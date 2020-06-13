@@ -14,15 +14,16 @@
 Hse_Config_Type HseConfig0 =
 {
 	.HseClockType = HSE_OSCILLATOR,
+	.HseOutputFreq = (4000000U),
 };
 #endif
 
-#ifdef(HSI_CLOCK_USED)
+//#ifdef(HSI_CLOCK_USED)
 Hsi_Config_Type HsiConfig0 =
 {
 	.HsiTrimValue = (0U),
 };
-#endif
+//#endif
 
 #ifdef(PLL_CLOCK_USED)
 Pll_Config_Type PllConfig0 =
@@ -35,15 +36,33 @@ Pll_Config_Type PllConfig0 =
 };
 #endif
 
+#ifdef(RTC_USED)
+Rtc_Config_Type RtcConfig0 =
+{
+	.RtcClkSource = (EN_HSE),
+};
+#endif
+
+Bus_Config_Type BusConfig0 =
+{
+	.APB1_PreScaler = (EN_AHB_CLK_DIVIDED_BY_2),
+	.APB2_PreScaler = (EN_AHB_CLK_NOT_DIVIDED),
+	.AHB_PreScaler = (EN_SYS_CLK_NOT_DIVIDED)
+};
+
 RCC_GlobalConfigType RCC_Config0 =
 {
 #ifdef(HSE_CLOCK_USED)
 	.HseConfig = &HseConfig0,
 #endif
-#ifdef(HSI_CLOCK_USED)
+//#ifdef(HSI_CLOCK_USED)
 	.HsiConfig = &HsiConfig0,
-#endif
+//#endif
 #ifdef(PLL_CLOCK_USED)
 	.PllConfig = &PllConfig0,
 #endif
+#ifdef(RTC_USED)
+	.RtcConfig = &RtcConfig0,
+#endif
+	.BusConfig = &BusConfig0,
 };

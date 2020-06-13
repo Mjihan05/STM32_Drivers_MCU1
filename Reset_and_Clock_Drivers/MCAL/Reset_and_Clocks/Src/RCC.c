@@ -10,6 +10,7 @@
  * ********************************************/
 #include <stdint.h>
 #include "RCC.h"
+#include "RCC_regTypes.h"
 
 Pll_PreScalerType PllPreScalerValues;
 
@@ -199,54 +200,393 @@ void RCC_PllI2SConfigure(void)
 	while(RCC_GetClockReadyStatus(EN_PLL_I2S)==EN_CLK_NOT_READY);
 }
 
+void RCC_EnableClk(Clk_Types clk)
+{
+	switch(clk)
+	{
+		case EN_PLL_I2S:
+			REG_RMW32(RCC_CR,0x04000000,SET_BIT(26U));
+			break;
+
+		case EN_PLL:
+			REG_RMW32(RCC_CR,0x01000000,SET_BIT(24U));
+			break;
+
+		case EN_HSE:
+			REG_RMW32(RCC_CR,0x00010000,SET_BIT(16U));
+			break;
+
+		case EN_HSI:
+			REG_RMW32(RCC_CR,0x00000001,SET_BIT(0U));
+			break;
+
+		default:
+			break;
+	}
+}
+
+void RCC_DisableClk(Clk_Types clk)
+{
+	switch(clk)
+	{
+		case EN_PLL_I2S:
+			REG_RMW32(RCC_CR,0x04000000,CLEAR_BIT(26U));
+			break;
+
+		case EN_PLL:
+			REG_RMW32(RCC_CR,0x01000000,CLEAR_BIT(24U));
+			break;
+
+		case EN_HSE:
+			REG_RMW32(RCC_CR,0x00010000,CLEAR_BIT(16U));
+			break;
+
+		case EN_HSI:
+			REG_RMW32(RCC_CR,0x00000001,CLEAR_BIT(0U));
+			break;
+
+		default:
+			break;
+	}
+}
+
 void RCC_EnableSpreadSpectrumClkGen()
 {
 
 }
 
-void RCC_McoConfig(enum clk, uint8_t preScaler)
+void RCC_Mco1Config(Clk_Types clk, uint8_t preScaler)
 {
+	if( (preScaler<(2U)) || (preScaler>(5U)) )
+		{
+			return;
+		}
 
+		switch(clk)
+		{
+			case EN_HSI:
+				REG_RMW32(RCC_CFGR,0x07600000,(((0U)<<21U)|((preScaler)<<24U)) );
+				break;
+
+			case EN_LSE:
+				RCC_DisableClk(EN_LSE);
+				REG_RMW32(RCC_CFGR,0x07600000,(((1U)<<21U)|((preScaler)<<24U)) );
+				break;
+
+			case EN_HSE:
+				RCC_DisableClk(EN_HSE);
+				REG_RMW32(RCC_CFGR,0x07600000,(((2U)<<21U)|((preScaler)<<24U)));
+				break;
+
+			case EN_PLL:
+				RCC_DisableClk(EN_PLL);
+				REG_RMW32(RCC_CFGR,0x07600000,(((3U)<<21U)|((preScaler)<<24U)));
+				break;
+
+			default:
+				return;
+		}
 }
 
-void RCC_SetClockSource(enum clk, uint8_t source)
+void RCC_Mco2Config(Clk_Types clk, uint8_t preScaler)
 {
+	if( (preScaler<(2U)) || (preScaler>(5U)) )
+	{
+		return;
+	}
 
+	switch(clk)
+	{
+		case EN_SYS_CLK:
+			REG_RMW32(RCC_CFGR,0xF8000000,(((0U)<<30U)|((preScaler)<<27U)) );
+			break;
+
+		case EN_PLL_I2S:
+			RCC_DisableClk(EN_PLL_I2S);
+			REG_RMW32(RCC_CFGR,0xF8000000,(((1U)<<30U)|((preScaler)<<27U)) );
+			break;
+
+		case EN_HSE:
+			RCC_DisableClk(EN_HSE);
+			REG_RMW32(RCC_CFGR,0xF8000000,(((2U)<<30U)|((preScaler)<<27U)));
+			break;
+
+		case EN_PLL:
+			RCC_DisableClk(EN_PLL);
+			REG_RMW32(RCC_CFGR,0xF8000000,(((3U)<<30U)|((preScaler)<<27U)));
+			break;
+
+		default:
+			return;
+	}
 }
 
-void RCC_RtcConfig()
+void RCC_SetClockSource(Clk_Types clk, uint8_t source)
 {
+	switch(clk)
+		{
+			case EN_PLL_I2S:
+				REG_RMW32(RCC_CFGR,0x00800000, (source<<23U) );
+				break;
 
+			case EN_SYS_CLK:
+				REG_RMW32(RCC_CFGR,0x00000003, (source<<0U) );
+				break;
+
+			default:
+				return;
+		}
 }
 
-void RCC_SystemClkConfig()
+void RCC_RtcConfig(Rtc_Config_Type* config)
 {
+	/** if HSE is being used then 1MHz clock needs to be supplied */
+#ifdef(HSE_CLOCK_USED)
+	if((config->RtcClkSource)== EN_HSE)
+	{
+		uint32_t HseOutputClkFreq = GlobalConfig->HseConfig->HseOutputFreq;
+		if(HseOutputClkFreq%(1000000U)== 0U)
+		{
+			uint8_t RtcPreScaler = HseOutputClkFreq/(1000000U);
+			REG_RMW32(RCC_CFGR,0x001F0000, (RtcPreScaler<<16U) );
+		}
+		else
+		{
+			/** Error*/
+		}
+	}
+	else
+#endif
+	{
 
+	}
 }
 
-void RCC_BusConfig()
+Clk_Types RCC_GetSystemClkSource()
 {
-
+	uint8_t source = (uint8_t)((REG_READ32(RCC_CFGR)&0x0000000C)>>2U);
+	return (Clk_Types)(3U-source);
 }
 
-void RCC_ClearClkRdyIntFlag()
+void RCC_BusConfig(Bus_Config_Type* config)
 {
-
+	/** Configure AHB, APB1, APB2 */
+	REG_RMW32(RCC_CFGR,0x000000F0, ((config->AHB_PreScaler)<<4U) );
+	REG_RMW32(RCC_CFGR,0x00001C00, ((config->APB1_PreScaler)<<10U) );
+	REG_RMW32(RCC_CFGR,0x0000E000, ((config->APB1_PreScaler)<<13U) );
 }
 
-void RCC_PeripheralClkEnable()
+void RCC_EnableIntFlag(Rcc_Int_Type IntFlag)
 {
+	switch(IntFlag)
+	{
+	case EN_CLK_SECURITY_INT:
+		REG_RMW32(RCC_CIR,0x00000080 ,SET_BIT(7U) );
+		break;
 
+	case EN_PLL_I2S_READY:
+		REG_RMW32(RCC_CIR,0x00002000 ,SET_BIT(13U) );
+		break;
+
+	case EN_PLL_READY:
+		REG_RMW32(RCC_CIR,0x00001000 ,SET_BIT(12U) );
+		break;
+
+	case EN_HSE_READY:
+		REG_RMW32(RCC_CIR,0x00000800 ,SET_BIT(11U) );
+		break;
+
+	case EN_HSI_READY:
+		REG_RMW32(RCC_CIR,0x00000400 ,SET_BIT(10U) );
+		break;
+
+	case EN_LSE_READY:
+		REG_RMW32(RCC_CIR,0x00000200 ,SET_BIT(9U) );
+		break;
+
+	case EN_LSI_READY:
+		REG_RMW32(RCC_CIR,0x00000100 ,SET_BIT(8U) );
+		break;
+
+	default:
+		break;
+
+	}
 }
 
-void RCC_PeripheralClkEnableLowPower()
+Rcc_Int_Type RCC_ReadIntFlag(void)
 {
-
+	uint8_t u8_returnValue=0U;
+	uint8_t u8_flag = (uint8_t)(REG_READ32(RCC_CIR)&0x0000003F);
+	while(u8_flag!=0U)
+	{
+		u8_returnValue++;
+		u8_flag = u8_flag>>1U;
+	}
+	return (Rcc_Int_Type)(7U-u8_returnValue);
 }
 
-void RCC_ResetPeripheral(enum peripheral)
+void RCC_ClearIntFlag(Rcc_Int_Type IntFlag)
 {
+	switch(IntFlag)
+	{
+	case EN_CLK_SECURITY_INT:
+		REG_WRITE32(RCC_CIR, SET_BIT(23U) );
+		break;
 
+	case EN_PLL_I2S_READY:
+		REG_WRITE32(RCC_CIR, SET_BIT(21U) );
+		break;
+
+	case EN_PLL_READY:
+		REG_WRITE32(RCC_CIR, SET_BIT(20U) );
+		break;
+
+	case EN_HSE_READY:
+		REG_WRITE32(RCC_CIR, SET_BIT(19U) );
+		break;
+
+	case EN_HSI_READY:
+		REG_WRITE32(RCC_CIR, SET_BIT(18U) );
+		break;
+
+	case EN_LSE_READY:
+		REG_WRITE32(RCC_CIR, SET_BIT(17U) );
+		break;
+
+	case EN_LSI_READY:
+		REG_WRITE32(RCC_CIR, SET_BIT(16U) );
+		break;
+
+	default:
+		break;
+
+	}
+}
+
+void RCC_AHB1PeripheralClkEnable(Rcc_AHB1_Peripherals peripheral)
+{
+	REG_RMW32(RCC_AHB1ENR,SET_BIT(peripheral) ,SET_BIT(peripheral) );
+}
+
+void RCC_AHB2PeripheralClkEnable(Rcc_AHB2_Peripherals peripheral)
+{
+	REG_RMW32(RCC_AHB2ENR,SET_BIT(peripheral) ,SET_BIT(peripheral) );
+}
+
+void RCC_AHB3PeripheralClkEnable(Rcc_AHB3_Peripherals peripheral)
+{
+	REG_RMW32(RCC_AHB3ENR,SET_BIT(peripheral) ,SET_BIT(peripheral) );
+}
+
+void RCC_APB1PeripheralClkEnable(Rcc_APB1_Peripherals peripheral)
+{
+	REG_RMW32(RCC_APB1ENR,SET_BIT(peripheral) ,SET_BIT(peripheral) );
+}
+
+void RCC_APB2PeripheralClkEnable(Rcc_APB2_Peripherals peripheral)
+{
+	REG_RMW32(RCC_APB2ENR,SET_BIT(peripheral) ,SET_BIT(peripheral) );
+}
+
+void RCC_AHB1EnablePerSleepMode(Rcc_AHB1_Peripherals peripheral)
+{
+	REG_RMW32(RCC_AHB1LPENR,SET_BIT(peripheral) ,SET_BIT(peripheral) );
+}
+
+void RCC_AHB2EnablePerSleepMode(Rcc_AHB2_Peripherals peripheral)
+{
+	REG_RMW32(RCC_AHB2LPENR,SET_BIT(peripheral) ,SET_BIT(peripheral) );
+}
+
+void RCC_AHB3EnablePerSleepMode(Rcc_AHB3_Peripherals peripheral)
+{
+	REG_RMW32(RCC_AHB3LPENR,SET_BIT(peripheral) ,SET_BIT(peripheral) );
+}
+
+void RCC_APB1EnablePerSleepMode(Rcc_APB1_Peripherals peripheral)
+{
+	REG_RMW32(RCC_APB1LPENR,SET_BIT(peripheral) ,SET_BIT(peripheral) );
+}
+
+void RCC_APB2EnablePerSleepMode(Rcc_APB2_Peripherals peripheral)
+{
+	REG_RMW32(RCC_APB2LPENR,SET_BIT(peripheral) ,SET_BIT(peripheral) );
+}
+
+void RCC_AHB1PeripheralClkDisable(Rcc_AHB1_Peripherals peripheral)
+{
+	REG_RMW32(RCC_AHB1ENR,SET_BIT(peripheral) ,CLEAR_BIT(peripheral) );
+}
+
+void RCC_AHB2PeripheralClkDisable(Rcc_AHB2_Peripherals peripheral)
+{
+	REG_RMW32(RCC_AHB2ENR,SET_BIT(peripheral) ,CLEAR_BIT(peripheral) );
+}
+
+void RCC_AHB3PeripheralClkDisable(Rcc_AHB3_Peripherals peripheral)
+{
+	REG_RMW32(RCC_AHB3ENR,SET_BIT(peripheral) ,CLEAR_BIT(peripheral) );
+}
+
+void RCC_APB1PeripheralClkDisable(Rcc_APB1_Peripherals peripheral)
+{
+	REG_RMW32(RCC_APB1ENR,SET_BIT(peripheral) ,CLEAR_BIT(peripheral) );
+}
+
+void RCC_APB2PeripheralClkDisable(Rcc_APB2_Peripherals peripheral)
+{
+	REG_RMW32(RCC_APB2ENR,SET_BIT(peripheral) ,CLEAR_BIT(peripheral) );
+}
+
+void RCC_AHB1DisablePerSleepMode(Rcc_AHB1_Peripherals peripheral)
+{
+	REG_RMW32(RCC_AHB1LPENR,SET_BIT(peripheral) ,CLEAR_BIT(peripheral) );
+}
+
+void RCC_AHB2DisablePerSleepMode(Rcc_AHB2_Peripherals peripheral)
+{
+	REG_RMW32(RCC_AHB2LPENR,SET_BIT(peripheral) ,CLEAR_BIT(peripheral) );
+}
+
+void RCC_AHB3DisablePerSleepMode(Rcc_AHB3_Peripherals peripheral)
+{
+	REG_RMW32(RCC_AHB3LPENR,SET_BIT(peripheral) ,CLEAR_BIT(peripheral) );
+}
+
+void RCC_APB1DisablePerSleepMode(Rcc_APB1_Peripherals peripheral)
+{
+	REG_RMW32(RCC_APB1LPENR,SET_BIT(peripheral) ,CLEAR_BIT(peripheral) );
+}
+
+void RCC_APB2DisablePerSleepMode(Rcc_APB2_Peripherals peripheral)
+{
+	REG_RMW32(RCC_APB2LPENR,SET_BIT(peripheral) ,CLEAR_BIT(peripheral) );
+}
+
+void RCC_ResetAHB1Peripheral(Rcc_AHB1_Peripherals peripheral)
+{
+	REG_WRITE32(RCC_AHB1RSTR, SET_BIT(peripheral) );
+}
+
+void RCC_ResetAHB2Peripheral(Rcc_AHB2_Peripherals peripheral)
+{
+	REG_WRITE32(RCC_AHB2RSTR, SET_BIT(peripheral) );
+}
+
+void RCC_ResetAHB3Peripheral(Rcc_AHB3_Peripherals peripheral)
+{
+	REG_WRITE32(RCC_AHB3RSTR, SET_BIT(peripheral) );
+}
+
+void RCC_ResetAPB1Peripheral(Rcc_APB1_Peripherals peripheral)
+{
+	REG_WRITE32(RCC_APB1RSTR, SET_BIT(peripheral) );
+}
+
+void RCC_ResetAPB2Peripheral(Rcc_APB2_Peripherals peripheral)
+{
+	REG_WRITE32(RCC_APB2RSTR, SET_BIT(peripheral) );
 }
 
 void RCC_ResetBackupDomain()
