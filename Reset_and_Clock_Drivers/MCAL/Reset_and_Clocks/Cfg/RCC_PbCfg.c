@@ -32,7 +32,10 @@ Pll_Config_Type PllConfig0 =
 	.PllInputFreq =          (16000000U),
 	.PllOutputFreq_SYSCLK =  (168000000U),
 	.PllOutputFreq_PLL48CK = (48000000U),
+#if(PLL_I2S_USED == STD_ON)
 	.PllOutputFreq_PLLI2S =  (96000000U),
+	.PLLI2S_ClkSource = PLL_I2S_CLK,
+#endif
 };
 #endif
 

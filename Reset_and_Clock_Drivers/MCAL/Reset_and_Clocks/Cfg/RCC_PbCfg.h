@@ -13,13 +13,19 @@
 	#define HSE_CLK_SECURITY STD_OFF
 #endif
 
-
-
-
+#ifdef(PLL_CLOCK_USED)
+#define PLL_I2S_USED STD_OFF
+#endif
 
 
 #define HSE_OSCILLATOR   (0x0U)
 #define HSE_EXTERNAL_CLK (0x1U)
+
+#define LSE_OSCILLATOR   (0x0U)
+#define LSE_EXTERNAL_CLK (0x1U)
+
+#define PLL_I2S_CLK      (0x0U)
+#define PLL_I2S_EXTERNAL_CLK (0x1U)
 
 typedef enum
 {
@@ -61,7 +67,10 @@ typedef struct
 	uint32_t PllInputFreq;
 	uint32_t PllOutputFreq_SYSCLK;
 	uint32_t PllOutputFreq_PLL48CK;
+#if(PLL_I2S_USED == STD_ON)
 	uint32_t PllOutputFreq_PLLI2S;
+	uint8_t PLLI2S_ClkSource;
+#endif
 }Pll_Config_Type;
 #endif
 

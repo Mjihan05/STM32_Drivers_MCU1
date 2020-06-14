@@ -8,7 +8,8 @@
  * 			 Reset and clock settings
  *
  * ********************************************/
-
+#ifndef RCC_H
+#define RCC_H
 
 typedef enum
 {
@@ -119,6 +120,17 @@ typedef enum
 	EN_INVALID_CLK,
 } Clk_Status_Type ;
 
+typedef enum
+{
+	EN_BURNOUT_RESET =25U,
+	EN_PIN_RESET,
+	EN_POR_PDR_RESET,
+	EN_SW_RESET,
+	EN_IWDG_RESET,
+	EN_WWDG_RESET,
+	EN_LPWR_RESET
+} Reset_Status_Type ;
+
 
 typedef struct
 {
@@ -126,6 +138,7 @@ typedef struct
 	uint8_t PreScaler_N;
 	uint8_t PreScaler_P;
 	uint8_t PreScaler_Q;
+	uint8_t PreScaler_I2SN;
 	uint8_t PreScaler_R;
 }Pll_PreScalerType;
 
@@ -133,5 +146,5 @@ typedef struct
 
 extern Pll_PreScalerType PllPreScalerValues;
 
-
+#endif /*#ifndef RCC_H*/
 

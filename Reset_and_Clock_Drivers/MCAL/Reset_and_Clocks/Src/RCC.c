@@ -39,6 +39,14 @@ Clk_Status_Type RCC_GetClockReadyStatus(Clk_Types En_clockType)
 			return (Clk_Status_Type)(((REG_READ32(RCC_CR))&(0x00000002))>>1U);
 			break;
 
+		case EN_LSE:
+			return (Clk_Status_Type)(((REG_READ32(RCC_BDCR))&(0x00000002))>>1U);
+			break;
+
+		case EN_LSI:
+			return (Clk_Status_Type)(((REG_READ32(RCC_CSR))&(0x00000002))>>1U);
+			break;
+
 		default:
 			return EN_INVALID_CLK;
 	}
@@ -116,6 +124,14 @@ void RCC_PllConfigure(Pll_Config_Type* config)
 	while(RCC_GetClockReadyStatus(EN_PLL)==EN_CLK_NOT_READY);
 }
 
+void RCC_LsiEnable(void)
+{
+	/** Turn on LSI */
+	REG_WRITE32(RCC_CSR,0x1U);
+	/** Wait until the clk is ready */
+	while(RCC_GetClockReadyStatus(EN_LSI)==EN_CLK_NOT_READY);
+}
+
 void RCC_CalculatePllPrescaler(Pll_Config_Type* config,Pll_PreScalerType* returnVal)
 {
 	uint32_t u32_PllIpFreq = 0U;
@@ -191,14 +207,80 @@ void RCC_CalculatePllPrescaler(Pll_Config_Type* config,Pll_PreScalerType* return
 	}
 }
 
-void RCC_PllI2SConfigure(void)
+#if(PLL_I2S_USED == STD_ON)
+
+void RCC_CalculatePllI2SPrescaler(Pll_Config_Type* config,Pll_PreScalerType* returnVal)
 {
+	uint32_t u32_PllIpFreq = 0U;
+	uint32_t u32_PllOpFreq = 0U;
+	uint8_t  u8_PrescalerI2sN = 50U;
+	uint8_t  u8_PrescalerR = 2U;
+
+	uint8_t u8_OperationCompleteFlag = FALSE;
+
+	/** Get source for PLL clk */
+	if((((REG_READ32(RCC_PLLCFGR))&(0x00400000))>>22U)==(0U))
+	{/** HSI Selected */
+		u32_PllIpFreq = 16000000U;
+		u32_PllOpFreq = config->PllOutputFreq_PLLI2S;
+	}
+	else
+	{/** HSE Selected */
+		u32_PllIpFreq = ((config->PllInputFreq)/returnVal->PreScaler_M);
+		u32_PllOpFreq = config->PllOutputFreq_PLLI2S;
+	}
+
+	for(u8_PrescalerI2sN = 50U; u8_PrescalerI2sN<=432; u8_PrescalerI2sN++)
+	{
+		while( ((u32_PllIpFreq*u8_PrescalerI2sN)/(u8_PrescalerR)) > u32_PllOpFreq )
+		{
+			u8_PrescalerR++;
+		}
+
+		if( ((u32_PllIpFreq*(returnVal->PreScaler_N))/(u8_PrescalerR)) == u32_PllOpFreq )
+		{
+			if(u8_PrescalerR<8U)
+			{
+				u8_OperationCompleteFlag = TRUE;
+			}
+		}
+
+		if(u8_OperationCompleteFlag == TRUE)
+		{
+			returnVal->PreScaler_I2SN = u8_PrescalerI2sN;
+			returnVal->PreScaler_R = u8_PrescalerR;
+			break;
+		}
+	}
+
+	if(u8_OperationCompleteFlag == FALSE)
+	{
+		/** Error No valid prescaler found */
+	}
+
+}
+
+void RCC_PllI2SConfigure(Pll_Config_Type* config)
+{
+	/** Disable PLLI2S */
+	REG_RMW32(RCC_CR,MASK_BIT(26U),CLEAR_BIT(26U));
+
+	/** Select source for PLLI2S*/
+	RCC_SetClockSource(EN_PLL_I2S,config->PLLI2S_ClkSource);
+
+	RCC_CalculatePllI2SPrescaler(configconfig,&PllPreScalerValues);
+
+	/** Write values to the register */
+	REG_RMW32(RCC_PLLI2SCFGR,0x00007FC0, (PllPreScalerValues.PreScaler_I2SN)<<6U );
+	REG_RMW32(RCC_PLLI2SCFGR,0x70000000, (PllPreScalerValues.PreScaler_R)<<28U );
+
 	/** Enable PLLI2S */
-	REG_WRITE32(RCC_CR,SET<<26U);
+	REG_RMW32(RCC_CR,MASK_BIT(26U),SET_BIT(26U));
 
 	/** Wait until the clk is ready */
 	while(RCC_GetClockReadyStatus(EN_PLL_I2S)==EN_CLK_NOT_READY);
 }
+#endif /*#if(PLL_I2S_USED == STD_ON)*/
 
 void RCC_EnableClk(Clk_Types clk)
 {
@@ -340,26 +422,46 @@ void RCC_SetClockSource(Clk_Types clk, uint8_t source)
 
 void RCC_RtcConfig(Rtc_Config_Type* config)
 {
-	/** if HSE is being used then 1MHz clock needs to be supplied */
+	if( ((config->RtcClkSource)== LSE_OSCILLATOR) || ((config->RtcClkSource)== LSE_EXTERNAL_CLK))
+	{
+		REG_RMW32(RCC_BDCR,0x00000300, ((0x1U)<<8U) );
+		if(((config->RtcClkSource)== LSE_EXTERNAL_CLK))
+		{
+			REG_RMW32(RCC_BDCR,0x00000004, SET_BIT(2) );
+		}
+		/** Turn on LSE */
+		REG_RMW32(RCC_BDCR,0x00000001, ((0x1U)<<0U) );
+		/** Wait until the clk is ready */
+		while(RCC_GetClockReadyStatus(EN_LSE)==EN_CLK_NOT_READY);
+	}
+	/** if HSE is being used then 1MHz clock needs to be supplied and LSE needs to run in bypass mode */
 #ifdef(HSE_CLOCK_USED)
-	if((config->RtcClkSource)== EN_HSE)
+	else if((config->RtcClkSource)== EN_HSE)
 	{
 		uint32_t HseOutputClkFreq = GlobalConfig->HseConfig->HseOutputFreq;
 		if(HseOutputClkFreq%(1000000U)== 0U)
 		{
 			uint8_t RtcPreScaler = HseOutputClkFreq/(1000000U);
 			REG_RMW32(RCC_CFGR,0x001F0000, (RtcPreScaler<<16U) );
+			REG_RMW32(RCC_BDCR,0x00000300, ((0x3U)<<8U) );
 		}
 		else
 		{
 			/** Error*/
 		}
 	}
-	else
 #endif
+	else if((config->RtcClkSource)== EN_LSI)
 	{
-
+		REG_RMW32(RCC_BDCR,0x00000300, SET_BIT(15) );
 	}
+	else
+	{
+		/** No clock */
+	}
+
+	/** Turn on RTC */
+	REG_RMW32(RCC_BDCR,0x00008000, ((0x3U)<<8U) );
 }
 
 Clk_Types RCC_GetSystemClkSource()
@@ -589,14 +691,22 @@ void RCC_ResetAPB2Peripheral(Rcc_APB2_Peripherals peripheral)
 	REG_WRITE32(RCC_APB2RSTR, SET_BIT(peripheral) );
 }
 
-void RCC_ResetBackupDomain()
+void RCC_ResetBackupDomain(void)
 {
-
+	REG_RMW32(RCC_BDCR,SET_BIT(16U) ,SET_BIT(16U) );
 }
 
-void RCC_GetResetStatus()
+Reset_Status_Type RCC_GetResetStatus(void)
 {
-
+	uint8_t u8_returnValue=0U;
+	uint8_t u8_flag = (uint8_t)(REG_READ32(RCC_CSR)&0xFE000000);
+	while(u8_flag!=0U)
+	{
+		u8_returnValue++;
+		u8_flag = u8_flag>>1U;
+	}
+	REG_RMW32(RCC_CSR,MASK_BIT(16U) ,SET_BIT(16U) );
+	return (Reset_Status_Type)(u8_returnValue);
 }
 
 

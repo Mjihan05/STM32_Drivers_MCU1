@@ -23,6 +23,7 @@
 
 #define SET_BIT(x)  (SET<<x)
 #define CLEAR_BIT(x) ~(SET<<x)
+#define MASK_BIT(x) (SET<<x)
 
 #define REG_READ32(regAddress) (uint32_t)(*regAddress)
 #define REG_WRITE32(regAddress,value) (uint32_t)(*regAddress) = value
