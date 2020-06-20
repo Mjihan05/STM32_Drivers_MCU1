@@ -8,9 +8,12 @@
  * 			 Reset and clock settings
  *
  * ********************************************/
+
 #include <stdint.h>
-#include "RCC.h"
+#include <Reg_Macros.h>
 #include "RCC_regTypes.h"
+
+#include "RCC.h"
 
 Pll_PreScalerType PllPreScalerValues;
 
@@ -24,7 +27,7 @@ Clk_Status_Type RCC_GetClockReadyStatus(Clk_Types En_clockType)
 	switch(En_clockType)
 	{
 		case EN_PLL_I2S:
-			return (Clk_Status_Type)(((REG_READ32(RCC_CR))&(0x08000000))>>27U);
+			return (Clk_Status_Type)( ( (REG_READ32(RCC_CR))&(0x08000000))>>27U );
 			break;
 
 		case EN_PLL:
@@ -52,24 +55,35 @@ Clk_Status_Type RCC_GetClockReadyStatus(Clk_Types En_clockType)
 	}
 }
 
+#ifdef HSE_CLOCK_USED
 void RCC_HseConfigure(Hse_Config_Type* config)
 {
 	/** Disable HSE before configuration */
 	REG_RMW32(RCC_CR,0x00010000,CLEAR<<16U);
 
 	/** Select the HSE to be used */
-	REG_RMW32(RCC_CR,SET<<18U,config->HseClockType);
+	RCC_SetClockSource(EN_HSE, (config->HseClockType));
+	//REG_RMW32(RCC_CR,MASK_BIT(18U),(config->HseClockType)<<18U);
 
 	/** Check if Clock Security System is needed */
 #if(HSE_CLK_SECURITY == STD_ON)
-	REG_RMW32(RCC_CR,SET<<19U,SET);
+	REG_RMW32(RCC_CR,MASK_BIT(19U),SET_BIT(19U));
 #endif
 
 	/** Enable HSE */
-	REG_RMW32(RCC_CR,SET<<16U,SET);
+	//REG_RMW32(RCC_CR,MASK_BIT(16U),SET_BIT(16U));
+	RCC_EnableClk(EN_HSE);
 
 	/** Wait until the clk is ready */
 	while(RCC_GetClockReadyStatus(EN_HSE)==EN_CLK_NOT_READY);
+}
+#endif /*#ifdef HSE_CLOCK_USED*/
+
+void RCC_HsiSetTrimValue(Hsi_Config_Type* config)
+{
+	/** TODO - If trim value can be adjusted during runtime then write to register
+	 *         else modify the HSI config Structure */
+	REG_RMW32(RCC_CR,0x000000F8,(config->HsiTrimValue)<<3U);
 }
 
 void RCC_HsiConfigure(Hsi_Config_Type* config)
@@ -81,7 +95,8 @@ void RCC_HsiConfigure(Hsi_Config_Type* config)
 	RCC_HsiSetTrimValue(config);
 
 	/** Enable HSI */
-	REG_RMW32(RCC_CR,SET<<0U,SET);
+	//REG_RMW32(RCC_CR,SET<<0U,SET);
+	RCC_EnableClk(EN_HSI);
 
 	/** Wait until the clk is ready */
 	while(RCC_GetClockReadyStatus(EN_HSI)==EN_CLK_NOT_READY);
@@ -92,52 +107,13 @@ uint8_t RCC_HsiGetCalibValue(void)
 	return (uint8_t)((((REG_READ32(RCC_CR))&(0x0000FF00))>>8U));
 }
 
-void RCC_HsiSetTrimValue(Hsi_Config_Type* config)
-{
-	/** TODO - If trim value can be adjusted during runtime then write to register
-	 *         else modify the HSI config Structure */
-	REG_RMW32(RCC_CR,0x000000F8,(config->HsiTrimValue)<<3U);
-}
-
-void RCC_PllConfigure(Pll_Config_Type* config)
-{
-
-	/** Disable PLL before configuration */
-	REG_RMW32(RCC_CR,0x01000000,CLEAR<<24U);
-
-	/** Set PLL Source */
-	REG_RMW32(RCC_PLLCFGR,0x00400000,SET<<22U);
-
-	RCC_CalculatePllPrescaler(config,&PllPreScalerValues);
-
-	/** Write Prescaler values to Register*/
-	REG_RMW32(RCC_PLLCFGR,0x0F000000,PllPreScalerValues.PreScaler_Q<<24U);
-	REG_RMW32(RCC_PLLCFGR,0x00030000,PllPreScalerValues.PreScaler_P<<16U);
-
-	REG_RMW32(RCC_PLLCFGR,0x0000003F,PllPreScalerValues.PreScaler_M<<0U);
-	REG_RMW32(RCC_PLLCFGR,0x00007FC0,PllPreScalerValues.PreScaler_N<<6U);
-
-	/** Enable PLL */
-	REG_RMW32(RCC_CR,0x01000000,SET<<24U);
-
-	/** Wait until the clk is ready */
-	while(RCC_GetClockReadyStatus(EN_PLL)==EN_CLK_NOT_READY);
-}
-
-void RCC_LsiEnable(void)
-{
-	/** Turn on LSI */
-	REG_WRITE32(RCC_CSR,0x1U);
-	/** Wait until the clk is ready */
-	while(RCC_GetClockReadyStatus(EN_LSI)==EN_CLK_NOT_READY);
-}
-
+#ifdef PLL_CLOCK_USED
 void RCC_CalculatePllPrescaler(Pll_Config_Type* config,Pll_PreScalerType* returnVal)
 {
 	uint32_t u32_PllIpFreq = 0U;
 	uint32_t u32_PllOpFreq = 0U;
-	uint8_t  u8_PrescalerM,u8_PrescalerN = 2U;
-	uint8_t  u8_PrescalerP,u8_PrescalerQ = 0U;
+	uint8_t  u8_PrescalerM = 0U,u8_PrescalerN = 2U;
+	uint8_t  u8_PrescalerP = 0U,u8_PrescalerQ = 0U;
 
 	uint8_t u8_OperationCompleteFlag = FALSE;
 
@@ -170,12 +146,12 @@ void RCC_CalculatePllPrescaler(Pll_Config_Type* config,Pll_PreScalerType* return
 		{
 			u32_PlltempFreq = (uint32_t)(u32_PllIpFreq*u8_PrescalerN);
 			u8_PrescalerM = 2U;
-			while((u8_PrescalerM<=63U)&&(u32_PlltempFreq>u32_PllOpFreq))
+			while((u8_PrescalerM<=63U)&&((u32_PlltempFreq/u8_PrescalerM)>u32_PllOpFreq))
 			{
-				u32_PlltempFreq = (uint32_t)(u32_PlltempFreq/u8_PrescalerM);
+				//u32_PlltempFreq = (uint32_t)(u32_PlltempFreq/u8_PrescalerM);
 				u8_PrescalerM++;
 			}
-		}
+
 
 		if(u32_PllOpFreq == (uint32_t)(u32_PllIpFreq*(u8_PrescalerN/u8_PrescalerM)))
 		{
@@ -197,15 +173,59 @@ void RCC_CalculatePllPrescaler(Pll_Config_Type* config,Pll_PreScalerType* return
 
 		if(u8_OperationCompleteFlag == TRUE)
 		{
-			returnVal.PreScaler_M = u8_PrescalerM;
-			returnVal.PreScaler_N = u8_PrescalerN;
-			returnVal.PreScaler_P = u8_PrescalerP;
-			returnVal.PreScaler_Q = u8_PrescalerQ;
-			u8_OperationCompleteFlag = FALSE;
+			returnVal->PreScaler_M = u8_PrescalerM;
+			returnVal->PreScaler_N = u8_PrescalerN;
+			returnVal->PreScaler_P = u8_PrescalerP;
+			returnVal->PreScaler_Q = u8_PrescalerQ;
+			//u8_OperationCompleteFlag = FALSE;
+			break;
+		}
+		}
+		if(u8_OperationCompleteFlag == TRUE)
+		{
 			break;
 		}
 	}
 }
+
+void RCC_PllConfigure(Pll_Config_Type* config)
+{
+
+	/** Disable PLL before configuration */
+	REG_RMW32(RCC_CR,0x01000000,CLEAR<<24U);
+
+	/** Set PLL Source */
+	//REG_RMW32(RCC_PLLCFGR,0x00400000,(config->PllClkSource)<<22U);
+	RCC_SetClockSource(EN_PLL, (config->PllClkSource));
+
+	RCC_CalculatePllPrescaler(config,&PllPreScalerValues);
+
+	/** Write Prescaler values to Register*/
+	REG_RMW32(RCC_PLLCFGR,0x0F000000,PllPreScalerValues.PreScaler_Q<<24U);
+	REG_RMW32(RCC_PLLCFGR,0x00030000,PllPreScalerValues.PreScaler_P<<16U);
+
+	REG_RMW32(RCC_PLLCFGR,0x0000003F,PllPreScalerValues.PreScaler_M<<0U);
+	REG_RMW32(RCC_PLLCFGR,0x00007FC0,PllPreScalerValues.PreScaler_N<<6U);
+
+	/** Enable PLL */
+	//REG_RMW32(RCC_CR,0x01000000,SET<<24U);
+	RCC_EnableClk(EN_PLL);
+
+	/** Wait until the clk is ready */
+	while(RCC_GetClockReadyStatus(EN_PLL)==EN_CLK_NOT_READY);
+}
+#endif /*#ifdef PLL_CLOCK_USED */
+
+#if 0
+void RCC_LsiEnable(void)
+{
+	/** Turn on LSI */
+	REG_WRITE32(RCC_CSR,0x1U);
+	/** Wait until the clk is ready */
+	while(RCC_GetClockReadyStatus(EN_LSI)==EN_CLK_NOT_READY);
+}
+#endif
+
 
 #if(PLL_I2S_USED == STD_ON)
 
@@ -221,7 +241,7 @@ void RCC_CalculatePllI2SPrescaler(Pll_Config_Type* config,Pll_PreScalerType* ret
 	/** Get source for PLL clk */
 	if((((REG_READ32(RCC_PLLCFGR))&(0x00400000))>>22U)==(0U))
 	{/** HSI Selected */
-		u32_PllIpFreq = 16000000U;
+		u32_PllIpFreq = (uint32_t)((16000000U));
 		u32_PllOpFreq = config->PllOutputFreq_PLLI2S;
 	}
 	else
@@ -232,12 +252,13 @@ void RCC_CalculatePllI2SPrescaler(Pll_Config_Type* config,Pll_PreScalerType* ret
 
 	for(u8_PrescalerI2sN = 50U; u8_PrescalerI2sN<=432; u8_PrescalerI2sN++)
 	{
-		while( ((u32_PllIpFreq*u8_PrescalerI2sN)/(u8_PrescalerR)) > u32_PllOpFreq )
+		u8_PrescalerR = 2U;
+		while( ((u32_PllIpFreq*u8_PrescalerI2sN)/(u8_PrescalerR*(returnVal->PreScaler_M))) > u32_PllOpFreq )
 		{
 			u8_PrescalerR++;
 		}
 
-		if( ((u32_PllIpFreq*(returnVal->PreScaler_N))/(u8_PrescalerR)) == u32_PllOpFreq )
+		if( ((u32_PllIpFreq*(u8_PrescalerI2sN))/(u8_PrescalerR*(returnVal->PreScaler_M))) == u32_PllOpFreq )
 		{
 			if(u8_PrescalerR<8U)
 			{
@@ -268,14 +289,18 @@ void RCC_PllI2SConfigure(Pll_Config_Type* config)
 	/** Select source for PLLI2S*/
 	RCC_SetClockSource(EN_PLL_I2S,config->PLLI2S_ClkSource);
 
-	RCC_CalculatePllI2SPrescaler(configconfig,&PllPreScalerValues);
+	if((config->PLLI2S_ClkSource)==PLL_I2S_CLK)
+	{
+		RCC_CalculatePllI2SPrescaler(config,&PllPreScalerValues);
 
-	/** Write values to the register */
-	REG_RMW32(RCC_PLLI2SCFGR,0x00007FC0, (PllPreScalerValues.PreScaler_I2SN)<<6U );
-	REG_RMW32(RCC_PLLI2SCFGR,0x70000000, (PllPreScalerValues.PreScaler_R)<<28U );
+		/** Write values to the register */
+		REG_RMW32(RCC_PLLI2SCFGR,0x00007FC0, (PllPreScalerValues.PreScaler_I2SN)<<6U );
+		REG_RMW32(RCC_PLLI2SCFGR,0x70000000, (PllPreScalerValues.PreScaler_R)<<28U );
+	}
 
 	/** Enable PLLI2S */
-	REG_RMW32(RCC_CR,MASK_BIT(26U),SET_BIT(26U));
+	//REG_RMW32(RCC_CR,MASK_BIT(26U),SET_BIT(26U));
+	RCC_EnableClk(EN_PLL_I2S);
 
 	/** Wait until the clk is ready */
 	while(RCC_GetClockReadyStatus(EN_PLL_I2S)==EN_CLK_NOT_READY);
@@ -300,6 +325,10 @@ void RCC_EnableClk(Clk_Types clk)
 
 		case EN_HSI:
 			REG_RMW32(RCC_CR,0x00000001,SET_BIT(0U));
+			break;
+
+		case EN_LSI:
+			REG_RMW32(RCC_CSR,MASK_BIT(1U),SET_BIT(1U));
 			break;
 
 		default:
@@ -411,8 +440,16 @@ void RCC_SetClockSource(Clk_Types clk, uint8_t source)
 				REG_RMW32(RCC_CFGR,0x00800000, (source<<23U) );
 				break;
 
+			case EN_PLL:
+				REG_RMW32(RCC_PLLCFGR,0x00400000,(source)<<22U);
+				break;
+
 			case EN_SYS_CLK:
 				REG_RMW32(RCC_CFGR,0x00000003, (source<<0U) );
+				break;
+
+			case EN_HSE:
+				REG_RMW32(RCC_CR,MASK_BIT(18U),(source)<<18U);
 				break;
 
 			default:
@@ -420,6 +457,7 @@ void RCC_SetClockSource(Clk_Types clk, uint8_t source)
 		}
 }
 
+#ifdef RTC_CLOCK_USED
 void RCC_RtcConfig(Rtc_Config_Type* config)
 {
 	if( ((config->RtcClkSource)== LSE_OSCILLATOR) || ((config->RtcClkSource)== LSE_EXTERNAL_CLK))
@@ -463,6 +501,7 @@ void RCC_RtcConfig(Rtc_Config_Type* config)
 	/** Turn on RTC */
 	REG_RMW32(RCC_BDCR,0x00008000, ((0x3U)<<8U) );
 }
+#endif /*#ifdef RTC_CLOCK_USED*/
 
 Clk_Types RCC_GetSystemClkSource()
 {

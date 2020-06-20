@@ -11,7 +11,25 @@
   #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
 #endif
 
+#include <stdint.h>
+#include "RCC.h"
+
+extern RCC_GlobalConfigType RCC_Config0;
+
 int main(void)
 {
+//	RCC_CalculatePllPrescaler(RCC_Config0.PllConfig,&PllPreScalerValues);
+	RCC_PllConfigure(RCC_Config0.PllConfig);
+	RCC_PllI2SConfigure(RCC_Config0.PllConfig);
+
+	Clk_Status_Type status = 0U;
+	status = RCC_GetClockReadyStatus(EN_PLL_I2S);
+	if(status==EN_CLK_READY)
+	{
+		RCC_DisableClk(EN_PLL_I2S);
+		while(1);
+	}
+
+	//RCC_HsiSetTrimValue((RCC_Config0.HsiConfig));
 	for(;;);
 }

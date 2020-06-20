@@ -8,12 +8,13 @@
  *
  * ********************************************/
 
+#include <stdint.h>
 #include "RCC_PbCfg.h"
 
-#ifdef(HSE_CLOCK_USED)
+#ifdef HSE_CLOCK_USED
 Hse_Config_Type HseConfig0 =
 {
-	.HseClockType = HSE_OSCILLATOR,
+	.HseClockType = HSE_EXTERNAL_CLK,
 	.HseOutputFreq = (4000000U),
 };
 #endif
@@ -21,14 +22,14 @@ Hse_Config_Type HseConfig0 =
 //#ifdef(HSI_CLOCK_USED)
 Hsi_Config_Type HsiConfig0 =
 {
-	.HsiTrimValue = (0U),
+	.HsiTrimValue = (17U),
 };
 //#endif
 
-#ifdef(PLL_CLOCK_USED)
+#ifdef PLL_CLOCK_USED
 Pll_Config_Type PllConfig0 =
 {
-	.PllClkSource = (EN_HSI),
+	.PllClkSource = (PLL_SRC_HSI),
 	.PllInputFreq =          (16000000U),
 	.PllOutputFreq_SYSCLK =  (168000000U),
 	.PllOutputFreq_PLL48CK = (48000000U),
@@ -39,7 +40,7 @@ Pll_Config_Type PllConfig0 =
 };
 #endif
 
-#ifdef(RTC_USED)
+#ifdef RTC_USED
 Rtc_Config_Type RtcConfig0 =
 {
 	.RtcClkSource = (EN_HSE),
@@ -55,16 +56,16 @@ Bus_Config_Type BusConfig0 =
 
 RCC_GlobalConfigType RCC_Config0 =
 {
-#ifdef(HSE_CLOCK_USED)
+#ifdef HSE_CLOCK_USED
 	.HseConfig = &HseConfig0,
 #endif
 //#ifdef(HSI_CLOCK_USED)
-	.HsiConfig = &HsiConfig0,
+	.HsiConfig = (&HsiConfig0),
 //#endif
-#ifdef(PLL_CLOCK_USED)
+#ifdef PLL_CLOCK_USED
 	.PllConfig = &PllConfig0,
 #endif
-#ifdef(RTC_USED)
+#ifdef RTC_USED
 	.RtcConfig = &RtcConfig0,
 #endif
 	.BusConfig = &BusConfig0,

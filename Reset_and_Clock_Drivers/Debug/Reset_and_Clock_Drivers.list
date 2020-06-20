@@ -1,0 +1,1216 @@
+
+Reset_and_Clock_Drivers.elf:     file format elf32-littlearm
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .isr_vector   000001a8  08000000  08000000  00010000  2**0
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  1 .text         000006d4  080001a8  080001a8  000101a8  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  2 .rodata       00000000  0800087c  0800087c  00020034  2**0
+                  CONTENTS, ALLOC, LOAD, DATA
+  3 .ARM.extab    00000000  0800087c  0800087c  00020034  2**0
+                  CONTENTS
+  4 .ARM          00000000  0800087c  0800087c  00020034  2**0
+                  CONTENTS
+  5 .preinit_array 00000000  0800087c  0800087c  00020034  2**0
+                  CONTENTS, ALLOC, LOAD, DATA
+  6 .init_array   00000004  0800087c  0800087c  0001087c  2**2
+                  CONTENTS, ALLOC, LOAD, DATA
+  7 .fini_array   00000004  08000880  08000880  00010880  2**2
+                  CONTENTS, ALLOC, LOAD, DATA
+  8 .data         00000034  20000000  08000884  00020000  2**2
+                  CONTENTS, ALLOC, LOAD, DATA
+  9 .bss          00000024  20000034  080008b8  00020034  2**2
+                  ALLOC
+ 10 ._user_heap_stack 00000600  20000058  080008b8  00020058  2**0
+                  ALLOC
+ 11 .ARM.attributes 0000002a  00000000  00000000  00020034  2**0
+                  CONTENTS, READONLY
+ 12 .debug_info   00001191  00000000  00000000  0002005e  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 13 .debug_abbrev 00000350  00000000  00000000  000211ef  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 14 .debug_aranges 000001f0  00000000  00000000  00021540  2**3
+                  CONTENTS, READONLY, DEBUGGING
+ 15 .debug_macro  000011c5  00000000  00000000  00021730  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 16 .debug_line   00001106  00000000  00000000  000228f5  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 17 .debug_str    000052d6  00000000  00000000  000239fb  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 18 .comment      0000007b  00000000  00000000  00028cd1  2**0
+                  CONTENTS, READONLY
+ 19 .debug_ranges 000001b0  00000000  00000000  00028d50  2**3
+                  CONTENTS, READONLY, DEBUGGING
+ 20 .debug_frame  00000790  00000000  00000000  00028f00  2**2
+                  CONTENTS, READONLY, DEBUGGING
+
+Disassembly of section .text:
+
+080001a8 <__do_global_dtors_aux>:
+ 80001a8:	b510      	push	{r4, lr}
+ 80001aa:	4c05      	ldr	r4, [pc, #20]	; (80001c0 <__do_global_dtors_aux+0x18>)
+ 80001ac:	7823      	ldrb	r3, [r4, #0]
+ 80001ae:	b933      	cbnz	r3, 80001be <__do_global_dtors_aux+0x16>
+ 80001b0:	4b04      	ldr	r3, [pc, #16]	; (80001c4 <__do_global_dtors_aux+0x1c>)
+ 80001b2:	b113      	cbz	r3, 80001ba <__do_global_dtors_aux+0x12>
+ 80001b4:	4804      	ldr	r0, [pc, #16]	; (80001c8 <__do_global_dtors_aux+0x20>)
+ 80001b6:	f3af 8000 	nop.w
+ 80001ba:	2301      	movs	r3, #1
+ 80001bc:	7023      	strb	r3, [r4, #0]
+ 80001be:	bd10      	pop	{r4, pc}
+ 80001c0:	20000034 	.word	0x20000034
+ 80001c4:	00000000 	.word	0x00000000
+ 80001c8:	08000864 	.word	0x08000864
+
+080001cc <frame_dummy>:
+ 80001cc:	b508      	push	{r3, lr}
+ 80001ce:	4b03      	ldr	r3, [pc, #12]	; (80001dc <frame_dummy+0x10>)
+ 80001d0:	b11b      	cbz	r3, 80001da <frame_dummy+0xe>
+ 80001d2:	4903      	ldr	r1, [pc, #12]	; (80001e0 <frame_dummy+0x14>)
+ 80001d4:	4803      	ldr	r0, [pc, #12]	; (80001e4 <frame_dummy+0x18>)
+ 80001d6:	f3af 8000 	nop.w
+ 80001da:	bd08      	pop	{r3, pc}
+ 80001dc:	00000000 	.word	0x00000000
+ 80001e0:	20000038 	.word	0x20000038
+ 80001e4:	08000864 	.word	0x08000864
+
+080001e8 <RCC_GetClockReadyStatus>:
+{
+
+}
+
+Clk_Status_Type RCC_GetClockReadyStatus(Clk_Types En_clockType)
+{
+ 80001e8:	b480      	push	{r7}
+ 80001ea:	b083      	sub	sp, #12
+ 80001ec:	af00      	add	r7, sp, #0
+ 80001ee:	4603      	mov	r3, r0
+ 80001f0:	71fb      	strb	r3, [r7, #7]
+	switch(En_clockType)
+ 80001f2:	79fb      	ldrb	r3, [r7, #7]
+ 80001f4:	2b05      	cmp	r3, #5
+ 80001f6:	d839      	bhi.n	800026c <RCC_GetClockReadyStatus+0x84>
+ 80001f8:	a201      	add	r2, pc, #4	; (adr r2, 8000200 <RCC_GetClockReadyStatus+0x18>)
+ 80001fa:	f852 f023 	ldr.w	pc, [r2, r3, lsl #2]
+ 80001fe:	bf00      	nop
+ 8000200:	08000219 	.word	0x08000219
+ 8000204:	08000227 	.word	0x08000227
+ 8000208:	08000235 	.word	0x08000235
+ 800020c:	08000243 	.word	0x08000243
+ 8000210:	08000251 	.word	0x08000251
+ 8000214:	0800025f 	.word	0x0800025f
+	{
+		case EN_PLL_I2S:
+			return (Clk_Status_Type)( ( (REG_READ32(RCC_CR))&(0x08000000))>>27U );
+ 8000218:	4b17      	ldr	r3, [pc, #92]	; (8000278 <RCC_GetClockReadyStatus+0x90>)
+ 800021a:	681b      	ldr	r3, [r3, #0]
+ 800021c:	0edb      	lsrs	r3, r3, #27
+ 800021e:	f003 0301 	and.w	r3, r3, #1
+ 8000222:	b2db      	uxtb	r3, r3
+ 8000224:	e023      	b.n	800026e <RCC_GetClockReadyStatus+0x86>
+			break;
+
+		case EN_PLL:
+			return (Clk_Status_Type)(((REG_READ32(RCC_CR))&(0x02000000))>>25U);
+ 8000226:	4b14      	ldr	r3, [pc, #80]	; (8000278 <RCC_GetClockReadyStatus+0x90>)
+ 8000228:	681b      	ldr	r3, [r3, #0]
+ 800022a:	0e5b      	lsrs	r3, r3, #25
+ 800022c:	f003 0301 	and.w	r3, r3, #1
+ 8000230:	b2db      	uxtb	r3, r3
+ 8000232:	e01c      	b.n	800026e <RCC_GetClockReadyStatus+0x86>
+			break;
+
+		case EN_HSE:
+			return (Clk_Status_Type)(((REG_READ32(RCC_CR))&(0x00020000))>>17U);
+ 8000234:	4b10      	ldr	r3, [pc, #64]	; (8000278 <RCC_GetClockReadyStatus+0x90>)
+ 8000236:	681b      	ldr	r3, [r3, #0]
+ 8000238:	0c5b      	lsrs	r3, r3, #17
+ 800023a:	f003 0301 	and.w	r3, r3, #1
+ 800023e:	b2db      	uxtb	r3, r3
+ 8000240:	e015      	b.n	800026e <RCC_GetClockReadyStatus+0x86>
+			break;
+
+		case EN_HSI:
+			return (Clk_Status_Type)(((REG_READ32(RCC_CR))&(0x00000002))>>1U);
+ 8000242:	4b0d      	ldr	r3, [pc, #52]	; (8000278 <RCC_GetClockReadyStatus+0x90>)
+ 8000244:	681b      	ldr	r3, [r3, #0]
+ 8000246:	085b      	lsrs	r3, r3, #1
+ 8000248:	f003 0301 	and.w	r3, r3, #1
+ 800024c:	b2db      	uxtb	r3, r3
+ 800024e:	e00e      	b.n	800026e <RCC_GetClockReadyStatus+0x86>
+			break;
+
+		case EN_LSE:
+			return (Clk_Status_Type)(((REG_READ32(RCC_BDCR))&(0x00000002))>>1U);
+ 8000250:	4b0a      	ldr	r3, [pc, #40]	; (800027c <RCC_GetClockReadyStatus+0x94>)
+ 8000252:	681b      	ldr	r3, [r3, #0]
+ 8000254:	085b      	lsrs	r3, r3, #1
+ 8000256:	f003 0301 	and.w	r3, r3, #1
+ 800025a:	b2db      	uxtb	r3, r3
+ 800025c:	e007      	b.n	800026e <RCC_GetClockReadyStatus+0x86>
+			break;
+
+		case EN_LSI:
+			return (Clk_Status_Type)(((REG_READ32(RCC_CSR))&(0x00000002))>>1U);
+ 800025e:	4b08      	ldr	r3, [pc, #32]	; (8000280 <RCC_GetClockReadyStatus+0x98>)
+ 8000260:	681b      	ldr	r3, [r3, #0]
+ 8000262:	085b      	lsrs	r3, r3, #1
+ 8000264:	f003 0301 	and.w	r3, r3, #1
+ 8000268:	b2db      	uxtb	r3, r3
+ 800026a:	e000      	b.n	800026e <RCC_GetClockReadyStatus+0x86>
+			break;
+
+		default:
+			return EN_INVALID_CLK;
+ 800026c:	2302      	movs	r3, #2
+	}
+}
+ 800026e:	4618      	mov	r0, r3
+ 8000270:	370c      	adds	r7, #12
+ 8000272:	46bd      	mov	sp, r7
+ 8000274:	bc80      	pop	{r7}
+ 8000276:	4770      	bx	lr
+ 8000278:	40023800 	.word	0x40023800
+ 800027c:	40023870 	.word	0x40023870
+ 8000280:	40023874 	.word	0x40023874
+
+08000284 <RCC_CalculatePllPrescaler>:
+	return (uint8_t)((((REG_READ32(RCC_CR))&(0x0000FF00))>>8U));
+}
+
+#ifdef PLL_CLOCK_USED
+void RCC_CalculatePllPrescaler(Pll_Config_Type* config,Pll_PreScalerType* returnVal)
+{
+ 8000284:	b480      	push	{r7}
+ 8000286:	b089      	sub	sp, #36	; 0x24
+ 8000288:	af00      	add	r7, sp, #0
+ 800028a:	6078      	str	r0, [r7, #4]
+ 800028c:	6039      	str	r1, [r7, #0]
+	uint32_t u32_PllIpFreq = 0U;
+ 800028e:	2300      	movs	r3, #0
+ 8000290:	61fb      	str	r3, [r7, #28]
+	uint32_t u32_PllOpFreq = 0U;
+ 8000292:	2300      	movs	r3, #0
+ 8000294:	61bb      	str	r3, [r7, #24]
+	uint8_t  u8_PrescalerM = 0U,u8_PrescalerN = 2U;
+ 8000296:	2300      	movs	r3, #0
+ 8000298:	75fb      	strb	r3, [r7, #23]
+ 800029a:	2302      	movs	r3, #2
+ 800029c:	75bb      	strb	r3, [r7, #22]
+	uint8_t  u8_PrescalerP = 0U,u8_PrescalerQ = 0U;
+ 800029e:	2300      	movs	r3, #0
+ 80002a0:	757b      	strb	r3, [r7, #21]
+ 80002a2:	2300      	movs	r3, #0
+ 80002a4:	753b      	strb	r3, [r7, #20]
+
+	uint8_t u8_OperationCompleteFlag = FALSE;
+ 80002a6:	2300      	movs	r3, #0
+ 80002a8:	74fb      	strb	r3, [r7, #19]
+
+	/** Get source for PLL clk */
+	if((((REG_READ32(RCC_PLLCFGR))&(0x00400000))>>22U)==(0U))
+ 80002aa:	4b47      	ldr	r3, [pc, #284]	; (80003c8 <RCC_CalculatePllPrescaler+0x144>)
+ 80002ac:	681b      	ldr	r3, [r3, #0]
+ 80002ae:	f403 0380 	and.w	r3, r3, #4194304	; 0x400000
+ 80002b2:	2b00      	cmp	r3, #0
+ 80002b4:	d105      	bne.n	80002c2 <RCC_CalculatePllPrescaler+0x3e>
+	{/** HSI Selected */
+		u32_PllIpFreq = 16000000U;
+ 80002b6:	4b45      	ldr	r3, [pc, #276]	; (80003cc <RCC_CalculatePllPrescaler+0x148>)
+ 80002b8:	61fb      	str	r3, [r7, #28]
+		u32_PllOpFreq = config->PllOutputFreq_SYSCLK;
+ 80002ba:	687b      	ldr	r3, [r7, #4]
+ 80002bc:	689b      	ldr	r3, [r3, #8]
+ 80002be:	61bb      	str	r3, [r7, #24]
+ 80002c0:	e005      	b.n	80002ce <RCC_CalculatePllPrescaler+0x4a>
+	}
+	else
+	{/** HSE Selected */
+		u32_PllIpFreq = config->PllInputFreq;
+ 80002c2:	687b      	ldr	r3, [r7, #4]
+ 80002c4:	685b      	ldr	r3, [r3, #4]
+ 80002c6:	61fb      	str	r3, [r7, #28]
+		u32_PllOpFreq = config->PllOutputFreq_SYSCLK;
+ 80002c8:	687b      	ldr	r3, [r7, #4]
+ 80002ca:	689b      	ldr	r3, [r3, #8]
+ 80002cc:	61bb      	str	r3, [r7, #24]
+	}
+
+	/** Find the best Prescalers */
+	for(uint8_t loopItr=0U; loopItr<4U; loopItr++)
+ 80002ce:	2300      	movs	r3, #0
+ 80002d0:	74bb      	strb	r3, [r7, #18]
+ 80002d2:	e071      	b.n	80003b8 <RCC_CalculatePllPrescaler+0x134>
+	{
+		uint32_t u32_PlltempFreq = 0U;
+ 80002d4:	2300      	movs	r3, #0
+ 80002d6:	60fb      	str	r3, [r7, #12]
+		u8_PrescalerP += 2U;
+ 80002d8:	7d7b      	ldrb	r3, [r7, #21]
+ 80002da:	3302      	adds	r3, #2
+ 80002dc:	757b      	strb	r3, [r7, #21]
+		u32_PllOpFreq = (uint32_t)(u32_PllOpFreq*u8_PrescalerP);
+ 80002de:	7d7a      	ldrb	r2, [r7, #21]
+ 80002e0:	69bb      	ldr	r3, [r7, #24]
+ 80002e2:	fb02 f303 	mul.w	r3, r2, r3
+ 80002e6:	61bb      	str	r3, [r7, #24]
+		u8_PrescalerN = (uint8_t)(u32_PllOpFreq/u32_PllIpFreq);
+ 80002e8:	69ba      	ldr	r2, [r7, #24]
+ 80002ea:	69fb      	ldr	r3, [r7, #28]
+ 80002ec:	fbb2 f3f3 	udiv	r3, r2, r3
+ 80002f0:	75bb      	strb	r3, [r7, #22]
+		/*while((u8_PrescalerN<50U)  &&(u32_PllOpFreq!= (uint32_t)(u32_PllIpFreq*(u8_PrescalerN/u8_PrescalerM))) )
+		{
+			u8_PrescalerN = u8_PrescalerN*u8_PrescalerM++;
+		}*/
+
+		for(u8_PrescalerN = 50U; u8_PrescalerN<=432; u8_PrescalerN++)
+ 80002f2:	2332      	movs	r3, #50	; 0x32
+ 80002f4:	75bb      	strb	r3, [r7, #22]
+		{
+			u32_PlltempFreq = (uint32_t)(u32_PllIpFreq*u8_PrescalerN);
+ 80002f6:	7dba      	ldrb	r2, [r7, #22]
+ 80002f8:	69fb      	ldr	r3, [r7, #28]
+ 80002fa:	fb02 f303 	mul.w	r3, r2, r3
+ 80002fe:	60fb      	str	r3, [r7, #12]
+			u8_PrescalerM = 2U;
+ 8000300:	2302      	movs	r3, #2
+ 8000302:	75fb      	strb	r3, [r7, #23]
+			while((u8_PrescalerM<=63U)&&((u32_PlltempFreq/u8_PrescalerM)>u32_PllOpFreq))
+ 8000304:	e002      	b.n	800030c <RCC_CalculatePllPrescaler+0x88>
+			{
+				//u32_PlltempFreq = (uint32_t)(u32_PlltempFreq/u8_PrescalerM);
+				u8_PrescalerM++;
+ 8000306:	7dfb      	ldrb	r3, [r7, #23]
+ 8000308:	3301      	adds	r3, #1
+ 800030a:	75fb      	strb	r3, [r7, #23]
+			while((u8_PrescalerM<=63U)&&((u32_PlltempFreq/u8_PrescalerM)>u32_PllOpFreq))
+ 800030c:	7dfb      	ldrb	r3, [r7, #23]
+ 800030e:	2b3f      	cmp	r3, #63	; 0x3f
+ 8000310:	d806      	bhi.n	8000320 <RCC_CalculatePllPrescaler+0x9c>
+ 8000312:	7dfb      	ldrb	r3, [r7, #23]
+ 8000314:	68fa      	ldr	r2, [r7, #12]
+ 8000316:	fbb2 f3f3 	udiv	r3, r2, r3
+ 800031a:	69ba      	ldr	r2, [r7, #24]
+ 800031c:	429a      	cmp	r2, r3
+ 800031e:	d3f2      	bcc.n	8000306 <RCC_CalculatePllPrescaler+0x82>
+			}
+
+
+		if(u32_PllOpFreq == (uint32_t)(u32_PllIpFreq*(u8_PrescalerN/u8_PrescalerM)))
+ 8000320:	7dba      	ldrb	r2, [r7, #22]
+ 8000322:	7dfb      	ldrb	r3, [r7, #23]
+ 8000324:	fbb2 f3f3 	udiv	r3, r2, r3
+ 8000328:	b2db      	uxtb	r3, r3
+ 800032a:	461a      	mov	r2, r3
+ 800032c:	69fb      	ldr	r3, [r7, #28]
+ 800032e:	fb03 f302 	mul.w	r3, r3, r2
+ 8000332:	69ba      	ldr	r2, [r7, #24]
+ 8000334:	429a      	cmp	r2, r3
+ 8000336:	d124      	bne.n	8000382 <RCC_CalculatePllPrescaler+0xfe>
+		{
+			/** PreScaler Found*/
+			u8_OperationCompleteFlag = TRUE;
+ 8000338:	2301      	movs	r3, #1
+ 800033a:	74fb      	strb	r3, [r7, #19]
+
+			if((u8_PrescalerP>8U)&&((u8_PrescalerP%2)!=0U))
+ 800033c:	7d7b      	ldrb	r3, [r7, #21]
+ 800033e:	2b08      	cmp	r3, #8
+ 8000340:	d907      	bls.n	8000352 <RCC_CalculatePllPrescaler+0xce>
+ 8000342:	7d7b      	ldrb	r3, [r7, #21]
+ 8000344:	f003 0301 	and.w	r3, r3, #1
+ 8000348:	b2db      	uxtb	r3, r3
+ 800034a:	2b00      	cmp	r3, #0
+ 800034c:	d001      	beq.n	8000352 <RCC_CalculatePllPrescaler+0xce>
+			{
+				u8_OperationCompleteFlag = FALSE;
+ 800034e:	2300      	movs	r3, #0
+ 8000350:	74fb      	strb	r3, [r7, #19]
+			}
+
+			u8_PrescalerQ = (uint8_t)(u32_PllOpFreq/(config->PllOutputFreq_PLL48CK));
+ 8000352:	687b      	ldr	r3, [r7, #4]
+ 8000354:	68db      	ldr	r3, [r3, #12]
+ 8000356:	69ba      	ldr	r2, [r7, #24]
+ 8000358:	fbb2 f3f3 	udiv	r3, r2, r3
+ 800035c:	753b      	strb	r3, [r7, #20]
+
+			if( ((u8_PrescalerQ<2U)&&((u8_PrescalerQ>15U))) && ((u32_PllOpFreq%(config->PllOutputFreq_PLL48CK))!=0U) )
+ 800035e:	7d3b      	ldrb	r3, [r7, #20]
+ 8000360:	2b01      	cmp	r3, #1
+ 8000362:	d80e      	bhi.n	8000382 <RCC_CalculatePllPrescaler+0xfe>
+ 8000364:	7d3b      	ldrb	r3, [r7, #20]
+ 8000366:	2b0f      	cmp	r3, #15
+ 8000368:	d90b      	bls.n	8000382 <RCC_CalculatePllPrescaler+0xfe>
+ 800036a:	687b      	ldr	r3, [r7, #4]
+ 800036c:	68da      	ldr	r2, [r3, #12]
+ 800036e:	69bb      	ldr	r3, [r7, #24]
+ 8000370:	fbb3 f1f2 	udiv	r1, r3, r2
+ 8000374:	fb02 f201 	mul.w	r2, r2, r1
+ 8000378:	1a9b      	subs	r3, r3, r2
+ 800037a:	2b00      	cmp	r3, #0
+ 800037c:	d001      	beq.n	8000382 <RCC_CalculatePllPrescaler+0xfe>
+			{
+				u8_OperationCompleteFlag = FALSE;
+ 800037e:	2300      	movs	r3, #0
+ 8000380:	74fb      	strb	r3, [r7, #19]
+			}
+		}
+
+		if(u8_OperationCompleteFlag == TRUE)
+ 8000382:	7cfb      	ldrb	r3, [r7, #19]
+ 8000384:	2b01      	cmp	r3, #1
+ 8000386:	d110      	bne.n	80003aa <RCC_CalculatePllPrescaler+0x126>
+		{
+			returnVal->PreScaler_M = u8_PrescalerM;
+ 8000388:	683b      	ldr	r3, [r7, #0]
+ 800038a:	7dfa      	ldrb	r2, [r7, #23]
+ 800038c:	701a      	strb	r2, [r3, #0]
+			returnVal->PreScaler_N = u8_PrescalerN;
+ 800038e:	683b      	ldr	r3, [r7, #0]
+ 8000390:	7dba      	ldrb	r2, [r7, #22]
+ 8000392:	705a      	strb	r2, [r3, #1]
+			returnVal->PreScaler_P = u8_PrescalerP;
+ 8000394:	683b      	ldr	r3, [r7, #0]
+ 8000396:	7d7a      	ldrb	r2, [r7, #21]
+ 8000398:	709a      	strb	r2, [r3, #2]
+			returnVal->PreScaler_Q = u8_PrescalerQ;
+ 800039a:	683b      	ldr	r3, [r7, #0]
+ 800039c:	7d3a      	ldrb	r2, [r7, #20]
+ 800039e:	70da      	strb	r2, [r3, #3]
+			//u8_OperationCompleteFlag = FALSE;
+			break;
+ 80003a0:	bf00      	nop
+		}
+		}
+		if(u8_OperationCompleteFlag == TRUE)
+ 80003a2:	7cfb      	ldrb	r3, [r7, #19]
+ 80003a4:	2b01      	cmp	r3, #1
+ 80003a6:	d104      	bne.n	80003b2 <RCC_CalculatePllPrescaler+0x12e>
+		{
+			break;
+ 80003a8:	e009      	b.n	80003be <RCC_CalculatePllPrescaler+0x13a>
+		for(u8_PrescalerN = 50U; u8_PrescalerN<=432; u8_PrescalerN++)
+ 80003aa:	7dbb      	ldrb	r3, [r7, #22]
+ 80003ac:	3301      	adds	r3, #1
+ 80003ae:	75bb      	strb	r3, [r7, #22]
+			u32_PlltempFreq = (uint32_t)(u32_PllIpFreq*u8_PrescalerN);
+ 80003b0:	e7a1      	b.n	80002f6 <RCC_CalculatePllPrescaler+0x72>
+	for(uint8_t loopItr=0U; loopItr<4U; loopItr++)
+ 80003b2:	7cbb      	ldrb	r3, [r7, #18]
+ 80003b4:	3301      	adds	r3, #1
+ 80003b6:	74bb      	strb	r3, [r7, #18]
+ 80003b8:	7cbb      	ldrb	r3, [r7, #18]
+ 80003ba:	2b03      	cmp	r3, #3
+ 80003bc:	d98a      	bls.n	80002d4 <RCC_CalculatePllPrescaler+0x50>
+		}
+	}
+}
+ 80003be:	bf00      	nop
+ 80003c0:	3724      	adds	r7, #36	; 0x24
+ 80003c2:	46bd      	mov	sp, r7
+ 80003c4:	bc80      	pop	{r7}
+ 80003c6:	4770      	bx	lr
+ 80003c8:	40023804 	.word	0x40023804
+ 80003cc:	00f42400 	.word	0x00f42400
+
+080003d0 <RCC_PllConfigure>:
+
+void RCC_PllConfigure(Pll_Config_Type* config)
+{
+ 80003d0:	b580      	push	{r7, lr}
+ 80003d2:	b082      	sub	sp, #8
+ 80003d4:	af00      	add	r7, sp, #0
+ 80003d6:	6078      	str	r0, [r7, #4]
+
+	/** Disable PLL before configuration */
+	REG_RMW32(RCC_CR,0x01000000,CLEAR<<24U);
+ 80003d8:	4b28      	ldr	r3, [pc, #160]	; (800047c <RCC_PllConfigure+0xac>)
+ 80003da:	681b      	ldr	r3, [r3, #0]
+ 80003dc:	4a27      	ldr	r2, [pc, #156]	; (800047c <RCC_PllConfigure+0xac>)
+ 80003de:	f023 7380 	bic.w	r3, r3, #16777216	; 0x1000000
+ 80003e2:	6013      	str	r3, [r2, #0]
+
+	/** Set PLL Source */
+	//REG_RMW32(RCC_PLLCFGR,0x00400000,(config->PllClkSource)<<22U);
+	RCC_SetClockSource(EN_PLL, (config->PllClkSource));
+ 80003e4:	687b      	ldr	r3, [r7, #4]
+ 80003e6:	781b      	ldrb	r3, [r3, #0]
+ 80003e8:	4619      	mov	r1, r3
+ 80003ea:	2001      	movs	r0, #1
+ 80003ec:	f000 f978 	bl	80006e0 <RCC_SetClockSource>
+
+	RCC_CalculatePllPrescaler(config,&PllPreScalerValues);
+ 80003f0:	4923      	ldr	r1, [pc, #140]	; (8000480 <RCC_PllConfigure+0xb0>)
+ 80003f2:	6878      	ldr	r0, [r7, #4]
+ 80003f4:	f7ff ff46 	bl	8000284 <RCC_CalculatePllPrescaler>
+
+	/** Write Prescaler values to Register*/
+	REG_RMW32(RCC_PLLCFGR,0x0F000000,PllPreScalerValues.PreScaler_Q<<24U);
+ 80003f8:	4b22      	ldr	r3, [pc, #136]	; (8000484 <RCC_PllConfigure+0xb4>)
+ 80003fa:	681b      	ldr	r3, [r3, #0]
+ 80003fc:	f023 6270 	bic.w	r2, r3, #251658240	; 0xf000000
+ 8000400:	4b1f      	ldr	r3, [pc, #124]	; (8000480 <RCC_PllConfigure+0xb0>)
+ 8000402:	78db      	ldrb	r3, [r3, #3]
+ 8000404:	061b      	lsls	r3, r3, #24
+ 8000406:	f003 6370 	and.w	r3, r3, #251658240	; 0xf000000
+ 800040a:	491e      	ldr	r1, [pc, #120]	; (8000484 <RCC_PllConfigure+0xb4>)
+ 800040c:	4313      	orrs	r3, r2
+ 800040e:	600b      	str	r3, [r1, #0]
+	REG_RMW32(RCC_PLLCFGR,0x00030000,PllPreScalerValues.PreScaler_P<<16U);
+ 8000410:	4b1c      	ldr	r3, [pc, #112]	; (8000484 <RCC_PllConfigure+0xb4>)
+ 8000412:	681b      	ldr	r3, [r3, #0]
+ 8000414:	f423 3240 	bic.w	r2, r3, #196608	; 0x30000
+ 8000418:	4b19      	ldr	r3, [pc, #100]	; (8000480 <RCC_PllConfigure+0xb0>)
+ 800041a:	789b      	ldrb	r3, [r3, #2]
+ 800041c:	041b      	lsls	r3, r3, #16
+ 800041e:	f403 3340 	and.w	r3, r3, #196608	; 0x30000
+ 8000422:	4918      	ldr	r1, [pc, #96]	; (8000484 <RCC_PllConfigure+0xb4>)
+ 8000424:	4313      	orrs	r3, r2
+ 8000426:	600b      	str	r3, [r1, #0]
+
+	REG_RMW32(RCC_PLLCFGR,0x0000003F,PllPreScalerValues.PreScaler_M<<0U);
+ 8000428:	4b16      	ldr	r3, [pc, #88]	; (8000484 <RCC_PllConfigure+0xb4>)
+ 800042a:	681b      	ldr	r3, [r3, #0]
+ 800042c:	f023 023f 	bic.w	r2, r3, #63	; 0x3f
+ 8000430:	4b13      	ldr	r3, [pc, #76]	; (8000480 <RCC_PllConfigure+0xb0>)
+ 8000432:	781b      	ldrb	r3, [r3, #0]
+ 8000434:	f003 033f 	and.w	r3, r3, #63	; 0x3f
+ 8000438:	4912      	ldr	r1, [pc, #72]	; (8000484 <RCC_PllConfigure+0xb4>)
+ 800043a:	4313      	orrs	r3, r2
+ 800043c:	600b      	str	r3, [r1, #0]
+	REG_RMW32(RCC_PLLCFGR,0x00007FC0,PllPreScalerValues.PreScaler_N<<6U);
+ 800043e:	4b11      	ldr	r3, [pc, #68]	; (8000484 <RCC_PllConfigure+0xb4>)
+ 8000440:	681b      	ldr	r3, [r3, #0]
+ 8000442:	f423 43ff 	bic.w	r3, r3, #32640	; 0x7f80
+ 8000446:	f023 0340 	bic.w	r3, r3, #64	; 0x40
+ 800044a:	4a0d      	ldr	r2, [pc, #52]	; (8000480 <RCC_PllConfigure+0xb0>)
+ 800044c:	7852      	ldrb	r2, [r2, #1]
+ 800044e:	0192      	lsls	r2, r2, #6
+ 8000450:	4611      	mov	r1, r2
+ 8000452:	f647 72c0 	movw	r2, #32704	; 0x7fc0
+ 8000456:	400a      	ands	r2, r1
+ 8000458:	490a      	ldr	r1, [pc, #40]	; (8000484 <RCC_PllConfigure+0xb4>)
+ 800045a:	4313      	orrs	r3, r2
+ 800045c:	600b      	str	r3, [r1, #0]
+
+	/** Enable PLL */
+	//REG_RMW32(RCC_CR,0x01000000,SET<<24U);
+	RCC_EnableClk(EN_PLL);
+ 800045e:	2001      	movs	r0, #1
+ 8000460:	f000 f8c0 	bl	80005e4 <RCC_EnableClk>
+
+	/** Wait until the clk is ready */
+	while(RCC_GetClockReadyStatus(EN_PLL)==EN_CLK_NOT_READY);
+ 8000464:	bf00      	nop
+ 8000466:	2001      	movs	r0, #1
+ 8000468:	f7ff febe 	bl	80001e8 <RCC_GetClockReadyStatus>
+ 800046c:	4603      	mov	r3, r0
+ 800046e:	2b00      	cmp	r3, #0
+ 8000470:	d0f9      	beq.n	8000466 <RCC_PllConfigure+0x96>
+}
+ 8000472:	bf00      	nop
+ 8000474:	3708      	adds	r7, #8
+ 8000476:	46bd      	mov	sp, r7
+ 8000478:	bd80      	pop	{r7, pc}
+ 800047a:	bf00      	nop
+ 800047c:	40023800 	.word	0x40023800
+ 8000480:	20000050 	.word	0x20000050
+ 8000484:	40023804 	.word	0x40023804
+
+08000488 <RCC_CalculatePllI2SPrescaler>:
+
+
+#if(PLL_I2S_USED == STD_ON)
+
+void RCC_CalculatePllI2SPrescaler(Pll_Config_Type* config,Pll_PreScalerType* returnVal)
+{
+ 8000488:	b480      	push	{r7}
+ 800048a:	b087      	sub	sp, #28
+ 800048c:	af00      	add	r7, sp, #0
+ 800048e:	6078      	str	r0, [r7, #4]
+ 8000490:	6039      	str	r1, [r7, #0]
+	uint32_t u32_PllIpFreq = 0U;
+ 8000492:	2300      	movs	r3, #0
+ 8000494:	617b      	str	r3, [r7, #20]
+	uint32_t u32_PllOpFreq = 0U;
+ 8000496:	2300      	movs	r3, #0
+ 8000498:	613b      	str	r3, [r7, #16]
+	uint8_t  u8_PrescalerI2sN = 50U;
+ 800049a:	2332      	movs	r3, #50	; 0x32
+ 800049c:	73fb      	strb	r3, [r7, #15]
+	uint8_t  u8_PrescalerR = 2U;
+ 800049e:	2302      	movs	r3, #2
+ 80004a0:	73bb      	strb	r3, [r7, #14]
+
+	uint8_t u8_OperationCompleteFlag = FALSE;
+ 80004a2:	2300      	movs	r3, #0
+ 80004a4:	737b      	strb	r3, [r7, #13]
+
+	/** Get source for PLL clk */
+	if((((REG_READ32(RCC_PLLCFGR))&(0x00400000))>>22U)==(0U))
+ 80004a6:	4b29      	ldr	r3, [pc, #164]	; (800054c <RCC_CalculatePllI2SPrescaler+0xc4>)
+ 80004a8:	681b      	ldr	r3, [r3, #0]
+ 80004aa:	f403 0380 	and.w	r3, r3, #4194304	; 0x400000
+ 80004ae:	2b00      	cmp	r3, #0
+ 80004b0:	d105      	bne.n	80004be <RCC_CalculatePllI2SPrescaler+0x36>
+	{/** HSI Selected */
+		u32_PllIpFreq = (uint32_t)((16000000U));
+ 80004b2:	4b27      	ldr	r3, [pc, #156]	; (8000550 <RCC_CalculatePllI2SPrescaler+0xc8>)
+ 80004b4:	617b      	str	r3, [r7, #20]
+		u32_PllOpFreq = config->PllOutputFreq_PLLI2S;
+ 80004b6:	687b      	ldr	r3, [r7, #4]
+ 80004b8:	691b      	ldr	r3, [r3, #16]
+ 80004ba:	613b      	str	r3, [r7, #16]
+ 80004bc:	e009      	b.n	80004d2 <RCC_CalculatePllI2SPrescaler+0x4a>
+	}
+	else
+	{/** HSE Selected */
+		u32_PllIpFreq = ((config->PllInputFreq)/returnVal->PreScaler_M);
+ 80004be:	687b      	ldr	r3, [r7, #4]
+ 80004c0:	685b      	ldr	r3, [r3, #4]
+ 80004c2:	683a      	ldr	r2, [r7, #0]
+ 80004c4:	7812      	ldrb	r2, [r2, #0]
+ 80004c6:	fbb3 f3f2 	udiv	r3, r3, r2
+ 80004ca:	617b      	str	r3, [r7, #20]
+		u32_PllOpFreq = config->PllOutputFreq_PLLI2S;
+ 80004cc:	687b      	ldr	r3, [r7, #4]
+ 80004ce:	691b      	ldr	r3, [r3, #16]
+ 80004d0:	613b      	str	r3, [r7, #16]
+	}
+
+	for(u8_PrescalerI2sN = 50U; u8_PrescalerI2sN<=432; u8_PrescalerI2sN++)
+ 80004d2:	2332      	movs	r3, #50	; 0x32
+ 80004d4:	73fb      	strb	r3, [r7, #15]
+	{
+		u8_PrescalerR = 2U;
+ 80004d6:	2302      	movs	r3, #2
+ 80004d8:	73bb      	strb	r3, [r7, #14]
+		while( ((u32_PllIpFreq*u8_PrescalerI2sN)/(u8_PrescalerR*(returnVal->PreScaler_M))) > u32_PllOpFreq )
+ 80004da:	e002      	b.n	80004e2 <RCC_CalculatePllI2SPrescaler+0x5a>
+		{
+			u8_PrescalerR++;
+ 80004dc:	7bbb      	ldrb	r3, [r7, #14]
+ 80004de:	3301      	adds	r3, #1
+ 80004e0:	73bb      	strb	r3, [r7, #14]
+		while( ((u32_PllIpFreq*u8_PrescalerI2sN)/(u8_PrescalerR*(returnVal->PreScaler_M))) > u32_PllOpFreq )
+ 80004e2:	7bfb      	ldrb	r3, [r7, #15]
+ 80004e4:	697a      	ldr	r2, [r7, #20]
+ 80004e6:	fb02 f303 	mul.w	r3, r2, r3
+ 80004ea:	7bba      	ldrb	r2, [r7, #14]
+ 80004ec:	6839      	ldr	r1, [r7, #0]
+ 80004ee:	7809      	ldrb	r1, [r1, #0]
+ 80004f0:	fb01 f202 	mul.w	r2, r1, r2
+ 80004f4:	fbb3 f3f2 	udiv	r3, r3, r2
+ 80004f8:	693a      	ldr	r2, [r7, #16]
+ 80004fa:	429a      	cmp	r2, r3
+ 80004fc:	d3ee      	bcc.n	80004dc <RCC_CalculatePllI2SPrescaler+0x54>
+		}
+
+		if( ((u32_PllIpFreq*(u8_PrescalerI2sN))/(u8_PrescalerR*(returnVal->PreScaler_M))) == u32_PllOpFreq )
+ 80004fe:	7bfb      	ldrb	r3, [r7, #15]
+ 8000500:	697a      	ldr	r2, [r7, #20]
+ 8000502:	fb02 f303 	mul.w	r3, r2, r3
+ 8000506:	7bba      	ldrb	r2, [r7, #14]
+ 8000508:	6839      	ldr	r1, [r7, #0]
+ 800050a:	7809      	ldrb	r1, [r1, #0]
+ 800050c:	fb01 f202 	mul.w	r2, r1, r2
+ 8000510:	fbb3 f3f2 	udiv	r3, r3, r2
+ 8000514:	693a      	ldr	r2, [r7, #16]
+ 8000516:	429a      	cmp	r2, r3
+ 8000518:	d104      	bne.n	8000524 <RCC_CalculatePllI2SPrescaler+0x9c>
+		{
+			if(u8_PrescalerR<8U)
+ 800051a:	7bbb      	ldrb	r3, [r7, #14]
+ 800051c:	2b07      	cmp	r3, #7
+ 800051e:	d801      	bhi.n	8000524 <RCC_CalculatePllI2SPrescaler+0x9c>
+			{
+				u8_OperationCompleteFlag = TRUE;
+ 8000520:	2301      	movs	r3, #1
+ 8000522:	737b      	strb	r3, [r7, #13]
+			}
+		}
+
+		if(u8_OperationCompleteFlag == TRUE)
+ 8000524:	7b7b      	ldrb	r3, [r7, #13]
+ 8000526:	2b01      	cmp	r3, #1
+ 8000528:	d106      	bne.n	8000538 <RCC_CalculatePllI2SPrescaler+0xb0>
+		{
+			returnVal->PreScaler_I2SN = u8_PrescalerI2sN;
+ 800052a:	683b      	ldr	r3, [r7, #0]
+ 800052c:	7bfa      	ldrb	r2, [r7, #15]
+ 800052e:	711a      	strb	r2, [r3, #4]
+			returnVal->PreScaler_R = u8_PrescalerR;
+ 8000530:	683b      	ldr	r3, [r7, #0]
+ 8000532:	7bba      	ldrb	r2, [r7, #14]
+ 8000534:	715a      	strb	r2, [r3, #5]
+			break;
+ 8000536:	e003      	b.n	8000540 <RCC_CalculatePllI2SPrescaler+0xb8>
+	for(u8_PrescalerI2sN = 50U; u8_PrescalerI2sN<=432; u8_PrescalerI2sN++)
+ 8000538:	7bfb      	ldrb	r3, [r7, #15]
+ 800053a:	3301      	adds	r3, #1
+ 800053c:	73fb      	strb	r3, [r7, #15]
+		u8_PrescalerR = 2U;
+ 800053e:	e7ca      	b.n	80004d6 <RCC_CalculatePllI2SPrescaler+0x4e>
+	if(u8_OperationCompleteFlag == FALSE)
+	{
+		/** Error No valid prescaler found */
+	}
+
+}
+ 8000540:	bf00      	nop
+ 8000542:	371c      	adds	r7, #28
+ 8000544:	46bd      	mov	sp, r7
+ 8000546:	bc80      	pop	{r7}
+ 8000548:	4770      	bx	lr
+ 800054a:	bf00      	nop
+ 800054c:	40023804 	.word	0x40023804
+ 8000550:	00f42400 	.word	0x00f42400
+
+08000554 <RCC_PllI2SConfigure>:
+
+void RCC_PllI2SConfigure(Pll_Config_Type* config)
+{
+ 8000554:	b580      	push	{r7, lr}
+ 8000556:	b082      	sub	sp, #8
+ 8000558:	af00      	add	r7, sp, #0
+ 800055a:	6078      	str	r0, [r7, #4]
+	/** Disable PLLI2S */
+	REG_RMW32(RCC_CR,MASK_BIT(26U),CLEAR_BIT(26U));
+ 800055c:	4b1e      	ldr	r3, [pc, #120]	; (80005d8 <RCC_PllI2SConfigure+0x84>)
+ 800055e:	681b      	ldr	r3, [r3, #0]
+ 8000560:	4a1d      	ldr	r2, [pc, #116]	; (80005d8 <RCC_PllI2SConfigure+0x84>)
+ 8000562:	f023 6380 	bic.w	r3, r3, #67108864	; 0x4000000
+ 8000566:	6013      	str	r3, [r2, #0]
+
+	/** Select source for PLLI2S*/
+	RCC_SetClockSource(EN_PLL_I2S,config->PLLI2S_ClkSource);
+ 8000568:	687b      	ldr	r3, [r7, #4]
+ 800056a:	7d1b      	ldrb	r3, [r3, #20]
+ 800056c:	4619      	mov	r1, r3
+ 800056e:	2000      	movs	r0, #0
+ 8000570:	f000 f8b6 	bl	80006e0 <RCC_SetClockSource>
+
+	if((config->PLLI2S_ClkSource)==PLL_I2S_CLK)
+ 8000574:	687b      	ldr	r3, [r7, #4]
+ 8000576:	7d1b      	ldrb	r3, [r3, #20]
+ 8000578:	2b00      	cmp	r3, #0
+ 800057a:	d11f      	bne.n	80005bc <RCC_PllI2SConfigure+0x68>
+	{
+		RCC_CalculatePllI2SPrescaler(config,&PllPreScalerValues);
+ 800057c:	4917      	ldr	r1, [pc, #92]	; (80005dc <RCC_PllI2SConfigure+0x88>)
+ 800057e:	6878      	ldr	r0, [r7, #4]
+ 8000580:	f7ff ff82 	bl	8000488 <RCC_CalculatePllI2SPrescaler>
+
+		/** Write values to the register */
+		REG_RMW32(RCC_PLLI2SCFGR,0x00007FC0, (PllPreScalerValues.PreScaler_I2SN)<<6U );
+ 8000584:	4b16      	ldr	r3, [pc, #88]	; (80005e0 <RCC_PllI2SConfigure+0x8c>)
+ 8000586:	681b      	ldr	r3, [r3, #0]
+ 8000588:	f423 43ff 	bic.w	r3, r3, #32640	; 0x7f80
+ 800058c:	f023 0340 	bic.w	r3, r3, #64	; 0x40
+ 8000590:	4a12      	ldr	r2, [pc, #72]	; (80005dc <RCC_PllI2SConfigure+0x88>)
+ 8000592:	7912      	ldrb	r2, [r2, #4]
+ 8000594:	0192      	lsls	r2, r2, #6
+ 8000596:	4611      	mov	r1, r2
+ 8000598:	f647 72c0 	movw	r2, #32704	; 0x7fc0
+ 800059c:	400a      	ands	r2, r1
+ 800059e:	4910      	ldr	r1, [pc, #64]	; (80005e0 <RCC_PllI2SConfigure+0x8c>)
+ 80005a0:	4313      	orrs	r3, r2
+ 80005a2:	600b      	str	r3, [r1, #0]
+		REG_RMW32(RCC_PLLI2SCFGR,0x70000000, (PllPreScalerValues.PreScaler_R)<<28U );
+ 80005a4:	4b0e      	ldr	r3, [pc, #56]	; (80005e0 <RCC_PllI2SConfigure+0x8c>)
+ 80005a6:	681b      	ldr	r3, [r3, #0]
+ 80005a8:	f023 42e0 	bic.w	r2, r3, #1879048192	; 0x70000000
+ 80005ac:	4b0b      	ldr	r3, [pc, #44]	; (80005dc <RCC_PllI2SConfigure+0x88>)
+ 80005ae:	795b      	ldrb	r3, [r3, #5]
+ 80005b0:	071b      	lsls	r3, r3, #28
+ 80005b2:	f003 43e0 	and.w	r3, r3, #1879048192	; 0x70000000
+ 80005b6:	490a      	ldr	r1, [pc, #40]	; (80005e0 <RCC_PllI2SConfigure+0x8c>)
+ 80005b8:	4313      	orrs	r3, r2
+ 80005ba:	600b      	str	r3, [r1, #0]
+	}
+
+	/** Enable PLLI2S */
+	//REG_RMW32(RCC_CR,MASK_BIT(26U),SET_BIT(26U));
+	RCC_EnableClk(EN_PLL_I2S);
+ 80005bc:	2000      	movs	r0, #0
+ 80005be:	f000 f811 	bl	80005e4 <RCC_EnableClk>
+
+	/** Wait until the clk is ready */
+	while(RCC_GetClockReadyStatus(EN_PLL_I2S)==EN_CLK_NOT_READY);
+ 80005c2:	bf00      	nop
+ 80005c4:	2000      	movs	r0, #0
+ 80005c6:	f7ff fe0f 	bl	80001e8 <RCC_GetClockReadyStatus>
+ 80005ca:	4603      	mov	r3, r0
+ 80005cc:	2b00      	cmp	r3, #0
+ 80005ce:	d0f9      	beq.n	80005c4 <RCC_PllI2SConfigure+0x70>
+}
+ 80005d0:	bf00      	nop
+ 80005d2:	3708      	adds	r7, #8
+ 80005d4:	46bd      	mov	sp, r7
+ 80005d6:	bd80      	pop	{r7, pc}
+ 80005d8:	40023800 	.word	0x40023800
+ 80005dc:	20000050 	.word	0x20000050
+ 80005e0:	40023884 	.word	0x40023884
+
+080005e4 <RCC_EnableClk>:
+#endif /*#if(PLL_I2S_USED == STD_ON)*/
+
+void RCC_EnableClk(Clk_Types clk)
+{
+ 80005e4:	b480      	push	{r7}
+ 80005e6:	b083      	sub	sp, #12
+ 80005e8:	af00      	add	r7, sp, #0
+ 80005ea:	4603      	mov	r3, r0
+ 80005ec:	71fb      	strb	r3, [r7, #7]
+	switch(clk)
+ 80005ee:	79fb      	ldrb	r3, [r7, #7]
+ 80005f0:	2b05      	cmp	r3, #5
+ 80005f2:	d832      	bhi.n	800065a <RCC_EnableClk+0x76>
+ 80005f4:	a201      	add	r2, pc, #4	; (adr r2, 80005fc <RCC_EnableClk+0x18>)
+ 80005f6:	f852 f023 	ldr.w	pc, [r2, r3, lsl #2]
+ 80005fa:	bf00      	nop
+ 80005fc:	08000615 	.word	0x08000615
+ 8000600:	08000623 	.word	0x08000623
+ 8000604:	08000631 	.word	0x08000631
+ 8000608:	0800063f 	.word	0x0800063f
+ 800060c:	0800065b 	.word	0x0800065b
+ 8000610:	0800064d 	.word	0x0800064d
+	{
+		case EN_PLL_I2S:
+			REG_RMW32(RCC_CR,0x04000000,SET_BIT(26U));
+ 8000614:	4b14      	ldr	r3, [pc, #80]	; (8000668 <RCC_EnableClk+0x84>)
+ 8000616:	681b      	ldr	r3, [r3, #0]
+ 8000618:	4a13      	ldr	r2, [pc, #76]	; (8000668 <RCC_EnableClk+0x84>)
+ 800061a:	f043 6380 	orr.w	r3, r3, #67108864	; 0x4000000
+ 800061e:	6013      	str	r3, [r2, #0]
+			break;
+ 8000620:	e01c      	b.n	800065c <RCC_EnableClk+0x78>
+
+		case EN_PLL:
+			REG_RMW32(RCC_CR,0x01000000,SET_BIT(24U));
+ 8000622:	4b11      	ldr	r3, [pc, #68]	; (8000668 <RCC_EnableClk+0x84>)
+ 8000624:	681b      	ldr	r3, [r3, #0]
+ 8000626:	4a10      	ldr	r2, [pc, #64]	; (8000668 <RCC_EnableClk+0x84>)
+ 8000628:	f043 7380 	orr.w	r3, r3, #16777216	; 0x1000000
+ 800062c:	6013      	str	r3, [r2, #0]
+			break;
+ 800062e:	e015      	b.n	800065c <RCC_EnableClk+0x78>
+
+		case EN_HSE:
+			REG_RMW32(RCC_CR,0x00010000,SET_BIT(16U));
+ 8000630:	4b0d      	ldr	r3, [pc, #52]	; (8000668 <RCC_EnableClk+0x84>)
+ 8000632:	681b      	ldr	r3, [r3, #0]
+ 8000634:	4a0c      	ldr	r2, [pc, #48]	; (8000668 <RCC_EnableClk+0x84>)
+ 8000636:	f443 3380 	orr.w	r3, r3, #65536	; 0x10000
+ 800063a:	6013      	str	r3, [r2, #0]
+			break;
+ 800063c:	e00e      	b.n	800065c <RCC_EnableClk+0x78>
+
+		case EN_HSI:
+			REG_RMW32(RCC_CR,0x00000001,SET_BIT(0U));
+ 800063e:	4b0a      	ldr	r3, [pc, #40]	; (8000668 <RCC_EnableClk+0x84>)
+ 8000640:	681b      	ldr	r3, [r3, #0]
+ 8000642:	4a09      	ldr	r2, [pc, #36]	; (8000668 <RCC_EnableClk+0x84>)
+ 8000644:	f043 0301 	orr.w	r3, r3, #1
+ 8000648:	6013      	str	r3, [r2, #0]
+			break;
+ 800064a:	e007      	b.n	800065c <RCC_EnableClk+0x78>
+
+		case EN_LSI:
+			REG_RMW32(RCC_CSR,MASK_BIT(1U),SET_BIT(1U));
+ 800064c:	4b07      	ldr	r3, [pc, #28]	; (800066c <RCC_EnableClk+0x88>)
+ 800064e:	681b      	ldr	r3, [r3, #0]
+ 8000650:	4a06      	ldr	r2, [pc, #24]	; (800066c <RCC_EnableClk+0x88>)
+ 8000652:	f043 0302 	orr.w	r3, r3, #2
+ 8000656:	6013      	str	r3, [r2, #0]
+			break;
+ 8000658:	e000      	b.n	800065c <RCC_EnableClk+0x78>
+
+		default:
+			break;
+ 800065a:	bf00      	nop
+	}
+}
+ 800065c:	bf00      	nop
+ 800065e:	370c      	adds	r7, #12
+ 8000660:	46bd      	mov	sp, r7
+ 8000662:	bc80      	pop	{r7}
+ 8000664:	4770      	bx	lr
+ 8000666:	bf00      	nop
+ 8000668:	40023800 	.word	0x40023800
+ 800066c:	40023874 	.word	0x40023874
+
+08000670 <RCC_DisableClk>:
+
+void RCC_DisableClk(Clk_Types clk)
+{
+ 8000670:	b480      	push	{r7}
+ 8000672:	b083      	sub	sp, #12
+ 8000674:	af00      	add	r7, sp, #0
+ 8000676:	4603      	mov	r3, r0
+ 8000678:	71fb      	strb	r3, [r7, #7]
+	switch(clk)
+ 800067a:	79fb      	ldrb	r3, [r7, #7]
+ 800067c:	2b03      	cmp	r3, #3
+ 800067e:	d827      	bhi.n	80006d0 <RCC_DisableClk+0x60>
+ 8000680:	a201      	add	r2, pc, #4	; (adr r2, 8000688 <RCC_DisableClk+0x18>)
+ 8000682:	f852 f023 	ldr.w	pc, [r2, r3, lsl #2]
+ 8000686:	bf00      	nop
+ 8000688:	08000699 	.word	0x08000699
+ 800068c:	080006a7 	.word	0x080006a7
+ 8000690:	080006b5 	.word	0x080006b5
+ 8000694:	080006c3 	.word	0x080006c3
+	{
+		case EN_PLL_I2S:
+			REG_RMW32(RCC_CR,0x04000000,CLEAR_BIT(26U));
+ 8000698:	4b10      	ldr	r3, [pc, #64]	; (80006dc <RCC_DisableClk+0x6c>)
+ 800069a:	681b      	ldr	r3, [r3, #0]
+ 800069c:	4a0f      	ldr	r2, [pc, #60]	; (80006dc <RCC_DisableClk+0x6c>)
+ 800069e:	f023 6380 	bic.w	r3, r3, #67108864	; 0x4000000
+ 80006a2:	6013      	str	r3, [r2, #0]
+			break;
+ 80006a4:	e015      	b.n	80006d2 <RCC_DisableClk+0x62>
+
+		case EN_PLL:
+			REG_RMW32(RCC_CR,0x01000000,CLEAR_BIT(24U));
+ 80006a6:	4b0d      	ldr	r3, [pc, #52]	; (80006dc <RCC_DisableClk+0x6c>)
+ 80006a8:	681b      	ldr	r3, [r3, #0]
+ 80006aa:	4a0c      	ldr	r2, [pc, #48]	; (80006dc <RCC_DisableClk+0x6c>)
+ 80006ac:	f023 7380 	bic.w	r3, r3, #16777216	; 0x1000000
+ 80006b0:	6013      	str	r3, [r2, #0]
+			break;
+ 80006b2:	e00e      	b.n	80006d2 <RCC_DisableClk+0x62>
+
+		case EN_HSE:
+			REG_RMW32(RCC_CR,0x00010000,CLEAR_BIT(16U));
+ 80006b4:	4b09      	ldr	r3, [pc, #36]	; (80006dc <RCC_DisableClk+0x6c>)
+ 80006b6:	681b      	ldr	r3, [r3, #0]
+ 80006b8:	4a08      	ldr	r2, [pc, #32]	; (80006dc <RCC_DisableClk+0x6c>)
+ 80006ba:	f423 3380 	bic.w	r3, r3, #65536	; 0x10000
+ 80006be:	6013      	str	r3, [r2, #0]
+			break;
+ 80006c0:	e007      	b.n	80006d2 <RCC_DisableClk+0x62>
+
+		case EN_HSI:
+			REG_RMW32(RCC_CR,0x00000001,CLEAR_BIT(0U));
+ 80006c2:	4b06      	ldr	r3, [pc, #24]	; (80006dc <RCC_DisableClk+0x6c>)
+ 80006c4:	681b      	ldr	r3, [r3, #0]
+ 80006c6:	4a05      	ldr	r2, [pc, #20]	; (80006dc <RCC_DisableClk+0x6c>)
+ 80006c8:	f023 0301 	bic.w	r3, r3, #1
+ 80006cc:	6013      	str	r3, [r2, #0]
+			break;
+ 80006ce:	e000      	b.n	80006d2 <RCC_DisableClk+0x62>
+
+		default:
+			break;
+ 80006d0:	bf00      	nop
+	}
+}
+ 80006d2:	bf00      	nop
+ 80006d4:	370c      	adds	r7, #12
+ 80006d6:	46bd      	mov	sp, r7
+ 80006d8:	bc80      	pop	{r7}
+ 80006da:	4770      	bx	lr
+ 80006dc:	40023800 	.word	0x40023800
+
+080006e0 <RCC_SetClockSource>:
+			return;
+	}
+}
+
+void RCC_SetClockSource(Clk_Types clk, uint8_t source)
+{
+ 80006e0:	b480      	push	{r7}
+ 80006e2:	b083      	sub	sp, #12
+ 80006e4:	af00      	add	r7, sp, #0
+ 80006e6:	4603      	mov	r3, r0
+ 80006e8:	460a      	mov	r2, r1
+ 80006ea:	71fb      	strb	r3, [r7, #7]
+ 80006ec:	4613      	mov	r3, r2
+ 80006ee:	71bb      	strb	r3, [r7, #6]
+	switch(clk)
+ 80006f0:	79fb      	ldrb	r3, [r7, #7]
+ 80006f2:	2b06      	cmp	r3, #6
+ 80006f4:	d83f      	bhi.n	8000776 <RCC_SetClockSource+0x96>
+ 80006f6:	a201      	add	r2, pc, #4	; (adr r2, 80006fc <RCC_SetClockSource+0x1c>)
+ 80006f8:	f852 f023 	ldr.w	pc, [r2, r3, lsl #2]
+ 80006fc:	08000719 	.word	0x08000719
+ 8000700:	08000731 	.word	0x08000731
+ 8000704:	0800075f 	.word	0x0800075f
+ 8000708:	08000777 	.word	0x08000777
+ 800070c:	08000777 	.word	0x08000777
+ 8000710:	08000777 	.word	0x08000777
+ 8000714:	08000749 	.word	0x08000749
+		{
+			case EN_PLL_I2S:
+				REG_RMW32(RCC_CFGR,0x00800000, (source<<23U) );
+ 8000718:	4b19      	ldr	r3, [pc, #100]	; (8000780 <RCC_SetClockSource+0xa0>)
+ 800071a:	681b      	ldr	r3, [r3, #0]
+ 800071c:	f423 0200 	bic.w	r2, r3, #8388608	; 0x800000
+ 8000720:	79bb      	ldrb	r3, [r7, #6]
+ 8000722:	05db      	lsls	r3, r3, #23
+ 8000724:	f403 0300 	and.w	r3, r3, #8388608	; 0x800000
+ 8000728:	4915      	ldr	r1, [pc, #84]	; (8000780 <RCC_SetClockSource+0xa0>)
+ 800072a:	4313      	orrs	r3, r2
+ 800072c:	600b      	str	r3, [r1, #0]
+				break;
+ 800072e:	e023      	b.n	8000778 <RCC_SetClockSource+0x98>
+
+			case EN_PLL:
+				REG_RMW32(RCC_PLLCFGR,0x00400000,(source)<<22U);
+ 8000730:	4b14      	ldr	r3, [pc, #80]	; (8000784 <RCC_SetClockSource+0xa4>)
+ 8000732:	681b      	ldr	r3, [r3, #0]
+ 8000734:	f423 0280 	bic.w	r2, r3, #4194304	; 0x400000
+ 8000738:	79bb      	ldrb	r3, [r7, #6]
+ 800073a:	059b      	lsls	r3, r3, #22
+ 800073c:	f403 0380 	and.w	r3, r3, #4194304	; 0x400000
+ 8000740:	4910      	ldr	r1, [pc, #64]	; (8000784 <RCC_SetClockSource+0xa4>)
+ 8000742:	4313      	orrs	r3, r2
+ 8000744:	600b      	str	r3, [r1, #0]
+				break;
+ 8000746:	e017      	b.n	8000778 <RCC_SetClockSource+0x98>
+
+			case EN_SYS_CLK:
+				REG_RMW32(RCC_CFGR,0x00000003, (source<<0U) );
+ 8000748:	4b0d      	ldr	r3, [pc, #52]	; (8000780 <RCC_SetClockSource+0xa0>)
+ 800074a:	681b      	ldr	r3, [r3, #0]
+ 800074c:	f023 0203 	bic.w	r2, r3, #3
+ 8000750:	79bb      	ldrb	r3, [r7, #6]
+ 8000752:	f003 0303 	and.w	r3, r3, #3
+ 8000756:	490a      	ldr	r1, [pc, #40]	; (8000780 <RCC_SetClockSource+0xa0>)
+ 8000758:	4313      	orrs	r3, r2
+ 800075a:	600b      	str	r3, [r1, #0]
+				break;
+ 800075c:	e00c      	b.n	8000778 <RCC_SetClockSource+0x98>
+
+			case EN_HSE:
+				REG_RMW32(RCC_CR,MASK_BIT(18U),(source)<<18U);
+ 800075e:	4b0a      	ldr	r3, [pc, #40]	; (8000788 <RCC_SetClockSource+0xa8>)
+ 8000760:	681b      	ldr	r3, [r3, #0]
+ 8000762:	f423 2280 	bic.w	r2, r3, #262144	; 0x40000
+ 8000766:	79bb      	ldrb	r3, [r7, #6]
+ 8000768:	049b      	lsls	r3, r3, #18
+ 800076a:	f403 2380 	and.w	r3, r3, #262144	; 0x40000
+ 800076e:	4906      	ldr	r1, [pc, #24]	; (8000788 <RCC_SetClockSource+0xa8>)
+ 8000770:	4313      	orrs	r3, r2
+ 8000772:	600b      	str	r3, [r1, #0]
+				break;
+ 8000774:	e000      	b.n	8000778 <RCC_SetClockSource+0x98>
+
+			default:
+				return;
+ 8000776:	bf00      	nop
+		}
+}
+ 8000778:	370c      	adds	r7, #12
+ 800077a:	46bd      	mov	sp, r7
+ 800077c:	bc80      	pop	{r7}
+ 800077e:	4770      	bx	lr
+ 8000780:	40023808 	.word	0x40023808
+ 8000784:	40023804 	.word	0x40023804
+ 8000788:	40023800 	.word	0x40023800
+
+0800078c <main>:
+#include "RCC.h"
+
+extern RCC_GlobalConfigType RCC_Config0;
+
+int main(void)
+{
+ 800078c:	b580      	push	{r7, lr}
+ 800078e:	b082      	sub	sp, #8
+ 8000790:	af00      	add	r7, sp, #0
+//	RCC_CalculatePllPrescaler(RCC_Config0.PllConfig,&PllPreScalerValues);
+	RCC_PllConfigure(RCC_Config0.PllConfig);
+ 8000792:	4b0c      	ldr	r3, [pc, #48]	; (80007c4 <main+0x38>)
+ 8000794:	685b      	ldr	r3, [r3, #4]
+ 8000796:	4618      	mov	r0, r3
+ 8000798:	f7ff fe1a 	bl	80003d0 <RCC_PllConfigure>
+	RCC_PllI2SConfigure(RCC_Config0.PllConfig);
+ 800079c:	4b09      	ldr	r3, [pc, #36]	; (80007c4 <main+0x38>)
+ 800079e:	685b      	ldr	r3, [r3, #4]
+ 80007a0:	4618      	mov	r0, r3
+ 80007a2:	f7ff fed7 	bl	8000554 <RCC_PllI2SConfigure>
+
+	Clk_Status_Type status = 0U;
+ 80007a6:	2300      	movs	r3, #0
+ 80007a8:	71fb      	strb	r3, [r7, #7]
+	status = RCC_GetClockReadyStatus(EN_PLL_I2S);
+ 80007aa:	2000      	movs	r0, #0
+ 80007ac:	f7ff fd1c 	bl	80001e8 <RCC_GetClockReadyStatus>
+ 80007b0:	4603      	mov	r3, r0
+ 80007b2:	71fb      	strb	r3, [r7, #7]
+	if(status==EN_CLK_READY)
+ 80007b4:	79fb      	ldrb	r3, [r7, #7]
+ 80007b6:	2b01      	cmp	r3, #1
+ 80007b8:	d103      	bne.n	80007c2 <main+0x36>
+	{
+		RCC_DisableClk(EN_PLL_I2S);
+ 80007ba:	2000      	movs	r0, #0
+ 80007bc:	f7ff ff58 	bl	8000670 <RCC_DisableClk>
+		while(1);
+ 80007c0:	e7fe      	b.n	80007c0 <main+0x34>
+	}
+
+	//RCC_HsiSetTrimValue((RCC_Config0.HsiConfig));
+	for(;;);
+ 80007c2:	e7fe      	b.n	80007c2 <main+0x36>
+ 80007c4:	20000028 	.word	0x20000028
+
+080007c8 <Reset_Handler>:
+
+  .section .text.Reset_Handler
+  .weak Reset_Handler
+  .type Reset_Handler, %function
+Reset_Handler:
+  ldr   r0, =_estack
+ 80007c8:	480d      	ldr	r0, [pc, #52]	; (8000800 <LoopForever+0x2>)
+  mov   sp, r0          /* set stack pointer */
+ 80007ca:	4685      	mov	sp, r0
+
+/* Copy the data segment initializers from flash to SRAM */
+  ldr r0, =_sdata
+ 80007cc:	480d      	ldr	r0, [pc, #52]	; (8000804 <LoopForever+0x6>)
+  ldr r1, =_edata
+ 80007ce:	490e      	ldr	r1, [pc, #56]	; (8000808 <LoopForever+0xa>)
+  ldr r2, =_sidata
+ 80007d0:	4a0e      	ldr	r2, [pc, #56]	; (800080c <LoopForever+0xe>)
+  movs r3, #0
+ 80007d2:	2300      	movs	r3, #0
+  b LoopCopyDataInit
+ 80007d4:	e002      	b.n	80007dc <LoopCopyDataInit>
+
+080007d6 <CopyDataInit>:
+
+CopyDataInit:
+  ldr r4, [r2, r3]
+ 80007d6:	58d4      	ldr	r4, [r2, r3]
+  str r4, [r0, r3]
+ 80007d8:	50c4      	str	r4, [r0, r3]
+  adds r3, r3, #4
+ 80007da:	3304      	adds	r3, #4
+
+080007dc <LoopCopyDataInit>:
+
+LoopCopyDataInit:
+  adds r4, r0, r3
+ 80007dc:	18c4      	adds	r4, r0, r3
+  cmp r4, r1
+ 80007de:	428c      	cmp	r4, r1
+  bcc CopyDataInit
+ 80007e0:	d3f9      	bcc.n	80007d6 <CopyDataInit>
+
+/* Zero fill the bss segment. */
+  ldr r2, =_sbss
+ 80007e2:	4a0b      	ldr	r2, [pc, #44]	; (8000810 <LoopForever+0x12>)
+  ldr r4, =_ebss
+ 80007e4:	4c0b      	ldr	r4, [pc, #44]	; (8000814 <LoopForever+0x16>)
+  movs r3, #0
+ 80007e6:	2300      	movs	r3, #0
+  b LoopFillZerobss
+ 80007e8:	e001      	b.n	80007ee <LoopFillZerobss>
+
+080007ea <FillZerobss>:
+
+FillZerobss:
+  str  r3, [r2]
+ 80007ea:	6013      	str	r3, [r2, #0]
+  adds r2, r2, #4
+ 80007ec:	3204      	adds	r2, #4
+
+080007ee <LoopFillZerobss>:
+
+LoopFillZerobss:
+  cmp r2, r4
+ 80007ee:	42a2      	cmp	r2, r4
+  bcc FillZerobss
+ 80007f0:	d3fb      	bcc.n	80007ea <FillZerobss>
+
+/* Call the clock system intitialization function.*/
+  bl  SystemInit
+ 80007f2:	f3af 8000 	nop.w
+/* Call static constructors */
+  bl __libc_init_array
+ 80007f6:	f000 f811 	bl	800081c <__libc_init_array>
+/* Call the application's entry point.*/
+  bl main
+ 80007fa:	f7ff ffc7 	bl	800078c <main>
+
+080007fe <LoopForever>:
+
+LoopForever:
+    b LoopForever
+ 80007fe:	e7fe      	b.n	80007fe <LoopForever>
+  ldr   r0, =_estack
+ 8000800:	20020000 	.word	0x20020000
+  ldr r0, =_sdata
+ 8000804:	20000000 	.word	0x20000000
+  ldr r1, =_edata
+ 8000808:	20000034 	.word	0x20000034
+  ldr r2, =_sidata
+ 800080c:	08000884 	.word	0x08000884
+  ldr r2, =_sbss
+ 8000810:	20000034 	.word	0x20000034
+  ldr r4, =_ebss
+ 8000814:	20000058 	.word	0x20000058
+
+08000818 <ADC_IRQHandler>:
+ * @retval : None
+*/
+  .section .text.Default_Handler,"ax",%progbits
+Default_Handler:
+Infinite_Loop:
+  b Infinite_Loop
+ 8000818:	e7fe      	b.n	8000818 <ADC_IRQHandler>
+	...
+
+0800081c <__libc_init_array>:
+ 800081c:	b570      	push	{r4, r5, r6, lr}
+ 800081e:	4e0d      	ldr	r6, [pc, #52]	; (8000854 <__libc_init_array+0x38>)
+ 8000820:	4c0d      	ldr	r4, [pc, #52]	; (8000858 <__libc_init_array+0x3c>)
+ 8000822:	1ba4      	subs	r4, r4, r6
+ 8000824:	10a4      	asrs	r4, r4, #2
+ 8000826:	2500      	movs	r5, #0
+ 8000828:	42a5      	cmp	r5, r4
+ 800082a:	d109      	bne.n	8000840 <__libc_init_array+0x24>
+ 800082c:	4e0b      	ldr	r6, [pc, #44]	; (800085c <__libc_init_array+0x40>)
+ 800082e:	4c0c      	ldr	r4, [pc, #48]	; (8000860 <__libc_init_array+0x44>)
+ 8000830:	f000 f818 	bl	8000864 <_init>
+ 8000834:	1ba4      	subs	r4, r4, r6
+ 8000836:	10a4      	asrs	r4, r4, #2
+ 8000838:	2500      	movs	r5, #0
+ 800083a:	42a5      	cmp	r5, r4
+ 800083c:	d105      	bne.n	800084a <__libc_init_array+0x2e>
+ 800083e:	bd70      	pop	{r4, r5, r6, pc}
+ 8000840:	f856 3025 	ldr.w	r3, [r6, r5, lsl #2]
+ 8000844:	4798      	blx	r3
+ 8000846:	3501      	adds	r5, #1
+ 8000848:	e7ee      	b.n	8000828 <__libc_init_array+0xc>
+ 800084a:	f856 3025 	ldr.w	r3, [r6, r5, lsl #2]
+ 800084e:	4798      	blx	r3
+ 8000850:	3501      	adds	r5, #1
+ 8000852:	e7f2      	b.n	800083a <__libc_init_array+0x1e>
+ 8000854:	0800087c 	.word	0x0800087c
+ 8000858:	0800087c 	.word	0x0800087c
+ 800085c:	0800087c 	.word	0x0800087c
+ 8000860:	08000880 	.word	0x08000880
+
+08000864 <_init>:
+ 8000864:	b5f8      	push	{r3, r4, r5, r6, r7, lr}
+ 8000866:	bf00      	nop
+ 8000868:	bcf8      	pop	{r3, r4, r5, r6, r7}
+ 800086a:	bc08      	pop	{r3}
+ 800086c:	469e      	mov	lr, r3
+ 800086e:	4770      	bx	lr
+
+08000870 <_fini>:
+ 8000870:	b5f8      	push	{r3, r4, r5, r6, r7, lr}
+ 8000872:	bf00      	nop
+ 8000874:	bcf8      	pop	{r3, r4, r5, r6, r7}
+ 8000876:	bc08      	pop	{r3}
+ 8000878:	469e      	mov	lr, r3
+ 800087a:	4770      	bx	lr

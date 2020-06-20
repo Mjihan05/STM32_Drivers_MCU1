@@ -26,8 +26,8 @@
 #define MASK_BIT(x) (SET<<x)
 
 #define REG_READ32(regAddress) (uint32_t)(*regAddress)
-#define REG_WRITE32(regAddress,value) (uint32_t)(*regAddress) = value
-#define REG_RMW32(regAddress,mask,value) (((uint32_t)(*regAddress)&(~mask))|(value&mask))
+#define REG_WRITE32(regAddress,value) ((uint32_t)(*regAddress = value) )
+#define REG_RMW32(regAddress,mask,value) REG_WRITE32(regAddress,( ( ((uint32_t)(*regAddress)) &(~mask) )|(value&mask)))
 
 typedef uint8_t Bool;
 

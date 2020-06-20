@@ -11,6 +11,8 @@
 #ifndef RCC_H
 #define RCC_H
 
+#include "RCC_PbCfg.h"
+
 typedef enum
 {
 	EN_PLL_I2S =0U,
@@ -145,6 +147,26 @@ typedef struct
 
 
 extern Pll_PreScalerType PllPreScalerValues;
+
+/** Function Prototypes */
+Clk_Status_Type RCC_GetClockReadyStatus(Clk_Types En_clockType);
+void RCC_EnableClk(Clk_Types clk);
+void RCC_DisableClk(Clk_Types clk);
+void RCC_SetClockSource(Clk_Types clk, uint8_t source);
+
+#ifdef HSE_CLOCK_USED
+void RCC_HseConfigure(Hse_Config_Type* config);
+#endif /*#ifdef HSE_CLOCK_USED*/
+
+void RCC_HsiConfigure(Hsi_Config_Type* config);
+void RCC_HsiSetTrimValue(Hsi_Config_Type* config);
+uint8_t RCC_HsiGetCalibValue(void);
+
+#ifdef PLL_CLOCK_USED
+void RCC_PllConfigure(Pll_Config_Type* config);
+void RCC_PllI2SConfigure(Pll_Config_Type* config);
+#endif
+
 
 #endif /*#ifndef RCC_H*/
 

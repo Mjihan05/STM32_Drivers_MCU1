@@ -7,14 +7,17 @@
  * 			 settings for the RCC modules
  *
  * ********************************************/
+#ifndef RCC_PBCFG_H
+#define RCC_PBCFG_H
 
+#define PLL_CLOCK_USED
 
-#ifdef(HSE_CLOCK_USED)
-	#define HSE_CLK_SECURITY STD_OFF
+#ifdef HSE_CLOCK_USED
+	#define HSE_CLK_SECURITY STD_ON
 #endif
 
-#ifdef(PLL_CLOCK_USED)
-#define PLL_I2S_USED STD_OFF
+#ifdef PLL_CLOCK_USED
+#define PLL_I2S_USED STD_ON
 #endif
 
 
@@ -23,6 +26,9 @@
 
 #define LSE_OSCILLATOR   (0x0U)
 #define LSE_EXTERNAL_CLK (0x1U)
+
+#define PLL_SRC_HSI      (0x0U)
+#define PLL_SRC_HSE      (0x1U)
 
 #define PLL_I2S_CLK      (0x0U)
 #define PLL_I2S_EXTERNAL_CLK (0x1U)
@@ -45,7 +51,7 @@ typedef enum
 	EN_SYS_CLK_DIVIDED_BY_512,
 } Bus_PreScalers ;
 
-#ifdef(HSE_CLOCK_USED)
+#ifdef HSE_CLOCK_USED
 typedef struct
 {
 	uint8_t HseClockType;
@@ -60,7 +66,7 @@ typedef struct
 }Hsi_Config_Type;
 //#endif
 
-#ifdef(PLL_CLOCK_USED)
+#ifdef PLL_CLOCK_USED
 typedef struct
 {
 	uint8_t PllClkSource;
@@ -74,7 +80,7 @@ typedef struct
 }Pll_Config_Type;
 #endif
 
-#ifdef(RTC_USED)
+#ifdef RTC_USED
 typedef struct
 {
 //#ifdef(HSE_CLOCK_USED)
@@ -92,19 +98,19 @@ typedef struct
 
 typedef struct
 {
-#ifdef(HSE_CLOCK_USED)
-	Hse_Config_Type HseConfig;
+#ifdef HSE_CLOCK_USED
+	Hse_Config_Type* HseConfig;
 #endif
 //#ifdef(HSI_CLOCK_USED)
-	Hsi_Config_Type HsiConfig;
+	Hsi_Config_Type* HsiConfig;
 //#endif
-#ifdef(PLL_CLOCK_USED)
-	Pll_Config_Type PllConfig;
+#ifdef PLL_CLOCK_USED
+	Pll_Config_Type* PllConfig;
 #endif
-#ifdef(RTC_USED)
-	Rtc_Config_Type RtcConfig;
+#ifdef RTC_USED
+	Rtc_Config_Type* RtcConfig;
 #endif
-	Bus_Config_Type BusConfig;
+	Bus_Config_Type* BusConfig;
 }RCC_GlobalConfigType;
 
-
+#endif /** #ifndef RCC_PBCFG_H */
