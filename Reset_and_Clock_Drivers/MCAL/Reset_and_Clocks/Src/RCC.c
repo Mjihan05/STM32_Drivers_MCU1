@@ -17,9 +17,31 @@
 
 Pll_PreScalerType PllPreScalerValues;
 
-void RCC_ClockInit(void)
+void RCC_Init(RCC_GlobalConfigType* Config )
 {
+#ifdef HSE_CLOCK_USED
+	RCC_HseConfigure(Config->HseConfig);
+#else
+	RCC_HsiConfigure(Config->HsiConfig);
+#endif
 
+#ifdef PLL_CLOCK_USED
+	RCC_PllConfigure(Config->PllConfig);
+#if(PLL_I2S_USED == STD_ON)
+	RCC_PllI2SConfigure(Config->PllConfig);
+#endif
+#endif
+
+#ifdef RTC_CLOCK_USED
+/*NOT TESTED*/
+	void RCC_RtcConfig(Config->RtcConfig);
+#endif
+
+	/** Bus Config */
+	RCC_BusConfig(Config->BusConfig);
+
+	/** Set System Clock Source */
+	RCC_SetClockSource(EN_SYS_CLK, SYS_CLK_SOURCE);
 }
 
 Clk_Status_Type RCC_GetClockReadyStatus(Clk_Types En_clockType)
@@ -445,7 +467,7 @@ void RCC_SetClockSource(Clk_Types clk, uint8_t source)
 				break;
 
 			case EN_SYS_CLK:
-				REG_RMW32(RCC_CFGR,0x00000003, (source<<0U) );
+				REG_RMW32(RCC_CFGR,0x00000003, (source) );
 				break;
 
 			case EN_HSE:
@@ -458,6 +480,7 @@ void RCC_SetClockSource(Clk_Types clk, uint8_t source)
 }
 
 #ifdef RTC_CLOCK_USED
+/*NOT TESTED*/
 void RCC_RtcConfig(Rtc_Config_Type* config)
 {
 	if( ((config->RtcClkSource)== LSE_OSCILLATOR) || ((config->RtcClkSource)== LSE_EXTERNAL_CLK))
@@ -738,13 +761,13 @@ void RCC_ResetBackupDomain(void)
 Reset_Status_Type RCC_GetResetStatus(void)
 {
 	uint8_t u8_returnValue=0U;
-	uint8_t u8_flag = (uint8_t)(REG_READ32(RCC_CSR)&0xFE000000);
-	while(u8_flag!=0U)
+	uint32_t u32_flag = (uint32_t)(REG_READ32(RCC_CSR)&0xFE000000);
+	while(u32_flag!=0U)
 	{
 		u8_returnValue++;
-		u8_flag = u8_flag>>1U;
+		u32_flag = u32_flag>>1U;
 	}
-	REG_RMW32(RCC_CSR,MASK_BIT(16U) ,SET_BIT(16U) );
+	REG_RMW32(RCC_CSR,MASK_BIT(24U) ,SET_BIT(24U) );
 	return (Reset_Status_Type)(u8_returnValue);
 }
 

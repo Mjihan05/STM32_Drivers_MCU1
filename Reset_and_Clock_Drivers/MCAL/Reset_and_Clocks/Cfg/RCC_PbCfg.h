@@ -20,6 +20,8 @@
 #define PLL_I2S_USED STD_ON
 #endif
 
+#define SYS_CLK_SOURCE (0x2U)/*PLL*/
+
 
 #define HSE_OSCILLATOR   (0x0U)
 #define HSE_EXTERNAL_CLK (0x1U)

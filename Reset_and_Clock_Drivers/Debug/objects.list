@@ -1,6 +1,0 @@
-"MCAL/Reset_and_Clocks/Cfg/RCC_PbCfg.o"
-"MCAL/Reset_and_Clocks/Src/RCC.o"
-"Src/main.o"
-"Src/syscalls.o"
-"Src/sysmem.o"
-"Startup/startup_stm32f407vgtx.o"

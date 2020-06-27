@@ -31,7 +31,7 @@ Pll_Config_Type PllConfig0 =
 {
 	.PllClkSource = (PLL_SRC_HSI),
 	.PllInputFreq =          (16000000U),
-	.PllOutputFreq_SYSCLK =  (168000000U),
+	.PllOutputFreq_SYSCLK =  (144000000U),
 	.PllOutputFreq_PLL48CK = (48000000U),
 #if(PLL_I2S_USED == STD_ON)
 	.PllOutputFreq_PLLI2S =  (96000000U),
@@ -49,9 +49,9 @@ Rtc_Config_Type RtcConfig0 =
 
 Bus_Config_Type BusConfig0 =
 {
-	.APB1_PreScaler = (EN_AHB_CLK_DIVIDED_BY_2),
-	.APB2_PreScaler = (EN_AHB_CLK_NOT_DIVIDED),
-	.AHB_PreScaler = (EN_SYS_CLK_NOT_DIVIDED)
+	.APB1_PreScaler = (EN_AHB_CLK_DIVIDED_BY_4),
+	.APB2_PreScaler = (EN_AHB_CLK_DIVIDED_BY_2),
+	.AHB_PreScaler = (EN_SYS_CLK_DIVIDED_BY_2)
 };
 
 RCC_GlobalConfigType RCC_Config0 =

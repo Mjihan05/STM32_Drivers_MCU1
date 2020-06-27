@@ -149,10 +149,21 @@ typedef struct
 extern Pll_PreScalerType PllPreScalerValues;
 
 /** Function Prototypes */
+void RCC_Init(RCC_GlobalConfigType* Config );
 Clk_Status_Type RCC_GetClockReadyStatus(Clk_Types En_clockType);
 void RCC_EnableClk(Clk_Types clk);
 void RCC_DisableClk(Clk_Types clk);
 void RCC_SetClockSource(Clk_Types clk, uint8_t source);
+Clk_Types RCC_GetSystemClkSource();
+void RCC_Mco1Config(Clk_Types clk, uint8_t preScaler);
+void RCC_Mco2Config(Clk_Types clk, uint8_t preScaler);
+void RCC_BusConfig(Bus_Config_Type* config);
+void RCC_ResetBackupDomain(void);
+Reset_Status_Type RCC_GetResetStatus(void);
+
+void RCC_EnableIntFlag(Rcc_Int_Type IntFlag);
+Rcc_Int_Type RCC_ReadIntFlag(void);
+void RCC_ClearIntFlag(Rcc_Int_Type IntFlag);
 
 #ifdef HSE_CLOCK_USED
 void RCC_HseConfigure(Hse_Config_Type* config);
@@ -166,6 +177,32 @@ uint8_t RCC_HsiGetCalibValue(void);
 void RCC_PllConfigure(Pll_Config_Type* config);
 void RCC_PllI2SConfigure(Pll_Config_Type* config);
 #endif
+
+void RCC_AHB1PeripheralClkEnable(Rcc_AHB1_Peripherals peripheral);
+void RCC_AHB2PeripheralClkEnable(Rcc_AHB2_Peripherals peripheral);
+void RCC_AHB3PeripheralClkEnable(Rcc_AHB3_Peripherals peripheral);
+void RCC_APB1PeripheralClkEnable(Rcc_APB1_Peripherals peripheral);
+void RCC_APB2PeripheralClkEnable(Rcc_APB2_Peripherals peripheral);
+void RCC_AHB1EnablePerSleepMode(Rcc_AHB1_Peripherals peripheral);
+void RCC_AHB2EnablePerSleepMode(Rcc_AHB2_Peripherals peripheral);
+void RCC_AHB3EnablePerSleepMode(Rcc_AHB3_Peripherals peripheral);
+void RCC_APB1EnablePerSleepMode(Rcc_APB1_Peripherals peripheral);
+void RCC_APB2EnablePerSleepMode(Rcc_APB2_Peripherals peripheral);
+void RCC_AHB1PeripheralClkDisable(Rcc_AHB1_Peripherals peripheral);
+void RCC_AHB2PeripheralClkDisable(Rcc_AHB2_Peripherals peripheral);
+void RCC_AHB3PeripheralClkDisable(Rcc_AHB3_Peripherals peripheral);
+void RCC_APB1PeripheralClkDisable(Rcc_APB1_Peripherals peripheral);
+void RCC_APB2PeripheralClkDisable(Rcc_APB2_Peripherals peripheral);
+void RCC_AHB1DisablePerSleepMode(Rcc_AHB1_Peripherals peripheral);
+void RCC_AHB2DisablePerSleepMode(Rcc_AHB2_Peripherals peripheral);
+void RCC_AHB3DisablePerSleepMode(Rcc_AHB3_Peripherals peripheral);
+void RCC_APB1DisablePerSleepMode(Rcc_APB1_Peripherals peripheral);
+void RCC_APB2DisablePerSleepMode(Rcc_APB2_Peripherals peripheral);
+void RCC_ResetAHB1Peripheral(Rcc_AHB1_Peripherals peripheral);
+void RCC_ResetAHB2Peripheral(Rcc_AHB2_Peripherals peripheral);
+void RCC_ResetAHB3Peripheral(Rcc_AHB3_Peripherals peripheral);
+void RCC_ResetAPB1Peripheral(Rcc_APB1_Peripherals peripheral);
+void RCC_ResetAPB2Peripheral(Rcc_APB2_Peripherals peripheral);
 
 
 #endif /*#ifndef RCC_H*/

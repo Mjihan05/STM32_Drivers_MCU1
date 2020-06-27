@@ -7,6 +7,18 @@
   ******************************************************************************
 */
 
+/** PROGRAM TO VIEW PLL AND SYSCLOCK ON THE MCO OUTPUT PIN */
+/** THIS PROGRAM CAN BE USED TO TEST THE FUNCTIONALITY OF THE RCC DRIVER */
+/*
+ * 	Issues-
+ * 	1. crash when sys clock in enabled - SOLVED - bus needs to be configured before enabling sysclk
+ * 	2. RTC Clock functionality not tested
+ * 	3. need to interface Mco config with port for controlling the pin
+ * 	4. Spread spectrum generation not implemented
+ * 	5. the pll clock calculator needs error handling mechanism if invalid clock frequencies are given in config file
+ * 	6. if HSI trim value can be adjusted during runtime then modify the HSI trim function to update the structure
+ */
+
 #if !defined(__SOFT_FP__) && defined(__ARM_FP)
   #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
 #endif
@@ -16,20 +28,60 @@
 
 extern RCC_GlobalConfigType RCC_Config0;
 
-int main(void)
+void perconfig(void)
 {
+	RCC_AHB1PeripheralClkEnable(EN_GPIOI);
+	RCC_AHB2PeripheralClkEnable(EN_OTGFS);
+	RCC_AHB3PeripheralClkEnable(EN_FSMC);
+	RCC_APB1PeripheralClkEnable(EN_TIM2);
+	RCC_APB2PeripheralClkEnable(EN_TIM1);
+	RCC_AHB1EnablePerSleepMode(EN_GPIOI);
+	RCC_AHB2EnablePerSleepMode(EN_CRYP);
+	RCC_AHB3EnablePerSleepMode(EN_FSMC);
+	RCC_APB1EnablePerSleepMode(EN_TIM2);
+	RCC_APB2EnablePerSleepMode(EN_TIM1);
+	RCC_AHB1PeripheralClkDisable(EN_GPIOI);
+	RCC_AHB2PeripheralClkDisable(EN_OTGFS);
+	RCC_AHB3PeripheralClkDisable(EN_FSMC);
+	RCC_APB1PeripheralClkDisable(EN_TIM2);
+	RCC_APB2PeripheralClkDisable(EN_TIM1);
+	RCC_AHB1DisablePerSleepMode(EN_GPIOI);
+	RCC_AHB2DisablePerSleepMode(EN_CRYP);
+	RCC_AHB3DisablePerSleepMode(EN_FSMC);
+	RCC_APB1DisablePerSleepMode(EN_TIM2);
+	RCC_APB2DisablePerSleepMode(EN_TIM1);
+	RCC_ResetAHB1Peripheral(EN_GPIOI);
+	RCC_ResetAHB2Peripheral(EN_OTGFS);
+	RCC_ResetAHB3Peripheral(EN_FSMC);
+	RCC_ResetAPB1Peripheral(EN_TIM2);
+	RCC_ResetAPB2Peripheral(EN_TIM1);
+}
+
+int main(void)
+{/** SAMPLE PROGRAM TO VIEW PLL AND SYSCLOCK ON THE MCO OUTPUT PIN */
 //	RCC_CalculatePllPrescaler(RCC_Config0.PllConfig,&PllPreScalerValues);
-	RCC_PllConfigure(RCC_Config0.PllConfig);
-	RCC_PllI2SConfigure(RCC_Config0.PllConfig);
+
+	RCC_Mco1Config(EN_PLL,2U);
+	//RCC_PllConfigure(RCC_Config0.PllConfig);
+	RCC_EnableIntFlag(EN_PLL_I2S_READY);
+	//RCC_PllI2SConfigure(RCC_Config0.PllConfig);
+
+	RCC_Mco2Config(EN_SYS_CLK, 2U);
+	//RCC_BusConfig(RCC_Config0.BusConfig);
+	//RCC_SetClockSource(EN_SYS_CLK, 2U);
+	RCC_Init(&RCC_Config0 );
 
 	Clk_Status_Type status = 0U;
-	status = RCC_GetClockReadyStatus(EN_PLL_I2S);
+	status = RCC_GetClockReadyStatus(EN_PLL);
 	if(status==EN_CLK_READY)
 	{
-		RCC_DisableClk(EN_PLL_I2S);
+
+		Rcc_Int_Type intStatus = 0U;
+		intStatus = RCC_ReadIntFlag();
+		RCC_ClearIntFlag(EN_PLL_I2S_READY);
+		//perconfig();
+		//RCC_ResetBackupDomain();
+		//Reset_Status_Type resetStatus = RCC_GetResetStatus();
 		while(1);
 	}
-
-	//RCC_HsiSetTrimValue((RCC_Config0.HsiConfig));
-	for(;;);
 }
