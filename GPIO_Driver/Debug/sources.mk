@@ -17,6 +17,8 @@ OBJCOPY_BIN :=
 
 # Every subdirectory with source files must be described here
 SUBDIRS := \
+MCAL/GPIO/Cfg \
+MCAL/GPIO/Src \
 MCAL/RCC/Cfg \
 MCAL/RCC/Src \
 Src \
