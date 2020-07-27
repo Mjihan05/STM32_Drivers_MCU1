@@ -12,6 +12,9 @@
 #ifndef REG_MACROS_H
 #define REG_MACROS_H
 
+#define GLOBAL
+#define NULL_PTR ((void*)0)
+
 #define TRUE (0x1U)
 #define FALSE (0x0U)
 
@@ -30,5 +33,12 @@
 #define REG_RMW32(regAddress,mask,value) REG_WRITE32(regAddress,( ( ((uint32_t)(*regAddress)) &(~mask) )|(value&mask)))
 
 typedef uint8_t Bool;
+
+typedef enum  /* Different port Output Type modes */
+{
+	MODULE_UNINITIALIZED,
+	MODULE_INITIALIZED,
+	MODULE_INIT_FAILED
+}InitStatusType;
 
 #endif /* #ifndef REG_MACROS_H */

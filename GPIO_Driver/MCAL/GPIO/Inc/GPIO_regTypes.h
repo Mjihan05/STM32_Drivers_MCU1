@@ -17,8 +17,8 @@
 #define GPIO_G_BASE_ADDRESS      (0x40021800U)
 #define GPIO_H_BASE_ADDRESS      (0x40021C00U)
 #define GPIO_I_BASE_ADDRESS      (0x40022000U)
-#define GPIO_J_BASE_ADDRESS      (0x40022400U)
-#define GPIO_K_BASE_ADDRESS      (0x40022800U)
+//#define GPIO_J_BASE_ADDRESS      (0x40022400U)
+//#define GPIO_K_BASE_ADDRESS      (0x40022800U)
 
 typedef union GPIO_Mode_Tag
 {
@@ -279,8 +279,7 @@ typedef struct
 #define GPIO_G 			(*(volatile GPIO_RegTypes*)(GPIO_G_BASE_ADDRESS))
 #define GPIO_H 			(*(volatile GPIO_RegTypes*)(GPIO_H_BASE_ADDRESS))
 #define GPIO_I 			(*(volatile GPIO_RegTypes*)(GPIO_I_BASE_ADDRESS))
-#define GPIO_J 			(*(volatile GPIO_RegTypes*)(GPIO_J_BASE_ADDRESS))
-#define GPIO_K 			(*(volatile GPIO_RegTypes*)(GPIO_K_BASE_ADDRESS))
-
+//#define GPIO_J 			(*(volatile GPIO_RegTypes*)(GPIO_J_BASE_ADDRESS))
+//#define GPIO_K 			(*(volatile GPIO_RegTypes*)(GPIO_K_BASE_ADDRESS))
 
 #endif /* GPIO_INC_GPIO_REGTYPES_H_ */

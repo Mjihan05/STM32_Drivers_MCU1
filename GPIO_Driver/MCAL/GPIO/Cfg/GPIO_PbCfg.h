@@ -10,8 +10,10 @@
 #ifndef GPIO_CFG_GPIO_PBCFG_H_
 #define GPIO_CFG_GPIO_PBCFG_H_
 
-#define TOTAL_NO_OF_PORTS	(11U)
+#define TOTAL_NO_OF_PORTS	(9U)
 #define TOTAL_NO_OF_PINS	(TOTAL_NO_OF_PORTS*16U)
+
+#define PIN_UNUSED	(0xFFU)
 
 typedef enum  /* Autosar 4.4.0 -  SWS_Port_00229 */
 {
@@ -214,15 +216,39 @@ typedef enum  /* Autosar 4.4.0 -  SWS_Port_00230 - Different port pin modes */
 	/** TODO */
 }Port_PinModeType;
 
+typedef enum  /* Different port Output Type modes */
+{
+	PIN_OUTPUT_PUSH_PULL,
+	PIN_OUTPUT_OPEN_DRAIN
+}Port_PinOutputType;
+
+typedef enum  /* Different port Output Speeds */
+{
+	PIN_LOW_SPEED,
+	PIN_MEDIUM_SPEED,
+	PIN_HIGH_SPEED,
+	PIN_VERY_HIGH_SPEED
+}Port_PinOutputSpeedType;
+
+typedef enum  /* Different port Output Speeds */
+{
+	PIN_NO_PULL_UP_PULL_DOWN,
+	PIN_PULL_UP,
+	PIN_PULL_DOWN,
+}Port_PinPullUpDownType;
+
 typedef struct  /**Autosar 4.4.0 SWS_Port_00072*/
 {
-	uint8_t PinMode;		/** To control the Pin Mode  @Refer - Port_PinModeType*/
-	uint8_t PinDirection;	/** To set the direction of the pin @Refer- Port_PinDirectionType*/
+	Port_PinModeType PinMode;		/** To control the Pin Mode  @Refer - Port_PinModeType*/
+	Port_PinDirectionType PinDirection;	/** To set the direction of the pin @Refer- Port_PinDirectionType*/
 	uint8_t PinInitValue;	/** Pin will be initialised with this value during Init */
 	uint8_t PinDirectionChangeable;	/** Can the direction be changed during runtime */
 	uint8_t PinModeChangeable;	/** Can the mode be changed during runtime	*/
 	/** Controller Specific Parameters  */
-	uint8_t PinSlewRate;
+	Port_PinOutputType PinOutputMode;	/** OpnenDrain or Push-pull  */
+	Port_PinOutputSpeedType PinSlewRate; /** Controls the Output speed of the pin @Refer - Port_PinOutputSpeedType*/
+	Port_PinPullUpDownType PinPupDown;	/** Enables Pull Up and Pull Down mechanism */
+	GPIO_RegTypes * pGPIOX;
 }Port_ConfigType;
 
 #endif /* GPIO_CFG_GPIO_PBCFG_H_ */

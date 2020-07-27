@@ -14,6 +14,7 @@
 
 #include "GPIO_PbCfg.h"
 
+extern InitStatusType gu8_PortInitStatus;
 extern Port_ConfigType Port_Config0;
 
 
