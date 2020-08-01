@@ -15,9 +15,18 @@
 
 
 
-Port_ConfigType Port_Config0[TOTAL_NO_OF_PINS] =
+Port_ConfigType Port_Config0[NO_OF_PINS_CONFIG] =
 {
-
+	{
+		PIN_MODE_ALT_FUNC_1,
+		PORT_PIN_OUT,
+		1U,
+		1U,
+		1U,
+		PIN_OUTPUT_OPEN_DRAIN,
+		PIN_HIGH_SPEED,
+		PIN_PULL_DOWN,
+	},
 };
 
 

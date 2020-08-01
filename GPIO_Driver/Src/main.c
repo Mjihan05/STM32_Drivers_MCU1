@@ -12,12 +12,16 @@
 #endif
 
 #include <stdint.h>
+#include "Reg_Macros.h"
 #include "RCC.h"
-#include "GPIO_regTypes.h"
+#include "Gpio.h"
 
 int main(void)
 {
-	RCC_AHB1PeripheralClkEnable(EN_GPIOA);
+	//RCC_AHB1PeripheralClkEnable(EN_GPIOA);
+	Port_Init (&Port_Config0);
+
+#if 0
 	RCC_AHB1PeripheralClkEnable(EN_GPIOD);
 	GPIO_D.MODER.B.ModeR1 = 0x1U;
 	GPIO_D.MODER.R = (0x1U<<2U);
@@ -26,5 +30,6 @@ int main(void)
 	{
 		RCC_AHB1PeripheralClkEnable(EN_GPIOC);
 	}
+#endif
 	for(;;);
 }

@@ -12,6 +12,7 @@
 #ifndef GPIO_INC_GPIO_H_
 #define GPIO_INC_GPIO_H_
 
+#include "GPIO_regTypes.h"
 #include "GPIO_PbCfg.h"
 
 extern InitStatusType gu8_PortInitStatus;

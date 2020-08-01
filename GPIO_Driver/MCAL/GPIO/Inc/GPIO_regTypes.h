@@ -20,6 +20,42 @@
 //#define GPIO_J_BASE_ADDRESS      (0x40022400U)
 //#define GPIO_K_BASE_ADDRESS      (0x40022800U)
 
+uint32_t Gpio_BaseAddress[] = {
+#ifdef GPIO_A_BASE_ADDRESS
+	   GPIO_A_BASE_ADDRESS,
+#endif
+#ifdef GPIO_B_BASE_ADDRESS
+	   GPIO_B_BASE_ADDRESS,
+#endif
+#ifdef GPIO_C_BASE_ADDRESS
+	   GPIO_C_BASE_ADDRESS,
+#endif
+#ifdef GPIO_D_BASE_ADDRESS
+	   GPIO_D_BASE_ADDRESS,
+#endif
+#ifdef GPIO_E_BASE_ADDRESS
+	   GPIO_E_BASE_ADDRESS,
+#endif
+#ifdef GPIO_F_BASE_ADDRESS
+	   GPIO_F_BASE_ADDRESS,
+#endif
+#ifdef GPIO_G_BASE_ADDRESS
+	   GPIO_G_BASE_ADDRESS,
+#endif
+#ifdef GPIO_H_BASE_ADDRESS
+	   GPIO_H_BASE_ADDRESS,
+#endif
+#ifdef GPIO_I_BASE_ADDRESS
+	   GPIO_I_BASE_ADDRESS,
+#endif
+#ifdef GPIO_J_BASE_ADDRESS
+	   GPIO_J_BASE_ADDRESS,
+#endif
+#ifdef GPIO_K_BASE_ADDRESS
+	   GPIO_K_BASE_ADDRESS,
+#endif
+							};
+
 typedef union GPIO_Mode_Tag
 {
 	struct {

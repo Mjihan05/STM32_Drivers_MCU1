@@ -10,8 +10,11 @@
 #ifndef GPIO_CFG_GPIO_PBCFG_H_
 #define GPIO_CFG_GPIO_PBCFG_H_
 
+#include "GPIO_regTypes.h"
+
 #define TOTAL_NO_OF_PORTS	(9U)
 #define TOTAL_NO_OF_PINS	(TOTAL_NO_OF_PORTS*16U)
+#define NO_OF_PINS_CONFIG   (1U)
 
 #define PIN_UNUSED	(0xFFU)
 
@@ -213,7 +216,24 @@ typedef enum  /* Autosar 4.4.0 -  SWS_Port_00230 - Possible directions of a port
 
 typedef enum  /* Autosar 4.4.0 -  SWS_Port_00230 - Different port pin modes */
 {
-	/** TODO */
+	PIN_MODE_GPIO =1U,
+	PIN_MODE_ANALOG =3U,
+	PIN_MODE_ALT_FUNC_0 =4U,
+	PIN_MODE_ALT_FUNC_1,
+	PIN_MODE_ALT_FUNC_2,
+	PIN_MODE_ALT_FUNC_3,
+	PIN_MODE_ALT_FUNC_4,
+	PIN_MODE_ALT_FUNC_5,
+	PIN_MODE_ALT_FUNC_6,
+	PIN_MODE_ALT_FUNC_7,
+	PIN_MODE_ALT_FUNC_8,
+	PIN_MODE_ALT_FUNC_9,
+	PIN_MODE_ALT_FUNC_10,
+	PIN_MODE_ALT_FUNC_11,
+	PIN_MODE_ALT_FUNC_12,
+	PIN_MODE_ALT_FUNC_13,
+	PIN_MODE_ALT_FUNC_14,
+	PIN_MODE_ALT_FUNC_15
 }Port_PinModeType;
 
 typedef enum  /* Different port Output Type modes */
@@ -230,7 +250,7 @@ typedef enum  /* Different port Output Speeds */
 	PIN_VERY_HIGH_SPEED
 }Port_PinOutputSpeedType;
 
-typedef enum  /* Different port Output Speeds */
+typedef enum  /* Different port Output Settings */
 {
 	PIN_NO_PULL_UP_PULL_DOWN,
 	PIN_PULL_UP,
@@ -248,7 +268,6 @@ typedef struct  /**Autosar 4.4.0 SWS_Port_00072*/
 	Port_PinOutputType PinOutputMode;	/** OpnenDrain or Push-pull  */
 	Port_PinOutputSpeedType PinSlewRate; /** Controls the Output speed of the pin @Refer - Port_PinOutputSpeedType*/
 	Port_PinPullUpDownType PinPupDown;	/** Enables Pull Up and Pull Down mechanism */
-	GPIO_RegTypes * pGPIOX;
 }Port_ConfigType;
 
 #endif /* GPIO_CFG_GPIO_PBCFG_H_ */
