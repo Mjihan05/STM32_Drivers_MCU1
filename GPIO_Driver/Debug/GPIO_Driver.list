@@ -5,45 +5,45 @@ Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
   0 .isr_vector   000001a8  08000000  08000000  00010000  2**0
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  1 .text         00000460  080001a8  080001a8  000101a8  2**2
+  1 .text         000004cc  080001a8  080001a8  000101a8  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  2 .rodata       00000000  08000608  08000608  0002002c  2**0
+  2 .rodata       00000000  08000674  08000674  000204a4  2**0
                   CONTENTS, ALLOC, LOAD, DATA
-  3 .ARM.extab    00000000  08000608  08000608  0002002c  2**0
+  3 .ARM.extab    00000000  08000674  08000674  000204a4  2**0
                   CONTENTS
-  4 .ARM          00000000  08000608  08000608  0002002c  2**0
+  4 .ARM          00000000  08000674  08000674  000204a4  2**0
                   CONTENTS
-  5 .preinit_array 00000000  08000608  08000608  0002002c  2**0
+  5 .preinit_array 00000000  08000674  08000674  000204a4  2**0
                   CONTENTS, ALLOC, LOAD, DATA
-  6 .init_array   00000004  08000608  08000608  00010608  2**2
+  6 .init_array   00000004  08000674  08000674  00010674  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-  7 .fini_array   00000004  0800060c  0800060c  0001060c  2**2
+  7 .fini_array   00000004  08000678  08000678  00010678  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-  8 .data         0000002c  20000000  08000610  00020000  2**2
+  8 .data         000004a4  20000000  0800067c  00020000  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-  9 .bss          00000024  2000002c  0800063c  0002002c  2**2
+  9 .bss          00000024  200004a4  08000b20  000204a4  2**2
                   ALLOC
- 10 ._user_heap_stack 00000600  20000050  0800063c  00020050  2**0
+ 10 ._user_heap_stack 00000600  200004c8  08000b20  000204c8  2**0
                   ALLOC
- 11 .ARM.attributes 0000002a  00000000  00000000  0002002c  2**0
+ 11 .ARM.attributes 0000002a  00000000  00000000  000204a4  2**0
                   CONTENTS, READONLY
- 12 .debug_info   000028c4  00000000  00000000  00020056  2**0
+ 12 .debug_info   00003544  00000000  00000000  000204ce  2**0
                   CONTENTS, READONLY, DEBUGGING
- 13 .debug_abbrev 00000580  00000000  00000000  0002291a  2**0
+ 13 .debug_abbrev 000005f7  00000000  00000000  00023a12  2**0
                   CONTENTS, READONLY, DEBUGGING
- 14 .debug_aranges 00000250  00000000  00000000  00022ea0  2**3
+ 14 .debug_aranges 00000250  00000000  00000000  00024010  2**3
                   CONTENTS, READONLY, DEBUGGING
- 15 .debug_macro  0000136d  00000000  00000000  000230f0  2**0
+ 15 .debug_macro  00001376  00000000  00000000  00024260  2**0
                   CONTENTS, READONLY, DEBUGGING
- 16 .debug_line   0000180a  00000000  00000000  0002445d  2**0
+ 16 .debug_line   00001826  00000000  00000000  000255d6  2**0
                   CONTENTS, READONLY, DEBUGGING
- 17 .debug_str    000068bc  00000000  00000000  00025c67  2**0
+ 17 .debug_str    000068e7  00000000  00000000  00026dfc  2**0
                   CONTENTS, READONLY, DEBUGGING
- 18 .comment      0000007b  00000000  00000000  0002c523  2**0
+ 18 .comment      0000007b  00000000  00000000  0002d6e3  2**0
                   CONTENTS, READONLY
- 19 .debug_ranges 00000200  00000000  00000000  0002c5a0  2**3
+ 19 .debug_ranges 00000200  00000000  00000000  0002d760  2**3
                   CONTENTS, READONLY, DEBUGGING
- 20 .debug_frame  000008f8  00000000  00000000  0002c7a0  2**2
+ 20 .debug_frame  000008f8  00000000  00000000  0002d960  2**2
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -60,9 +60,9 @@ Disassembly of section .text:
  80001ba:	2301      	movs	r3, #1
  80001bc:	7023      	strb	r3, [r4, #0]
  80001be:	bd10      	pop	{r4, pc}
- 80001c0:	2000002c 	.word	0x2000002c
+ 80001c0:	200004a4 	.word	0x200004a4
  80001c4:	00000000 	.word	0x00000000
- 80001c8:	080005f0 	.word	0x080005f0
+ 80001c8:	0800065c 	.word	0x0800065c
 
 080001cc <frame_dummy>:
  80001cc:	b508      	push	{r3, lr}
@@ -73,8 +73,8 @@ Disassembly of section .text:
  80001d6:	f3af 8000 	nop.w
  80001da:	bd08      	pop	{r3, pc}
  80001dc:	00000000 	.word	0x00000000
- 80001e0:	20000030 	.word	0x20000030
- 80001e4:	080005f0 	.word	0x080005f0
+ 80001e0:	200004a8 	.word	0x200004a8
+ 80001e4:	0800065c 	.word	0x0800065c
 
 080001e8 <Port_Init>:
 
@@ -88,7 +88,7 @@ void Port_Init (const Port_ConfigType* ConfigPtr)
  80001ec:	af00      	add	r7, sp, #0
  80001ee:	6078      	str	r0, [r7, #4]
 	gu8_PortInitStatus = MODULE_UNINITIALIZED;
- 80001f0:	4ba5      	ldr	r3, [pc, #660]	; (8000488 <Port_Init+0x2a0>)
+ 80001f0:	4bae      	ldr	r3, [pc, #696]	; (80004ac <Port_Init+0x2c4>)
  80001f2:	2200      	movs	r2, #0
  80001f4:	701a      	strb	r2, [r3, #0]
 	volatile  GPIO_RegTypes * pReg = 0U;
@@ -103,670 +103,724 @@ void Port_Init (const Port_ConfigType* ConfigPtr)
 	uint8_t pinNo = 0U;
  8000202:	2300      	movs	r3, #0
  8000204:	73bb      	strb	r3, [r7, #14]
+	uint16_t portsConfigured = 0U;
+ 8000206:	2300      	movs	r3, #0
+ 8000208:	82bb      	strh	r3, [r7, #20]
 
 	if(ConfigPtr == NULL_PTR)
- 8000206:	687b      	ldr	r3, [r7, #4]
- 8000208:	2b00      	cmp	r3, #0
- 800020a:	d103      	bne.n	8000214 <Port_Init+0x2c>
+ 800020a:	687b      	ldr	r3, [r7, #4]
+ 800020c:	2b00      	cmp	r3, #0
+ 800020e:	d103      	bne.n	8000218 <Port_Init+0x30>
 	{
 		gu8_PortInitStatus = MODULE_INIT_FAILED;
- 800020c:	4b9e      	ldr	r3, [pc, #632]	; (8000488 <Port_Init+0x2a0>)
- 800020e:	2202      	movs	r2, #2
- 8000210:	701a      	strb	r2, [r3, #0]
+ 8000210:	4ba6      	ldr	r3, [pc, #664]	; (80004ac <Port_Init+0x2c4>)
+ 8000212:	2202      	movs	r2, #2
+ 8000214:	701a      	strb	r2, [r3, #0]
 		return;
- 8000212:	e136      	b.n	8000482 <Port_Init+0x29a>
+ 8000216:	e166      	b.n	80004e6 <Port_Init+0x2fe>
 	}
 
 	GlobalConfigPtr = (Port_ConfigType*) ConfigPtr;
- 8000214:	4a9d      	ldr	r2, [pc, #628]	; (800048c <Port_Init+0x2a4>)
- 8000216:	687b      	ldr	r3, [r7, #4]
- 8000218:	6013      	str	r3, [r2, #0]
+ 8000218:	4aa5      	ldr	r2, [pc, #660]	; (80004b0 <Port_Init+0x2c8>)
+ 800021a:	687b      	ldr	r3, [r7, #4]
+ 800021c:	6013      	str	r3, [r2, #0]
 
 	for(loopItr0=0U; loopItr0<TOTAL_NO_OF_PINS; loopItr0++)
- 800021a:	2300      	movs	r3, #0
- 800021c:	75fb      	strb	r3, [r7, #23]
- 800021e:	e11d      	b.n	800045c <Port_Init+0x274>
+ 800021e:	2300      	movs	r3, #0
+ 8000220:	75fb      	strb	r3, [r7, #23]
+ 8000222:	e13b      	b.n	800049c <Port_Init+0x2b4>
 	{
 		if((ConfigPtr[loopItr0]).PinMode != PIN_UNUSED)
- 8000220:	7dfb      	ldrb	r3, [r7, #23]
- 8000222:	00db      	lsls	r3, r3, #3
- 8000224:	687a      	ldr	r2, [r7, #4]
- 8000226:	4413      	add	r3, r2
- 8000228:	781b      	ldrb	r3, [r3, #0]
- 800022a:	2bff      	cmp	r3, #255	; 0xff
- 800022c:	f000 8113 	beq.w	8000456 <Port_Init+0x26e>
+ 8000224:	7dfb      	ldrb	r3, [r7, #23]
+ 8000226:	00db      	lsls	r3, r3, #3
+ 8000228:	687a      	ldr	r2, [r7, #4]
+ 800022a:	4413      	add	r3, r2
+ 800022c:	781b      	ldrb	r3, [r3, #0]
+ 800022e:	2bff      	cmp	r3, #255	; 0xff
+ 8000230:	f000 8131 	beq.w	8000496 <Port_Init+0x2ae>
 		{
 			moduleNo = loopItr0/16U;
- 8000230:	7dfb      	ldrb	r3, [r7, #23]
- 8000232:	091b      	lsrs	r3, r3, #4
- 8000234:	73fb      	strb	r3, [r7, #15]
+ 8000234:	7dfb      	ldrb	r3, [r7, #23]
+ 8000236:	091b      	lsrs	r3, r3, #4
+ 8000238:	73fb      	strb	r3, [r7, #15]
 			pinNo = loopItr0%16U;
- 8000236:	7dfb      	ldrb	r3, [r7, #23]
- 8000238:	f003 030f 	and.w	r3, r3, #15
- 800023c:	73bb      	strb	r3, [r7, #14]
+ 800023a:	7dfb      	ldrb	r3, [r7, #23]
+ 800023c:	f003 030f 	and.w	r3, r3, #15
+ 8000240:	73bb      	strb	r3, [r7, #14]
 			GPIO_Port_Enable(moduleNo);	/** Turns on the Clock for the configured Port */
- 800023e:	7bfb      	ldrb	r3, [r7, #15]
- 8000240:	4618      	mov	r0, r3
- 8000242:	f000 f955 	bl	80004f0 <GPIO_Port_Enable>
+ 8000242:	7bfb      	ldrb	r3, [r7, #15]
+ 8000244:	4618      	mov	r0, r3
+ 8000246:	f000 f981 	bl	800054c <GPIO_Port_Enable>
 			pReg = (GPIO_RegTypes *)Gpio_BaseAddress[moduleNo];
- 8000246:	7bfb      	ldrb	r3, [r7, #15]
- 8000248:	4a91      	ldr	r2, [pc, #580]	; (8000490 <Port_Init+0x2a8>)
- 800024a:	f852 3023 	ldr.w	r3, [r2, r3, lsl #2]
- 800024e:	613b      	str	r3, [r7, #16]
+ 800024a:	7bfb      	ldrb	r3, [r7, #15]
+ 800024c:	4a99      	ldr	r2, [pc, #612]	; (80004b4 <Port_Init+0x2cc>)
+ 800024e:	f852 3023 	ldr.w	r3, [r2, r3, lsl #2]
+ 8000252:	613b      	str	r3, [r7, #16]
+
+			portsConfigured |= SET_BIT(moduleNo);
+ 8000254:	7bfb      	ldrb	r3, [r7, #15]
+ 8000256:	2201      	movs	r2, #1
+ 8000258:	fa02 f303 	lsl.w	r3, r2, r3
+ 800025c:	b29a      	uxth	r2, r3
+ 800025e:	8abb      	ldrh	r3, [r7, #20]
+ 8000260:	4313      	orrs	r3, r2
+ 8000262:	82bb      	strh	r3, [r7, #20]
 
 			/** Configure the Pull Up/Down settings */
-			REG_RMW32(&pReg->PUPDR.R,MASK_BITS(0x2U,pinNo*2U),((ConfigPtr[loopItr0]).PinPupDown)<<(pinNo*2U));
- 8000250:	693b      	ldr	r3, [r7, #16]
- 8000252:	68da      	ldr	r2, [r3, #12]
- 8000254:	7bbb      	ldrb	r3, [r7, #14]
- 8000256:	005b      	lsls	r3, r3, #1
- 8000258:	2102      	movs	r1, #2
- 800025a:	fa01 f303 	lsl.w	r3, r1, r3
- 800025e:	43db      	mvns	r3, r3
- 8000260:	401a      	ands	r2, r3
- 8000262:	7dfb      	ldrb	r3, [r7, #23]
- 8000264:	00db      	lsls	r3, r3, #3
- 8000266:	6879      	ldr	r1, [r7, #4]
- 8000268:	440b      	add	r3, r1
- 800026a:	79db      	ldrb	r3, [r3, #7]
- 800026c:	4619      	mov	r1, r3
- 800026e:	7bbb      	ldrb	r3, [r7, #14]
- 8000270:	005b      	lsls	r3, r3, #1
- 8000272:	fa01 f303 	lsl.w	r3, r1, r3
- 8000276:	4618      	mov	r0, r3
- 8000278:	7bbb      	ldrb	r3, [r7, #14]
- 800027a:	005b      	lsls	r3, r3, #1
- 800027c:	2102      	movs	r1, #2
- 800027e:	fa01 f303 	lsl.w	r3, r1, r3
- 8000282:	4003      	ands	r3, r0
- 8000284:	431a      	orrs	r2, r3
- 8000286:	693b      	ldr	r3, [r7, #16]
- 8000288:	60da      	str	r2, [r3, #12]
+			REG_RMW32(&pReg->PUPDR.R,MASK_BITS(0x3U,pinNo*2U),((ConfigPtr[loopItr0]).PinPupDown)<<(pinNo*2U));
+ 8000264:	693b      	ldr	r3, [r7, #16]
+ 8000266:	68da      	ldr	r2, [r3, #12]
+ 8000268:	7bbb      	ldrb	r3, [r7, #14]
+ 800026a:	005b      	lsls	r3, r3, #1
+ 800026c:	2103      	movs	r1, #3
+ 800026e:	fa01 f303 	lsl.w	r3, r1, r3
+ 8000272:	43db      	mvns	r3, r3
+ 8000274:	401a      	ands	r2, r3
+ 8000276:	7dfb      	ldrb	r3, [r7, #23]
+ 8000278:	00db      	lsls	r3, r3, #3
+ 800027a:	6879      	ldr	r1, [r7, #4]
+ 800027c:	440b      	add	r3, r1
+ 800027e:	79db      	ldrb	r3, [r3, #7]
+ 8000280:	4619      	mov	r1, r3
+ 8000282:	7bbb      	ldrb	r3, [r7, #14]
+ 8000284:	005b      	lsls	r3, r3, #1
+ 8000286:	fa01 f303 	lsl.w	r3, r1, r3
+ 800028a:	4618      	mov	r0, r3
+ 800028c:	7bbb      	ldrb	r3, [r7, #14]
+ 800028e:	005b      	lsls	r3, r3, #1
+ 8000290:	2103      	movs	r1, #3
+ 8000292:	fa01 f303 	lsl.w	r3, r1, r3
+ 8000296:	4003      	ands	r3, r0
+ 8000298:	431a      	orrs	r2, r3
+ 800029a:	693b      	ldr	r3, [r7, #16]
+ 800029c:	60da      	str	r2, [r3, #12]
 
 			/** Select the output settings */
 			if(((ConfigPtr[loopItr0]).PinDirection)==PORT_PIN_OUT)
- 800028a:	7dfb      	ldrb	r3, [r7, #23]
- 800028c:	00db      	lsls	r3, r3, #3
- 800028e:	687a      	ldr	r2, [r7, #4]
- 8000290:	4413      	add	r3, r2
- 8000292:	785b      	ldrb	r3, [r3, #1]
- 8000294:	2b01      	cmp	r3, #1
- 8000296:	d136      	bne.n	8000306 <Port_Init+0x11e>
+ 800029e:	7dfb      	ldrb	r3, [r7, #23]
+ 80002a0:	00db      	lsls	r3, r3, #3
+ 80002a2:	687a      	ldr	r2, [r7, #4]
+ 80002a4:	4413      	add	r3, r2
+ 80002a6:	785b      	ldrb	r3, [r3, #1]
+ 80002a8:	2b01      	cmp	r3, #1
+ 80002aa:	d136      	bne.n	800031a <Port_Init+0x132>
 			{
 				REG_RMW32(&pReg->OTYPER.R,MASK_BITS(0x1U,pinNo),((ConfigPtr[loopItr0]).PinOutputMode)<<(pinNo));
- 8000298:	693b      	ldr	r3, [r7, #16]
- 800029a:	685a      	ldr	r2, [r3, #4]
- 800029c:	7bbb      	ldrb	r3, [r7, #14]
- 800029e:	2101      	movs	r1, #1
- 80002a0:	fa01 f303 	lsl.w	r3, r1, r3
- 80002a4:	43db      	mvns	r3, r3
- 80002a6:	401a      	ands	r2, r3
- 80002a8:	7dfb      	ldrb	r3, [r7, #23]
- 80002aa:	00db      	lsls	r3, r3, #3
- 80002ac:	6879      	ldr	r1, [r7, #4]
- 80002ae:	440b      	add	r3, r1
- 80002b0:	795b      	ldrb	r3, [r3, #5]
- 80002b2:	4619      	mov	r1, r3
- 80002b4:	7bbb      	ldrb	r3, [r7, #14]
- 80002b6:	fa01 f303 	lsl.w	r3, r1, r3
- 80002ba:	4618      	mov	r0, r3
- 80002bc:	7bbb      	ldrb	r3, [r7, #14]
- 80002be:	2101      	movs	r1, #1
- 80002c0:	fa01 f303 	lsl.w	r3, r1, r3
- 80002c4:	4003      	ands	r3, r0
- 80002c6:	431a      	orrs	r2, r3
- 80002c8:	693b      	ldr	r3, [r7, #16]
- 80002ca:	605a      	str	r2, [r3, #4]
+ 80002ac:	693b      	ldr	r3, [r7, #16]
+ 80002ae:	685a      	ldr	r2, [r3, #4]
+ 80002b0:	7bbb      	ldrb	r3, [r7, #14]
+ 80002b2:	2101      	movs	r1, #1
+ 80002b4:	fa01 f303 	lsl.w	r3, r1, r3
+ 80002b8:	43db      	mvns	r3, r3
+ 80002ba:	401a      	ands	r2, r3
+ 80002bc:	7dfb      	ldrb	r3, [r7, #23]
+ 80002be:	00db      	lsls	r3, r3, #3
+ 80002c0:	6879      	ldr	r1, [r7, #4]
+ 80002c2:	440b      	add	r3, r1
+ 80002c4:	795b      	ldrb	r3, [r3, #5]
+ 80002c6:	4619      	mov	r1, r3
+ 80002c8:	7bbb      	ldrb	r3, [r7, #14]
+ 80002ca:	fa01 f303 	lsl.w	r3, r1, r3
+ 80002ce:	4618      	mov	r0, r3
+ 80002d0:	7bbb      	ldrb	r3, [r7, #14]
+ 80002d2:	2101      	movs	r1, #1
+ 80002d4:	fa01 f303 	lsl.w	r3, r1, r3
+ 80002d8:	4003      	ands	r3, r0
+ 80002da:	431a      	orrs	r2, r3
+ 80002dc:	693b      	ldr	r3, [r7, #16]
+ 80002de:	605a      	str	r2, [r3, #4]
 
 				/** Configure output speed settings */
 				REG_RMW32(&pReg->OSPEEDR.R,MASK_BITS(0x3U,pinNo*2U),((ConfigPtr[loopItr0]).PinSlewRate)<<(pinNo*2U));
- 80002cc:	693b      	ldr	r3, [r7, #16]
- 80002ce:	689a      	ldr	r2, [r3, #8]
- 80002d0:	7bbb      	ldrb	r3, [r7, #14]
- 80002d2:	005b      	lsls	r3, r3, #1
- 80002d4:	2103      	movs	r1, #3
- 80002d6:	fa01 f303 	lsl.w	r3, r1, r3
- 80002da:	43db      	mvns	r3, r3
- 80002dc:	401a      	ands	r2, r3
- 80002de:	7dfb      	ldrb	r3, [r7, #23]
- 80002e0:	00db      	lsls	r3, r3, #3
- 80002e2:	6879      	ldr	r1, [r7, #4]
- 80002e4:	440b      	add	r3, r1
- 80002e6:	799b      	ldrb	r3, [r3, #6]
- 80002e8:	4619      	mov	r1, r3
- 80002ea:	7bbb      	ldrb	r3, [r7, #14]
- 80002ec:	005b      	lsls	r3, r3, #1
- 80002ee:	fa01 f303 	lsl.w	r3, r1, r3
- 80002f2:	4618      	mov	r0, r3
- 80002f4:	7bbb      	ldrb	r3, [r7, #14]
- 80002f6:	005b      	lsls	r3, r3, #1
- 80002f8:	2103      	movs	r1, #3
- 80002fa:	fa01 f303 	lsl.w	r3, r1, r3
- 80002fe:	4003      	ands	r3, r0
- 8000300:	431a      	orrs	r2, r3
- 8000302:	693b      	ldr	r3, [r7, #16]
- 8000304:	609a      	str	r2, [r3, #8]
+ 80002e0:	693b      	ldr	r3, [r7, #16]
+ 80002e2:	689a      	ldr	r2, [r3, #8]
+ 80002e4:	7bbb      	ldrb	r3, [r7, #14]
+ 80002e6:	005b      	lsls	r3, r3, #1
+ 80002e8:	2103      	movs	r1, #3
+ 80002ea:	fa01 f303 	lsl.w	r3, r1, r3
+ 80002ee:	43db      	mvns	r3, r3
+ 80002f0:	401a      	ands	r2, r3
+ 80002f2:	7dfb      	ldrb	r3, [r7, #23]
+ 80002f4:	00db      	lsls	r3, r3, #3
+ 80002f6:	6879      	ldr	r1, [r7, #4]
+ 80002f8:	440b      	add	r3, r1
+ 80002fa:	799b      	ldrb	r3, [r3, #6]
+ 80002fc:	4619      	mov	r1, r3
+ 80002fe:	7bbb      	ldrb	r3, [r7, #14]
+ 8000300:	005b      	lsls	r3, r3, #1
+ 8000302:	fa01 f303 	lsl.w	r3, r1, r3
+ 8000306:	4618      	mov	r0, r3
+ 8000308:	7bbb      	ldrb	r3, [r7, #14]
+ 800030a:	005b      	lsls	r3, r3, #1
+ 800030c:	2103      	movs	r1, #3
+ 800030e:	fa01 f303 	lsl.w	r3, r1, r3
+ 8000312:	4003      	ands	r3, r0
+ 8000314:	431a      	orrs	r2, r3
+ 8000316:	693b      	ldr	r3, [r7, #16]
+ 8000318:	609a      	str	r2, [r3, #8]
 			}
 
 			/** Set the o/p default value before setting the pin direction */
 			if( ((ConfigPtr[loopItr0]).PinInitValue) == SET)
- 8000306:	7dfb      	ldrb	r3, [r7, #23]
- 8000308:	00db      	lsls	r3, r3, #3
- 800030a:	687a      	ldr	r2, [r7, #4]
- 800030c:	4413      	add	r3, r2
- 800030e:	789b      	ldrb	r3, [r3, #2]
- 8000310:	2b01      	cmp	r3, #1
- 8000312:	d10f      	bne.n	8000334 <Port_Init+0x14c>
+ 800031a:	7dfb      	ldrb	r3, [r7, #23]
+ 800031c:	00db      	lsls	r3, r3, #3
+ 800031e:	687a      	ldr	r2, [r7, #4]
+ 8000320:	4413      	add	r3, r2
+ 8000322:	789b      	ldrb	r3, [r3, #2]
+ 8000324:	2b01      	cmp	r3, #1
+ 8000326:	d10f      	bne.n	8000348 <Port_Init+0x160>
 			{
 				REG_RMW32(&pReg->BSRR.R,MASK_BITS(0x1U,pinNo),(SET)<<(pinNo));
- 8000314:	693b      	ldr	r3, [r7, #16]
- 8000316:	699a      	ldr	r2, [r3, #24]
- 8000318:	7bbb      	ldrb	r3, [r7, #14]
- 800031a:	2101      	movs	r1, #1
- 800031c:	fa01 f303 	lsl.w	r3, r1, r3
- 8000320:	43db      	mvns	r3, r3
- 8000322:	401a      	ands	r2, r3
- 8000324:	7bbb      	ldrb	r3, [r7, #14]
- 8000326:	2101      	movs	r1, #1
- 8000328:	fa01 f303 	lsl.w	r3, r1, r3
- 800032c:	431a      	orrs	r2, r3
- 800032e:	693b      	ldr	r3, [r7, #16]
- 8000330:	619a      	str	r2, [r3, #24]
- 8000332:	e013      	b.n	800035c <Port_Init+0x174>
+ 8000328:	693b      	ldr	r3, [r7, #16]
+ 800032a:	699a      	ldr	r2, [r3, #24]
+ 800032c:	7bbb      	ldrb	r3, [r7, #14]
+ 800032e:	2101      	movs	r1, #1
+ 8000330:	fa01 f303 	lsl.w	r3, r1, r3
+ 8000334:	43db      	mvns	r3, r3
+ 8000336:	401a      	ands	r2, r3
+ 8000338:	7bbb      	ldrb	r3, [r7, #14]
+ 800033a:	2101      	movs	r1, #1
+ 800033c:	fa01 f303 	lsl.w	r3, r1, r3
+ 8000340:	431a      	orrs	r2, r3
+ 8000342:	693b      	ldr	r3, [r7, #16]
+ 8000344:	619a      	str	r2, [r3, #24]
+ 8000346:	e013      	b.n	8000370 <Port_Init+0x188>
 			}
 			else
 			{
 				REG_RMW32(&pReg->BSRR.R,MASK_BITS(0x1U,pinNo),(SET)<<(pinNo+16U));
- 8000334:	693b      	ldr	r3, [r7, #16]
- 8000336:	699a      	ldr	r2, [r3, #24]
- 8000338:	7bbb      	ldrb	r3, [r7, #14]
- 800033a:	2101      	movs	r1, #1
- 800033c:	fa01 f303 	lsl.w	r3, r1, r3
- 8000340:	43db      	mvns	r3, r3
- 8000342:	401a      	ands	r2, r3
- 8000344:	7bbb      	ldrb	r3, [r7, #14]
- 8000346:	3310      	adds	r3, #16
- 8000348:	2101      	movs	r1, #1
- 800034a:	4099      	lsls	r1, r3
+ 8000348:	693b      	ldr	r3, [r7, #16]
+ 800034a:	699a      	ldr	r2, [r3, #24]
  800034c:	7bbb      	ldrb	r3, [r7, #14]
- 800034e:	2001      	movs	r0, #1
- 8000350:	fa00 f303 	lsl.w	r3, r0, r3
- 8000354:	400b      	ands	r3, r1
- 8000356:	431a      	orrs	r2, r3
- 8000358:	693b      	ldr	r3, [r7, #16]
- 800035a:	619a      	str	r2, [r3, #24]
+ 800034e:	2101      	movs	r1, #1
+ 8000350:	fa01 f303 	lsl.w	r3, r1, r3
+ 8000354:	43db      	mvns	r3, r3
+ 8000356:	401a      	ands	r2, r3
+ 8000358:	7bbb      	ldrb	r3, [r7, #14]
+ 800035a:	3310      	adds	r3, #16
+ 800035c:	2101      	movs	r1, #1
+ 800035e:	4099      	lsls	r1, r3
+ 8000360:	7bbb      	ldrb	r3, [r7, #14]
+ 8000362:	2001      	movs	r0, #1
+ 8000364:	fa00 f303 	lsl.w	r3, r0, r3
+ 8000368:	400b      	ands	r3, r1
+ 800036a:	431a      	orrs	r2, r3
+ 800036c:	693b      	ldr	r3, [r7, #16]
+ 800036e:	619a      	str	r2, [r3, #24]
 			}
 
 			/** Set the mode of the GPIO Pins */
 			if( ((ConfigPtr[loopItr0]).PinMode)==PIN_MODE_GPIO && ((ConfigPtr[loopItr0]).PinDirection==PORT_PIN_IN) )
- 800035c:	7dfb      	ldrb	r3, [r7, #23]
- 800035e:	00db      	lsls	r3, r3, #3
- 8000360:	687a      	ldr	r2, [r7, #4]
- 8000362:	4413      	add	r3, r2
- 8000364:	781b      	ldrb	r3, [r3, #0]
- 8000366:	2b01      	cmp	r3, #1
- 8000368:	d112      	bne.n	8000390 <Port_Init+0x1a8>
- 800036a:	7dfb      	ldrb	r3, [r7, #23]
- 800036c:	00db      	lsls	r3, r3, #3
- 800036e:	687a      	ldr	r2, [r7, #4]
- 8000370:	4413      	add	r3, r2
- 8000372:	785b      	ldrb	r3, [r3, #1]
- 8000374:	2b00      	cmp	r3, #0
- 8000376:	d10b      	bne.n	8000390 <Port_Init+0x1a8>
+ 8000370:	7dfb      	ldrb	r3, [r7, #23]
+ 8000372:	00db      	lsls	r3, r3, #3
+ 8000374:	687a      	ldr	r2, [r7, #4]
+ 8000376:	4413      	add	r3, r2
+ 8000378:	781b      	ldrb	r3, [r3, #0]
+ 800037a:	2b01      	cmp	r3, #1
+ 800037c:	d112      	bne.n	80003a4 <Port_Init+0x1bc>
+ 800037e:	7dfb      	ldrb	r3, [r7, #23]
+ 8000380:	00db      	lsls	r3, r3, #3
+ 8000382:	687a      	ldr	r2, [r7, #4]
+ 8000384:	4413      	add	r3, r2
+ 8000386:	785b      	ldrb	r3, [r3, #1]
+ 8000388:	2b00      	cmp	r3, #0
+ 800038a:	d10b      	bne.n	80003a4 <Port_Init+0x1bc>
 			{
 				REG_RMW32(&pReg->MODER.R,MASK_BITS(0x3U,pinNo*2U),(PORT_PIN_IN)<<(pinNo*2U));
- 8000378:	693b      	ldr	r3, [r7, #16]
- 800037a:	681a      	ldr	r2, [r3, #0]
- 800037c:	7bbb      	ldrb	r3, [r7, #14]
- 800037e:	005b      	lsls	r3, r3, #1
- 8000380:	2103      	movs	r1, #3
- 8000382:	fa01 f303 	lsl.w	r3, r1, r3
- 8000386:	43db      	mvns	r3, r3
- 8000388:	401a      	ands	r2, r3
- 800038a:	693b      	ldr	r3, [r7, #16]
- 800038c:	601a      	str	r2, [r3, #0]
- 800038e:	e062      	b.n	8000456 <Port_Init+0x26e>
+ 800038c:	693b      	ldr	r3, [r7, #16]
+ 800038e:	681a      	ldr	r2, [r3, #0]
+ 8000390:	7bbb      	ldrb	r3, [r7, #14]
+ 8000392:	005b      	lsls	r3, r3, #1
+ 8000394:	2103      	movs	r1, #3
+ 8000396:	fa01 f303 	lsl.w	r3, r1, r3
+ 800039a:	43db      	mvns	r3, r3
+ 800039c:	401a      	ands	r2, r3
+ 800039e:	693b      	ldr	r3, [r7, #16]
+ 80003a0:	601a      	str	r2, [r3, #0]
+ 80003a2:	e078      	b.n	8000496 <Port_Init+0x2ae>
 			}
 			else if (((ConfigPtr[loopItr0]).PinMode)>=PIN_MODE_ALT_FUNC_0)
- 8000390:	7dfb      	ldrb	r3, [r7, #23]
- 8000392:	00db      	lsls	r3, r3, #3
- 8000394:	687a      	ldr	r2, [r7, #4]
- 8000396:	4413      	add	r3, r2
- 8000398:	781b      	ldrb	r3, [r3, #0]
- 800039a:	2b03      	cmp	r3, #3
- 800039c:	d93e      	bls.n	800041c <Port_Init+0x234>
+ 80003a4:	7dfb      	ldrb	r3, [r7, #23]
+ 80003a6:	00db      	lsls	r3, r3, #3
+ 80003a8:	687a      	ldr	r2, [r7, #4]
+ 80003aa:	4413      	add	r3, r2
+ 80003ac:	781b      	ldrb	r3, [r3, #0]
+ 80003ae:	2b03      	cmp	r3, #3
+ 80003b0:	d954      	bls.n	800045c <Port_Init+0x274>
 			{
 				/** Select the Alternate Functionality in AFRL */
 				if( (((ConfigPtr[loopItr0]).PinMode)<=PIN_MODE_ALT_FUNC_7))
- 800039e:	7dfb      	ldrb	r3, [r7, #23]
- 80003a0:	00db      	lsls	r3, r3, #3
- 80003a2:	687a      	ldr	r2, [r7, #4]
- 80003a4:	4413      	add	r3, r2
- 80003a6:	781b      	ldrb	r3, [r3, #0]
- 80003a8:	2b0b      	cmp	r3, #11
- 80003aa:	d81b      	bhi.n	80003e4 <Port_Init+0x1fc>
+ 80003b2:	7dfb      	ldrb	r3, [r7, #23]
+ 80003b4:	00db      	lsls	r3, r3, #3
+ 80003b6:	687a      	ldr	r2, [r7, #4]
+ 80003b8:	4413      	add	r3, r2
+ 80003ba:	781b      	ldrb	r3, [r3, #0]
+ 80003bc:	2b0b      	cmp	r3, #11
+ 80003be:	d81b      	bhi.n	80003f8 <Port_Init+0x210>
 				{
 					REG_RMW32(&pReg->AFRL.R,MASK_BITS(0xFU,pinNo*4U),(((ConfigPtr[loopItr0]).PinMode-4U))<<(pinNo*4U));
- 80003ac:	693b      	ldr	r3, [r7, #16]
- 80003ae:	6a1a      	ldr	r2, [r3, #32]
- 80003b0:	7bbb      	ldrb	r3, [r7, #14]
- 80003b2:	009b      	lsls	r3, r3, #2
- 80003b4:	210f      	movs	r1, #15
- 80003b6:	fa01 f303 	lsl.w	r3, r1, r3
- 80003ba:	43db      	mvns	r3, r3
- 80003bc:	401a      	ands	r2, r3
- 80003be:	7dfb      	ldrb	r3, [r7, #23]
- 80003c0:	00db      	lsls	r3, r3, #3
- 80003c2:	6879      	ldr	r1, [r7, #4]
- 80003c4:	440b      	add	r3, r1
- 80003c6:	781b      	ldrb	r3, [r3, #0]
- 80003c8:	1f19      	subs	r1, r3, #4
- 80003ca:	7bbb      	ldrb	r3, [r7, #14]
- 80003cc:	009b      	lsls	r3, r3, #2
- 80003ce:	4099      	lsls	r1, r3
- 80003d0:	7bbb      	ldrb	r3, [r7, #14]
- 80003d2:	009b      	lsls	r3, r3, #2
- 80003d4:	200f      	movs	r0, #15
- 80003d6:	fa00 f303 	lsl.w	r3, r0, r3
- 80003da:	400b      	ands	r3, r1
- 80003dc:	431a      	orrs	r2, r3
- 80003de:	693b      	ldr	r3, [r7, #16]
- 80003e0:	621a      	str	r2, [r3, #32]
- 80003e2:	e038      	b.n	8000456 <Port_Init+0x26e>
+ 80003c0:	693b      	ldr	r3, [r7, #16]
+ 80003c2:	6a1a      	ldr	r2, [r3, #32]
+ 80003c4:	7bbb      	ldrb	r3, [r7, #14]
+ 80003c6:	009b      	lsls	r3, r3, #2
+ 80003c8:	210f      	movs	r1, #15
+ 80003ca:	fa01 f303 	lsl.w	r3, r1, r3
+ 80003ce:	43db      	mvns	r3, r3
+ 80003d0:	401a      	ands	r2, r3
+ 80003d2:	7dfb      	ldrb	r3, [r7, #23]
+ 80003d4:	00db      	lsls	r3, r3, #3
+ 80003d6:	6879      	ldr	r1, [r7, #4]
+ 80003d8:	440b      	add	r3, r1
+ 80003da:	781b      	ldrb	r3, [r3, #0]
+ 80003dc:	1f19      	subs	r1, r3, #4
+ 80003de:	7bbb      	ldrb	r3, [r7, #14]
+ 80003e0:	009b      	lsls	r3, r3, #2
+ 80003e2:	4099      	lsls	r1, r3
+ 80003e4:	7bbb      	ldrb	r3, [r7, #14]
+ 80003e6:	009b      	lsls	r3, r3, #2
+ 80003e8:	200f      	movs	r0, #15
+ 80003ea:	fa00 f303 	lsl.w	r3, r0, r3
+ 80003ee:	400b      	ands	r3, r1
+ 80003f0:	431a      	orrs	r2, r3
+ 80003f2:	693b      	ldr	r3, [r7, #16]
+ 80003f4:	621a      	str	r2, [r3, #32]
+ 80003f6:	e01a      	b.n	800042e <Port_Init+0x246>
 				}
 				else /** Select the Alternate Functionality in AFRH */
 				{
 					REG_RMW32(&pReg->AFRH.R,MASK_BITS(0xFU,pinNo*4U),(((ConfigPtr[loopItr0]).PinMode-4U))<<(pinNo*4U));
- 80003e4:	693b      	ldr	r3, [r7, #16]
- 80003e6:	6a5a      	ldr	r2, [r3, #36]	; 0x24
- 80003e8:	7bbb      	ldrb	r3, [r7, #14]
- 80003ea:	009b      	lsls	r3, r3, #2
- 80003ec:	210f      	movs	r1, #15
- 80003ee:	fa01 f303 	lsl.w	r3, r1, r3
- 80003f2:	43db      	mvns	r3, r3
- 80003f4:	401a      	ands	r2, r3
- 80003f6:	7dfb      	ldrb	r3, [r7, #23]
- 80003f8:	00db      	lsls	r3, r3, #3
- 80003fa:	6879      	ldr	r1, [r7, #4]
- 80003fc:	440b      	add	r3, r1
- 80003fe:	781b      	ldrb	r3, [r3, #0]
- 8000400:	1f19      	subs	r1, r3, #4
- 8000402:	7bbb      	ldrb	r3, [r7, #14]
- 8000404:	009b      	lsls	r3, r3, #2
- 8000406:	4099      	lsls	r1, r3
- 8000408:	7bbb      	ldrb	r3, [r7, #14]
- 800040a:	009b      	lsls	r3, r3, #2
- 800040c:	200f      	movs	r0, #15
- 800040e:	fa00 f303 	lsl.w	r3, r0, r3
- 8000412:	400b      	ands	r3, r1
- 8000414:	431a      	orrs	r2, r3
- 8000416:	693b      	ldr	r3, [r7, #16]
- 8000418:	625a      	str	r2, [r3, #36]	; 0x24
- 800041a:	e01c      	b.n	8000456 <Port_Init+0x26e>
+ 80003f8:	693b      	ldr	r3, [r7, #16]
+ 80003fa:	6a5a      	ldr	r2, [r3, #36]	; 0x24
+ 80003fc:	7bbb      	ldrb	r3, [r7, #14]
+ 80003fe:	009b      	lsls	r3, r3, #2
+ 8000400:	210f      	movs	r1, #15
+ 8000402:	fa01 f303 	lsl.w	r3, r1, r3
+ 8000406:	43db      	mvns	r3, r3
+ 8000408:	401a      	ands	r2, r3
+ 800040a:	7dfb      	ldrb	r3, [r7, #23]
+ 800040c:	00db      	lsls	r3, r3, #3
+ 800040e:	6879      	ldr	r1, [r7, #4]
+ 8000410:	440b      	add	r3, r1
+ 8000412:	781b      	ldrb	r3, [r3, #0]
+ 8000414:	1f19      	subs	r1, r3, #4
+ 8000416:	7bbb      	ldrb	r3, [r7, #14]
+ 8000418:	009b      	lsls	r3, r3, #2
+ 800041a:	4099      	lsls	r1, r3
+ 800041c:	7bbb      	ldrb	r3, [r7, #14]
+ 800041e:	009b      	lsls	r3, r3, #2
+ 8000420:	200f      	movs	r0, #15
+ 8000422:	fa00 f303 	lsl.w	r3, r0, r3
+ 8000426:	400b      	ands	r3, r1
+ 8000428:	431a      	orrs	r2, r3
+ 800042a:	693b      	ldr	r3, [r7, #16]
+ 800042c:	625a      	str	r2, [r3, #36]	; 0x24
 				}
+				REG_RMW32(&pReg->MODER.R,MASK_BITS(0x3U,pinNo*2U),(0x2U)<<(pinNo*2U));
+ 800042e:	693b      	ldr	r3, [r7, #16]
+ 8000430:	681a      	ldr	r2, [r3, #0]
+ 8000432:	7bbb      	ldrb	r3, [r7, #14]
+ 8000434:	005b      	lsls	r3, r3, #1
+ 8000436:	2103      	movs	r1, #3
+ 8000438:	fa01 f303 	lsl.w	r3, r1, r3
+ 800043c:	43db      	mvns	r3, r3
+ 800043e:	401a      	ands	r2, r3
+ 8000440:	7bbb      	ldrb	r3, [r7, #14]
+ 8000442:	005b      	lsls	r3, r3, #1
+ 8000444:	2102      	movs	r1, #2
+ 8000446:	4099      	lsls	r1, r3
+ 8000448:	7bbb      	ldrb	r3, [r7, #14]
+ 800044a:	005b      	lsls	r3, r3, #1
+ 800044c:	2003      	movs	r0, #3
+ 800044e:	fa00 f303 	lsl.w	r3, r0, r3
+ 8000452:	400b      	ands	r3, r1
+ 8000454:	431a      	orrs	r2, r3
+ 8000456:	693b      	ldr	r3, [r7, #16]
+ 8000458:	601a      	str	r2, [r3, #0]
+ 800045a:	e01c      	b.n	8000496 <Port_Init+0x2ae>
 			}
 			else
 			{
 				REG_RMW32(&pReg->MODER.R,MASK_BITS(0x3U,pinNo*2U),((ConfigPtr[loopItr0]).PinMode)<<(pinNo*2U));
- 800041c:	693b      	ldr	r3, [r7, #16]
- 800041e:	681a      	ldr	r2, [r3, #0]
- 8000420:	7bbb      	ldrb	r3, [r7, #14]
- 8000422:	005b      	lsls	r3, r3, #1
- 8000424:	2103      	movs	r1, #3
- 8000426:	fa01 f303 	lsl.w	r3, r1, r3
- 800042a:	43db      	mvns	r3, r3
- 800042c:	401a      	ands	r2, r3
- 800042e:	7dfb      	ldrb	r3, [r7, #23]
- 8000430:	00db      	lsls	r3, r3, #3
- 8000432:	6879      	ldr	r1, [r7, #4]
- 8000434:	440b      	add	r3, r1
- 8000436:	781b      	ldrb	r3, [r3, #0]
- 8000438:	4619      	mov	r1, r3
- 800043a:	7bbb      	ldrb	r3, [r7, #14]
- 800043c:	005b      	lsls	r3, r3, #1
- 800043e:	fa01 f303 	lsl.w	r3, r1, r3
- 8000442:	4618      	mov	r0, r3
- 8000444:	7bbb      	ldrb	r3, [r7, #14]
- 8000446:	005b      	lsls	r3, r3, #1
- 8000448:	2103      	movs	r1, #3
- 800044a:	fa01 f303 	lsl.w	r3, r1, r3
- 800044e:	4003      	ands	r3, r0
- 8000450:	431a      	orrs	r2, r3
- 8000452:	693b      	ldr	r3, [r7, #16]
- 8000454:	601a      	str	r2, [r3, #0]
+ 800045c:	693b      	ldr	r3, [r7, #16]
+ 800045e:	681a      	ldr	r2, [r3, #0]
+ 8000460:	7bbb      	ldrb	r3, [r7, #14]
+ 8000462:	005b      	lsls	r3, r3, #1
+ 8000464:	2103      	movs	r1, #3
+ 8000466:	fa01 f303 	lsl.w	r3, r1, r3
+ 800046a:	43db      	mvns	r3, r3
+ 800046c:	401a      	ands	r2, r3
+ 800046e:	7dfb      	ldrb	r3, [r7, #23]
+ 8000470:	00db      	lsls	r3, r3, #3
+ 8000472:	6879      	ldr	r1, [r7, #4]
+ 8000474:	440b      	add	r3, r1
+ 8000476:	781b      	ldrb	r3, [r3, #0]
+ 8000478:	4619      	mov	r1, r3
+ 800047a:	7bbb      	ldrb	r3, [r7, #14]
+ 800047c:	005b      	lsls	r3, r3, #1
+ 800047e:	fa01 f303 	lsl.w	r3, r1, r3
+ 8000482:	4618      	mov	r0, r3
+ 8000484:	7bbb      	ldrb	r3, [r7, #14]
+ 8000486:	005b      	lsls	r3, r3, #1
+ 8000488:	2103      	movs	r1, #3
+ 800048a:	fa01 f303 	lsl.w	r3, r1, r3
+ 800048e:	4003      	ands	r3, r0
+ 8000490:	431a      	orrs	r2, r3
+ 8000492:	693b      	ldr	r3, [r7, #16]
+ 8000494:	601a      	str	r2, [r3, #0]
 	for(loopItr0=0U; loopItr0<TOTAL_NO_OF_PINS; loopItr0++)
- 8000456:	7dfb      	ldrb	r3, [r7, #23]
- 8000458:	3301      	adds	r3, #1
- 800045a:	75fb      	strb	r3, [r7, #23]
- 800045c:	7dfb      	ldrb	r3, [r7, #23]
- 800045e:	2b8f      	cmp	r3, #143	; 0x8f
- 8000460:	f67f aede 	bls.w	8000220 <Port_Init+0x38>
+ 8000496:	7dfb      	ldrb	r3, [r7, #23]
+ 8000498:	3301      	adds	r3, #1
+ 800049a:	75fb      	strb	r3, [r7, #23]
+ 800049c:	7dfb      	ldrb	r3, [r7, #23]
+ 800049e:	2b8f      	cmp	r3, #143	; 0x8f
+ 80004a0:	f67f aec0 	bls.w	8000224 <Port_Init+0x3c>
 			}
 		}
 	}
 
 #if(GPIO_PORT_LOCK == STD_ON)
-	for(loopItr0 =0U; (loopItr0 = TOTAL_NO_OF_PORTS); loopItr0++)
- 8000464:	2300      	movs	r3, #0
- 8000466:	75fb      	strb	r3, [r7, #23]
- 8000468:	e008      	b.n	800047c <Port_Init+0x294>
+	for(loopItr0 =0U; (loopItr0 < TOTAL_NO_OF_PORTS); loopItr0++)
+ 80004a4:	2300      	movs	r3, #0
+ 80004a6:	75fb      	strb	r3, [r7, #23]
+ 80004a8:	e017      	b.n	80004da <Port_Init+0x2f2>
+ 80004aa:	bf00      	nop
+ 80004ac:	200004c0 	.word	0x200004c0
+ 80004b0:	200004c4 	.word	0x200004c4
+ 80004b4:	20000000 	.word	0x20000000
 	{
-		GPIO_Port_Lock(loopItr0,0xFFFF);  /** Locks all the pins of the port until next reset */
- 800046a:	7dfb      	ldrb	r3, [r7, #23]
- 800046c:	f64f 71ff 	movw	r1, #65535	; 0xffff
- 8000470:	4618      	mov	r0, r3
- 8000472:	f000 f80f 	bl	8000494 <GPIO_Port_Lock>
-	for(loopItr0 =0U; (loopItr0 = TOTAL_NO_OF_PORTS); loopItr0++)
- 8000476:	7dfb      	ldrb	r3, [r7, #23]
- 8000478:	3301      	adds	r3, #1
- 800047a:	75fb      	strb	r3, [r7, #23]
- 800047c:	2309      	movs	r3, #9
- 800047e:	75fb      	strb	r3, [r7, #23]
- 8000480:	e7f3      	b.n	800046a <Port_Init+0x282>
+		if( ((portsConfigured>>loopItr0)&0x1U) == SET )
+ 80004b8:	8aba      	ldrh	r2, [r7, #20]
+ 80004ba:	7dfb      	ldrb	r3, [r7, #23]
+ 80004bc:	fa42 f303 	asr.w	r3, r2, r3
+ 80004c0:	f003 0301 	and.w	r3, r3, #1
+ 80004c4:	2b00      	cmp	r3, #0
+ 80004c6:	d005      	beq.n	80004d4 <Port_Init+0x2ec>
+		{
+			GPIO_Port_Lock(loopItr0,0xFFFF);  /** Locks all the pins of the port until next reset */
+ 80004c8:	7dfb      	ldrb	r3, [r7, #23]
+ 80004ca:	f64f 71ff 	movw	r1, #65535	; 0xffff
+ 80004ce:	4618      	mov	r0, r3
+ 80004d0:	f000 f80e 	bl	80004f0 <GPIO_Port_Lock>
+	for(loopItr0 =0U; (loopItr0 < TOTAL_NO_OF_PORTS); loopItr0++)
+ 80004d4:	7dfb      	ldrb	r3, [r7, #23]
+ 80004d6:	3301      	adds	r3, #1
+ 80004d8:	75fb      	strb	r3, [r7, #23]
+ 80004da:	7dfb      	ldrb	r3, [r7, #23]
+ 80004dc:	2b08      	cmp	r3, #8
+ 80004de:	d9eb      	bls.n	80004b8 <Port_Init+0x2d0>
+		}
 	}
 #endif
 
 	gu8_PortInitStatus = MODULE_INITIALIZED;
+ 80004e0:	4b02      	ldr	r3, [pc, #8]	; (80004ec <Port_Init+0x304>)
+ 80004e2:	2201      	movs	r2, #1
+ 80004e4:	701a      	strb	r2, [r3, #0]
 
 }
- 8000482:	3718      	adds	r7, #24
- 8000484:	46bd      	mov	sp, r7
- 8000486:	bd80      	pop	{r7, pc}
- 8000488:	20000048 	.word	0x20000048
- 800048c:	2000004c 	.word	0x2000004c
- 8000490:	20000000 	.word	0x20000000
+ 80004e6:	3718      	adds	r7, #24
+ 80004e8:	46bd      	mov	sp, r7
+ 80004ea:	bd80      	pop	{r7, pc}
+ 80004ec:	200004c0 	.word	0x200004c0
 
-08000494 <GPIO_Port_Lock>:
+080004f0 <GPIO_Port_Lock>:
 }
 #endif
 
 #if(GPIO_PORT_LOCK == STD_ON)
 void GPIO_Port_Lock(uint8_t moduleNo, uint16_t lockMask)
 {
- 8000494:	b480      	push	{r7}
- 8000496:	b085      	sub	sp, #20
- 8000498:	af00      	add	r7, sp, #0
- 800049a:	4603      	mov	r3, r0
- 800049c:	460a      	mov	r2, r1
- 800049e:	71fb      	strb	r3, [r7, #7]
- 80004a0:	4613      	mov	r3, r2
- 80004a2:	80bb      	strh	r3, [r7, #4]
+ 80004f0:	b480      	push	{r7}
+ 80004f2:	b085      	sub	sp, #20
+ 80004f4:	af00      	add	r7, sp, #0
+ 80004f6:	4603      	mov	r3, r0
+ 80004f8:	460a      	mov	r2, r1
+ 80004fa:	71fb      	strb	r3, [r7, #7]
+ 80004fc:	4613      	mov	r3, r2
+ 80004fe:	80bb      	strh	r3, [r7, #4]
 	const uint32_t lockBit = 0x00010000;
- 80004a4:	f44f 3380 	mov.w	r3, #65536	; 0x10000
- 80004a8:	60fb      	str	r3, [r7, #12]
+ 8000500:	f44f 3380 	mov.w	r3, #65536	; 0x10000
+ 8000504:	60fb      	str	r3, [r7, #12]
 	volatile  GPIO_RegTypes * pReg = 0U;
- 80004aa:	2300      	movs	r3, #0
- 80004ac:	60bb      	str	r3, [r7, #8]
+ 8000506:	2300      	movs	r3, #0
+ 8000508:	60bb      	str	r3, [r7, #8]
 	pReg = (GPIO_RegTypes *)Gpio_BaseAddress[moduleNo];
- 80004ae:	79fb      	ldrb	r3, [r7, #7]
- 80004b0:	4a0e      	ldr	r2, [pc, #56]	; (80004ec <GPIO_Port_Lock+0x58>)
- 80004b2:	f852 3023 	ldr.w	r3, [r2, r3, lsl #2]
- 80004b6:	60bb      	str	r3, [r7, #8]
+ 800050a:	79fb      	ldrb	r3, [r7, #7]
+ 800050c:	4a0e      	ldr	r2, [pc, #56]	; (8000548 <GPIO_Port_Lock+0x58>)
+ 800050e:	f852 3023 	ldr.w	r3, [r2, r3, lsl #2]
+ 8000512:	60bb      	str	r3, [r7, #8]
 	lockMask = lockMask&0x0000FFFF;
-	REG_WRITE32(&pReg->LCKR.R,(lockBit|lockMask));
- 80004b8:	88ba      	ldrh	r2, [r7, #4]
- 80004ba:	68fb      	ldr	r3, [r7, #12]
- 80004bc:	431a      	orrs	r2, r3
- 80004be:	68bb      	ldr	r3, [r7, #8]
- 80004c0:	61da      	str	r2, [r3, #28]
-	REG_WRITE32(&pReg->LCKR.R,(0x0000U|lockMask));
- 80004c2:	88ba      	ldrh	r2, [r7, #4]
- 80004c4:	68bb      	ldr	r3, [r7, #8]
- 80004c6:	61da      	str	r2, [r3, #28]
-	REG_WRITE32(&pReg->LCKR.R,(lockBit|lockMask));
- 80004c8:	88ba      	ldrh	r2, [r7, #4]
- 80004ca:	68fb      	ldr	r3, [r7, #12]
- 80004cc:	431a      	orrs	r2, r3
- 80004ce:	68bb      	ldr	r3, [r7, #8]
- 80004d0:	61da      	str	r2, [r3, #28]
+	REG_WRITE32(&pReg->LCKR.R,(uint32_t)(lockBit|lockMask));
+ 8000514:	88ba      	ldrh	r2, [r7, #4]
+ 8000516:	68fb      	ldr	r3, [r7, #12]
+ 8000518:	431a      	orrs	r2, r3
+ 800051a:	68bb      	ldr	r3, [r7, #8]
+ 800051c:	61da      	str	r2, [r3, #28]
+	REG_WRITE32(&pReg->LCKR.R,(uint32_t)(0x00000000U|lockMask));
+ 800051e:	88ba      	ldrh	r2, [r7, #4]
+ 8000520:	68bb      	ldr	r3, [r7, #8]
+ 8000522:	61da      	str	r2, [r3, #28]
+	REG_WRITE32(&pReg->LCKR.R,(uint32_t)(lockBit|lockMask));
+ 8000524:	88ba      	ldrh	r2, [r7, #4]
+ 8000526:	68fb      	ldr	r3, [r7, #12]
+ 8000528:	431a      	orrs	r2, r3
+ 800052a:	68bb      	ldr	r3, [r7, #8]
+ 800052c:	61da      	str	r2, [r3, #28]
 	REG_READ32(&pReg->LCKR.R);
- 80004d2:	68bb      	ldr	r3, [r7, #8]
- 80004d4:	69db      	ldr	r3, [r3, #28]
+ 800052e:	68bb      	ldr	r3, [r7, #8]
+ 8000530:	69db      	ldr	r3, [r3, #28]
 	while(REG_READ32((&pReg->LCKR.R)>>16U)!=SET);
- 80004d6:	bf00      	nop
- 80004d8:	68bb      	ldr	r3, [r7, #8]
- 80004da:	69db      	ldr	r3, [r3, #28]
- 80004dc:	0c1b      	lsrs	r3, r3, #16
- 80004de:	2b01      	cmp	r3, #1
- 80004e0:	d1fa      	bne.n	80004d8 <GPIO_Port_Lock+0x44>
+ 8000532:	bf00      	nop
+ 8000534:	68bb      	ldr	r3, [r7, #8]
+ 8000536:	69db      	ldr	r3, [r3, #28]
+ 8000538:	0c1b      	lsrs	r3, r3, #16
+ 800053a:	2b01      	cmp	r3, #1
+ 800053c:	d1fa      	bne.n	8000534 <GPIO_Port_Lock+0x44>
 }
- 80004e2:	bf00      	nop
- 80004e4:	3714      	adds	r7, #20
- 80004e6:	46bd      	mov	sp, r7
- 80004e8:	bc80      	pop	{r7}
- 80004ea:	4770      	bx	lr
- 80004ec:	20000000 	.word	0x20000000
+ 800053e:	bf00      	nop
+ 8000540:	3714      	adds	r7, #20
+ 8000542:	46bd      	mov	sp, r7
+ 8000544:	bc80      	pop	{r7}
+ 8000546:	4770      	bx	lr
+ 8000548:	20000000 	.word	0x20000000
 
-080004f0 <GPIO_Port_Enable>:
+0800054c <GPIO_Port_Enable>:
 	GPIO_Reset_Port(moduleNo);
 }
 #endif
 
 void GPIO_Port_Enable(uint8_t portNo)
 {
- 80004f0:	b580      	push	{r7, lr}
- 80004f2:	b082      	sub	sp, #8
- 80004f4:	af00      	add	r7, sp, #0
- 80004f6:	4603      	mov	r3, r0
- 80004f8:	71fb      	strb	r3, [r7, #7]
+ 800054c:	b580      	push	{r7, lr}
+ 800054e:	b082      	sub	sp, #8
+ 8000550:	af00      	add	r7, sp, #0
+ 8000552:	4603      	mov	r3, r0
+ 8000554:	71fb      	strb	r3, [r7, #7]
 	RCC_AHB1PeripheralClkEnable(portNo);	/** Turns on the Clock for the configured Port */
- 80004fa:	79fb      	ldrb	r3, [r7, #7]
- 80004fc:	4618      	mov	r0, r3
- 80004fe:	f000 f805 	bl	800050c <RCC_AHB1PeripheralClkEnable>
+ 8000556:	79fb      	ldrb	r3, [r7, #7]
+ 8000558:	4618      	mov	r0, r3
+ 800055a:	f000 f805 	bl	8000568 <RCC_AHB1PeripheralClkEnable>
 }
- 8000502:	bf00      	nop
- 8000504:	3708      	adds	r7, #8
- 8000506:	46bd      	mov	sp, r7
- 8000508:	bd80      	pop	{r7, pc}
+ 800055e:	bf00      	nop
+ 8000560:	3708      	adds	r7, #8
+ 8000562:	46bd      	mov	sp, r7
+ 8000564:	bd80      	pop	{r7, pc}
 	...
 
-0800050c <RCC_AHB1PeripheralClkEnable>:
+08000568 <RCC_AHB1PeripheralClkEnable>:
 
 	}
 }
 
 void RCC_AHB1PeripheralClkEnable(Rcc_AHB1_Peripherals peripheral)
 {
- 800050c:	b480      	push	{r7}
- 800050e:	b083      	sub	sp, #12
- 8000510:	af00      	add	r7, sp, #0
- 8000512:	4603      	mov	r3, r0
- 8000514:	71fb      	strb	r3, [r7, #7]
+ 8000568:	b480      	push	{r7}
+ 800056a:	b083      	sub	sp, #12
+ 800056c:	af00      	add	r7, sp, #0
+ 800056e:	4603      	mov	r3, r0
+ 8000570:	71fb      	strb	r3, [r7, #7]
 	REG_RMW32(RCC_AHB1ENR,SET_BIT(peripheral) ,SET_BIT(peripheral) );
- 8000516:	4b0a      	ldr	r3, [pc, #40]	; (8000540 <RCC_AHB1PeripheralClkEnable+0x34>)
- 8000518:	681a      	ldr	r2, [r3, #0]
- 800051a:	79fb      	ldrb	r3, [r7, #7]
- 800051c:	2101      	movs	r1, #1
- 800051e:	fa01 f303 	lsl.w	r3, r1, r3
- 8000522:	43db      	mvns	r3, r3
- 8000524:	401a      	ands	r2, r3
- 8000526:	79fb      	ldrb	r3, [r7, #7]
- 8000528:	2101      	movs	r1, #1
- 800052a:	fa01 f303 	lsl.w	r3, r1, r3
- 800052e:	4904      	ldr	r1, [pc, #16]	; (8000540 <RCC_AHB1PeripheralClkEnable+0x34>)
- 8000530:	4313      	orrs	r3, r2
- 8000532:	600b      	str	r3, [r1, #0]
+ 8000572:	4b0a      	ldr	r3, [pc, #40]	; (800059c <RCC_AHB1PeripheralClkEnable+0x34>)
+ 8000574:	681a      	ldr	r2, [r3, #0]
+ 8000576:	79fb      	ldrb	r3, [r7, #7]
+ 8000578:	2101      	movs	r1, #1
+ 800057a:	fa01 f303 	lsl.w	r3, r1, r3
+ 800057e:	43db      	mvns	r3, r3
+ 8000580:	401a      	ands	r2, r3
+ 8000582:	79fb      	ldrb	r3, [r7, #7]
+ 8000584:	2101      	movs	r1, #1
+ 8000586:	fa01 f303 	lsl.w	r3, r1, r3
+ 800058a:	4904      	ldr	r1, [pc, #16]	; (800059c <RCC_AHB1PeripheralClkEnable+0x34>)
+ 800058c:	4313      	orrs	r3, r2
+ 800058e:	600b      	str	r3, [r1, #0]
 }
- 8000534:	bf00      	nop
- 8000536:	370c      	adds	r7, #12
- 8000538:	46bd      	mov	sp, r7
- 800053a:	bc80      	pop	{r7}
- 800053c:	4770      	bx	lr
- 800053e:	bf00      	nop
- 8000540:	40023830 	.word	0x40023830
+ 8000590:	bf00      	nop
+ 8000592:	370c      	adds	r7, #12
+ 8000594:	46bd      	mov	sp, r7
+ 8000596:	bc80      	pop	{r7}
+ 8000598:	4770      	bx	lr
+ 800059a:	bf00      	nop
+ 800059c:	40023830 	.word	0x40023830
 
-08000544 <main>:
+080005a0 <main>:
 #include "Reg_Macros.h"
 #include "RCC.h"
 #include "Gpio.h"
 
 int main(void)
 {
- 8000544:	b580      	push	{r7, lr}
- 8000546:	af00      	add	r7, sp, #0
+ 80005a0:	b580      	push	{r7, lr}
+ 80005a2:	af00      	add	r7, sp, #0
 	//RCC_AHB1PeripheralClkEnable(EN_GPIOA);
 	Port_Init (&Port_Config0);
- 8000548:	4801      	ldr	r0, [pc, #4]	; (8000550 <main+0xc>)
- 800054a:	f7ff fe4d 	bl	80001e8 <Port_Init>
+ 80005a4:	4804      	ldr	r0, [pc, #16]	; (80005b8 <main+0x18>)
+ 80005a6:	f7ff fe1f 	bl	80001e8 <Port_Init>
+	GPIO_A.MODER.B.ModeR12 = 0x1U;
+ 80005aa:	4a04      	ldr	r2, [pc, #16]	; (80005bc <main+0x1c>)
+ 80005ac:	6813      	ldr	r3, [r2, #0]
+ 80005ae:	2101      	movs	r1, #1
+ 80005b0:	f361 6319 	bfi	r3, r1, #24, #2
+ 80005b4:	6013      	str	r3, [r2, #0]
 	if((GPIO_B.MODER.B.ModeR1)==0x1U)
 	{
 		RCC_AHB1PeripheralClkEnable(EN_GPIOC);
 	}
 #endif
 	for(;;);
- 800054e:	e7fe      	b.n	800054e <main+0xa>
- 8000550:	20000024 	.word	0x20000024
+ 80005b6:	e7fe      	b.n	80005b6 <main+0x16>
+ 80005b8:	20000024 	.word	0x20000024
+ 80005bc:	40020000 	.word	0x40020000
 
-08000554 <Reset_Handler>:
+080005c0 <Reset_Handler>:
 
   .section .text.Reset_Handler
   .weak Reset_Handler
   .type Reset_Handler, %function
 Reset_Handler:
   ldr   r0, =_estack
- 8000554:	480d      	ldr	r0, [pc, #52]	; (800058c <LoopForever+0x2>)
+ 80005c0:	480d      	ldr	r0, [pc, #52]	; (80005f8 <LoopForever+0x2>)
   mov   sp, r0          /* set stack pointer */
- 8000556:	4685      	mov	sp, r0
+ 80005c2:	4685      	mov	sp, r0
 
 /* Copy the data segment initializers from flash to SRAM */
   ldr r0, =_sdata
- 8000558:	480d      	ldr	r0, [pc, #52]	; (8000590 <LoopForever+0x6>)
+ 80005c4:	480d      	ldr	r0, [pc, #52]	; (80005fc <LoopForever+0x6>)
   ldr r1, =_edata
- 800055a:	490e      	ldr	r1, [pc, #56]	; (8000594 <LoopForever+0xa>)
+ 80005c6:	490e      	ldr	r1, [pc, #56]	; (8000600 <LoopForever+0xa>)
   ldr r2, =_sidata
- 800055c:	4a0e      	ldr	r2, [pc, #56]	; (8000598 <LoopForever+0xe>)
+ 80005c8:	4a0e      	ldr	r2, [pc, #56]	; (8000604 <LoopForever+0xe>)
   movs r3, #0
- 800055e:	2300      	movs	r3, #0
+ 80005ca:	2300      	movs	r3, #0
   b LoopCopyDataInit
- 8000560:	e002      	b.n	8000568 <LoopCopyDataInit>
+ 80005cc:	e002      	b.n	80005d4 <LoopCopyDataInit>
 
-08000562 <CopyDataInit>:
+080005ce <CopyDataInit>:
 
 CopyDataInit:
   ldr r4, [r2, r3]
- 8000562:	58d4      	ldr	r4, [r2, r3]
+ 80005ce:	58d4      	ldr	r4, [r2, r3]
   str r4, [r0, r3]
- 8000564:	50c4      	str	r4, [r0, r3]
+ 80005d0:	50c4      	str	r4, [r0, r3]
   adds r3, r3, #4
- 8000566:	3304      	adds	r3, #4
+ 80005d2:	3304      	adds	r3, #4
 
-08000568 <LoopCopyDataInit>:
+080005d4 <LoopCopyDataInit>:
 
 LoopCopyDataInit:
   adds r4, r0, r3
- 8000568:	18c4      	adds	r4, r0, r3
+ 80005d4:	18c4      	adds	r4, r0, r3
   cmp r4, r1
- 800056a:	428c      	cmp	r4, r1
+ 80005d6:	428c      	cmp	r4, r1
   bcc CopyDataInit
- 800056c:	d3f9      	bcc.n	8000562 <CopyDataInit>
+ 80005d8:	d3f9      	bcc.n	80005ce <CopyDataInit>
 
 /* Zero fill the bss segment. */
   ldr r2, =_sbss
- 800056e:	4a0b      	ldr	r2, [pc, #44]	; (800059c <LoopForever+0x12>)
+ 80005da:	4a0b      	ldr	r2, [pc, #44]	; (8000608 <LoopForever+0x12>)
   ldr r4, =_ebss
- 8000570:	4c0b      	ldr	r4, [pc, #44]	; (80005a0 <LoopForever+0x16>)
+ 80005dc:	4c0b      	ldr	r4, [pc, #44]	; (800060c <LoopForever+0x16>)
   movs r3, #0
- 8000572:	2300      	movs	r3, #0
+ 80005de:	2300      	movs	r3, #0
   b LoopFillZerobss
- 8000574:	e001      	b.n	800057a <LoopFillZerobss>
+ 80005e0:	e001      	b.n	80005e6 <LoopFillZerobss>
 
-08000576 <FillZerobss>:
+080005e2 <FillZerobss>:
 
 FillZerobss:
   str  r3, [r2]
- 8000576:	6013      	str	r3, [r2, #0]
+ 80005e2:	6013      	str	r3, [r2, #0]
   adds r2, r2, #4
- 8000578:	3204      	adds	r2, #4
+ 80005e4:	3204      	adds	r2, #4
 
-0800057a <LoopFillZerobss>:
+080005e6 <LoopFillZerobss>:
 
 LoopFillZerobss:
   cmp r2, r4
- 800057a:	42a2      	cmp	r2, r4
+ 80005e6:	42a2      	cmp	r2, r4
   bcc FillZerobss
- 800057c:	d3fb      	bcc.n	8000576 <FillZerobss>
+ 80005e8:	d3fb      	bcc.n	80005e2 <FillZerobss>
 
 /* Call the clock system intitialization function.*/
   bl  SystemInit
- 800057e:	f3af 8000 	nop.w
+ 80005ea:	f3af 8000 	nop.w
 /* Call static constructors */
   bl __libc_init_array
- 8000582:	f000 f811 	bl	80005a8 <__libc_init_array>
+ 80005ee:	f000 f811 	bl	8000614 <__libc_init_array>
 /* Call the application's entry point.*/
   bl main
- 8000586:	f7ff ffdd 	bl	8000544 <main>
+ 80005f2:	f7ff ffd5 	bl	80005a0 <main>
 
-0800058a <LoopForever>:
+080005f6 <LoopForever>:
 
 LoopForever:
     b LoopForever
- 800058a:	e7fe      	b.n	800058a <LoopForever>
+ 80005f6:	e7fe      	b.n	80005f6 <LoopForever>
   ldr   r0, =_estack
- 800058c:	20020000 	.word	0x20020000
+ 80005f8:	20020000 	.word	0x20020000
   ldr r0, =_sdata
- 8000590:	20000000 	.word	0x20000000
+ 80005fc:	20000000 	.word	0x20000000
   ldr r1, =_edata
- 8000594:	2000002c 	.word	0x2000002c
+ 8000600:	200004a4 	.word	0x200004a4
   ldr r2, =_sidata
- 8000598:	08000610 	.word	0x08000610
+ 8000604:	0800067c 	.word	0x0800067c
   ldr r2, =_sbss
- 800059c:	2000002c 	.word	0x2000002c
+ 8000608:	200004a4 	.word	0x200004a4
   ldr r4, =_ebss
- 80005a0:	20000050 	.word	0x20000050
+ 800060c:	200004c8 	.word	0x200004c8
 
-080005a4 <ADC_IRQHandler>:
+08000610 <ADC_IRQHandler>:
  * @retval : None
 */
   .section .text.Default_Handler,"ax",%progbits
 Default_Handler:
 Infinite_Loop:
   b Infinite_Loop
- 80005a4:	e7fe      	b.n	80005a4 <ADC_IRQHandler>
+ 8000610:	e7fe      	b.n	8000610 <ADC_IRQHandler>
 	...
 
-080005a8 <__libc_init_array>:
- 80005a8:	b570      	push	{r4, r5, r6, lr}
- 80005aa:	4e0d      	ldr	r6, [pc, #52]	; (80005e0 <__libc_init_array+0x38>)
- 80005ac:	4c0d      	ldr	r4, [pc, #52]	; (80005e4 <__libc_init_array+0x3c>)
- 80005ae:	1ba4      	subs	r4, r4, r6
- 80005b0:	10a4      	asrs	r4, r4, #2
- 80005b2:	2500      	movs	r5, #0
- 80005b4:	42a5      	cmp	r5, r4
- 80005b6:	d109      	bne.n	80005cc <__libc_init_array+0x24>
- 80005b8:	4e0b      	ldr	r6, [pc, #44]	; (80005e8 <__libc_init_array+0x40>)
- 80005ba:	4c0c      	ldr	r4, [pc, #48]	; (80005ec <__libc_init_array+0x44>)
- 80005bc:	f000 f818 	bl	80005f0 <_init>
- 80005c0:	1ba4      	subs	r4, r4, r6
- 80005c2:	10a4      	asrs	r4, r4, #2
- 80005c4:	2500      	movs	r5, #0
- 80005c6:	42a5      	cmp	r5, r4
- 80005c8:	d105      	bne.n	80005d6 <__libc_init_array+0x2e>
- 80005ca:	bd70      	pop	{r4, r5, r6, pc}
- 80005cc:	f856 3025 	ldr.w	r3, [r6, r5, lsl #2]
- 80005d0:	4798      	blx	r3
- 80005d2:	3501      	adds	r5, #1
- 80005d4:	e7ee      	b.n	80005b4 <__libc_init_array+0xc>
- 80005d6:	f856 3025 	ldr.w	r3, [r6, r5, lsl #2]
- 80005da:	4798      	blx	r3
- 80005dc:	3501      	adds	r5, #1
- 80005de:	e7f2      	b.n	80005c6 <__libc_init_array+0x1e>
- 80005e0:	08000608 	.word	0x08000608
- 80005e4:	08000608 	.word	0x08000608
- 80005e8:	08000608 	.word	0x08000608
- 80005ec:	0800060c 	.word	0x0800060c
+08000614 <__libc_init_array>:
+ 8000614:	b570      	push	{r4, r5, r6, lr}
+ 8000616:	4e0d      	ldr	r6, [pc, #52]	; (800064c <__libc_init_array+0x38>)
+ 8000618:	4c0d      	ldr	r4, [pc, #52]	; (8000650 <__libc_init_array+0x3c>)
+ 800061a:	1ba4      	subs	r4, r4, r6
+ 800061c:	10a4      	asrs	r4, r4, #2
+ 800061e:	2500      	movs	r5, #0
+ 8000620:	42a5      	cmp	r5, r4
+ 8000622:	d109      	bne.n	8000638 <__libc_init_array+0x24>
+ 8000624:	4e0b      	ldr	r6, [pc, #44]	; (8000654 <__libc_init_array+0x40>)
+ 8000626:	4c0c      	ldr	r4, [pc, #48]	; (8000658 <__libc_init_array+0x44>)
+ 8000628:	f000 f818 	bl	800065c <_init>
+ 800062c:	1ba4      	subs	r4, r4, r6
+ 800062e:	10a4      	asrs	r4, r4, #2
+ 8000630:	2500      	movs	r5, #0
+ 8000632:	42a5      	cmp	r5, r4
+ 8000634:	d105      	bne.n	8000642 <__libc_init_array+0x2e>
+ 8000636:	bd70      	pop	{r4, r5, r6, pc}
+ 8000638:	f856 3025 	ldr.w	r3, [r6, r5, lsl #2]
+ 800063c:	4798      	blx	r3
+ 800063e:	3501      	adds	r5, #1
+ 8000640:	e7ee      	b.n	8000620 <__libc_init_array+0xc>
+ 8000642:	f856 3025 	ldr.w	r3, [r6, r5, lsl #2]
+ 8000646:	4798      	blx	r3
+ 8000648:	3501      	adds	r5, #1
+ 800064a:	e7f2      	b.n	8000632 <__libc_init_array+0x1e>
+ 800064c:	08000674 	.word	0x08000674
+ 8000650:	08000674 	.word	0x08000674
+ 8000654:	08000674 	.word	0x08000674
+ 8000658:	08000678 	.word	0x08000678
 
-080005f0 <_init>:
- 80005f0:	b5f8      	push	{r3, r4, r5, r6, r7, lr}
- 80005f2:	bf00      	nop
- 80005f4:	bcf8      	pop	{r3, r4, r5, r6, r7}
- 80005f6:	bc08      	pop	{r3}
- 80005f8:	469e      	mov	lr, r3
- 80005fa:	4770      	bx	lr
+0800065c <_init>:
+ 800065c:	b5f8      	push	{r3, r4, r5, r6, r7, lr}
+ 800065e:	bf00      	nop
+ 8000660:	bcf8      	pop	{r3, r4, r5, r6, r7}
+ 8000662:	bc08      	pop	{r3}
+ 8000664:	469e      	mov	lr, r3
+ 8000666:	4770      	bx	lr
 
-080005fc <_fini>:
- 80005fc:	b5f8      	push	{r3, r4, r5, r6, r7, lr}
- 80005fe:	bf00      	nop
- 8000600:	bcf8      	pop	{r3, r4, r5, r6, r7}
- 8000602:	bc08      	pop	{r3}
- 8000604:	469e      	mov	lr, r3
- 8000606:	4770      	bx	lr
+08000668 <_fini>:
+ 8000668:	b5f8      	push	{r3, r4, r5, r6, r7, lr}
+ 800066a:	bf00      	nop
+ 800066c:	bcf8      	pop	{r3, r4, r5, r6, r7}
+ 800066e:	bc08      	pop	{r3}
+ 8000670:	469e      	mov	lr, r3
+ 8000672:	4770      	bx	lr

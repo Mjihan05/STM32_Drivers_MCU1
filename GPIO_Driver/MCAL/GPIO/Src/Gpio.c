@@ -28,6 +28,7 @@ void Port_Init (const Port_ConfigType* ConfigPtr)
 	uint8_t loopItr0 = 0U;
 	uint8_t moduleNo = 0U;
 	uint8_t pinNo = 0U;
+	uint16_t portsConfigured = 0U;
 
 	if(ConfigPtr == NULL_PTR)
 	{
@@ -46,8 +47,10 @@ void Port_Init (const Port_ConfigType* ConfigPtr)
 			GPIO_Port_Enable(moduleNo);	/** Turns on the Clock for the configured Port */
 			pReg = (GPIO_RegTypes *)Gpio_BaseAddress[moduleNo];
 
+			portsConfigured |= SET_BIT(moduleNo);
+
 			/** Configure the Pull Up/Down settings */
-			REG_RMW32(&pReg->PUPDR.R,MASK_BITS(0x2U,pinNo*2U),((ConfigPtr[loopItr0]).PinPupDown)<<(pinNo*2U));
+			REG_RMW32(&pReg->PUPDR.R,MASK_BITS(0x3U,pinNo*2U),((ConfigPtr[loopItr0]).PinPupDown)<<(pinNo*2U));
 
 			/** Select the output settings */
 			if(((ConfigPtr[loopItr0]).PinDirection)==PORT_PIN_OUT)
@@ -84,6 +87,7 @@ void Port_Init (const Port_ConfigType* ConfigPtr)
 				{
 					REG_RMW32(&pReg->AFRH.R,MASK_BITS(0xFU,pinNo*4U),(((ConfigPtr[loopItr0]).PinMode-4U))<<(pinNo*4U));
 				}
+				REG_RMW32(&pReg->MODER.R,MASK_BITS(0x3U,pinNo*2U),(0x2U)<<(pinNo*2U));
 			}
 			else
 			{
@@ -93,9 +97,12 @@ void Port_Init (const Port_ConfigType* ConfigPtr)
 	}
 
 #if(GPIO_PORT_LOCK == STD_ON)
-	for(loopItr0 =0U; (loopItr0 = TOTAL_NO_OF_PORTS); loopItr0++)
+	for(loopItr0 =0U; (loopItr0 < TOTAL_NO_OF_PORTS); loopItr0++)
 	{
-		GPIO_Port_Lock(loopItr0,0xFFFF);  /** Locks all the pins of the port until next reset */
+		if( ((portsConfigured>>loopItr0)&0x1U) == SET )
+		{
+			GPIO_Port_Lock(loopItr0,0xFFFF);  /** Locks all the pins of the port until next reset */
+		}
 	}
 #endif
 
@@ -222,9 +229,9 @@ void GPIO_Port_Lock(uint8_t moduleNo, uint16_t lockMask)
 	volatile  GPIO_RegTypes * pReg = 0U;
 	pReg = (GPIO_RegTypes *)Gpio_BaseAddress[moduleNo];
 	lockMask = lockMask&0x0000FFFF;
-	REG_WRITE32(&pReg->LCKR.R,(lockBit|lockMask));
-	REG_WRITE32(&pReg->LCKR.R,(0x0000U|lockMask));
-	REG_WRITE32(&pReg->LCKR.R,(lockBit|lockMask));
+	REG_WRITE32(&pReg->LCKR.R,(uint32_t)(lockBit|lockMask));
+	REG_WRITE32(&pReg->LCKR.R,(uint32_t)(0x00000000U|lockMask));
+	REG_WRITE32(&pReg->LCKR.R,(uint32_t)(lockBit|lockMask));
 	REG_READ32(&pReg->LCKR.R);
 	while(REG_READ32((&pReg->LCKR.R)>>16U)!=SET);
 }

@@ -212,6 +212,12 @@ typedef enum  /* Autosar 4.4.0 -  SWS_Port_00229 */
 	GPIO_K_PIN_15,
 }Port_PinType;
 
+typedef enum
+{
+	PORT_PIN_LOW,
+	PORT_PIN_HIGH,
+}Port_PinInitValue;
+
 typedef enum  /* Autosar 4.4.0 -  SWS_Port_00230 - Possible directions of a port pin */
 {
 	PORT_PIN_IN,

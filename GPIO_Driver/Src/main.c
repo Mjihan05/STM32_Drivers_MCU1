@@ -20,6 +20,7 @@ int main(void)
 {
 	//RCC_AHB1PeripheralClkEnable(EN_GPIOA);
 	Port_Init (&Port_Config0);
+	GPIO_A.MODER.B.ModeR12 = 0x1U;
 
 #if 0
 	RCC_AHB1PeripheralClkEnable(EN_GPIOD);
