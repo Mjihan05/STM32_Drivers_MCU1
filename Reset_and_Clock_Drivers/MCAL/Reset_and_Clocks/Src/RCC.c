@@ -731,26 +731,31 @@ void RCC_APB2DisablePerSleepMode(Rcc_APB2_Peripherals peripheral)
 void RCC_ResetAHB1Peripheral(Rcc_AHB1_Peripherals peripheral)
 {
 	REG_WRITE32(RCC_AHB1RSTR, SET_BIT(peripheral) );
+	REG_WRITE32(RCC_AHB1RSTR, CLEAR_BIT(peripheral) );
 }
 
 void RCC_ResetAHB2Peripheral(Rcc_AHB2_Peripherals peripheral)
 {
 	REG_WRITE32(RCC_AHB2RSTR, SET_BIT(peripheral) );
+	REG_WRITE32(RCC_AHB2RSTR, CLEAR_BIT(peripheral) );
 }
 
 void RCC_ResetAHB3Peripheral(Rcc_AHB3_Peripherals peripheral)
 {
 	REG_WRITE32(RCC_AHB3RSTR, SET_BIT(peripheral) );
+	REG_WRITE32(RCC_AHB3RSTR, CLEAR_BIT(peripheral) );
 }
 
 void RCC_ResetAPB1Peripheral(Rcc_APB1_Peripherals peripheral)
 {
 	REG_WRITE32(RCC_APB1RSTR, SET_BIT(peripheral) );
+	REG_WRITE32(RCC_APB1RSTR, CLEAR_BIT(peripheral) );
 }
 
 void RCC_ResetAPB2Peripheral(Rcc_APB2_Peripherals peripheral)
 {
 	REG_WRITE32(RCC_APB2RSTR, SET_BIT(peripheral) );
+	REG_WRITE32(RCC_APB2RSTR, CLEAR_BIT(peripheral) );
 }
 
 void RCC_ResetBackupDomain(void)
