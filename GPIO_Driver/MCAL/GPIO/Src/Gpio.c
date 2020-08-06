@@ -79,7 +79,7 @@ void Port_Init (const Port_ConfigType* ConfigPtr)
 			else if (((ConfigPtr[loopItr0]).PinMode)>=PIN_MODE_ALT_FUNC_0)
 			{
 				/** Select the Alternate Functionality in AFRL */
-				if( (((ConfigPtr[loopItr0]).PinMode)<=PIN_MODE_ALT_FUNC_7))
+				if( pinNo < 8U )
 				{
 					REG_RMW32(&pReg->AFRL.R,MASK_BITS(0xFU,pinNo*4U),(((ConfigPtr[loopItr0]).PinMode-4U))<<(pinNo*4U));
 				}
@@ -149,7 +149,7 @@ void Port_RefreshPortDirection (void)
 		pinNo = loopItr0%16U;
 		pReg = (GPIO_RegTypes *)Gpio_BaseAddress[moduleNo];
 
-		if( (GlobalConfigPtr[loopItr0]).PinDirectionChangeable == FALSE )
+		if(((GlobalConfigPtr[loopItr0]).PinMode != PIN_UNUSED) && (GlobalConfigPtr[loopItr0]).PinDirectionChangeable == FALSE )
 		{
 			/** Set the o/p default value before setting the pin direction */
 			if( ((GlobalConfigPtr[loopItr0]).PinInitValue) == SET)
@@ -197,27 +197,29 @@ void Port_SetPinMode (Port_PinType Pin,Port_PinModeType Mode)
 
 	volatile  GPIO_RegTypes * pReg = 0U;
 	uint8_t moduleNo = Pin/16U;
+	uint8_t PinNo = Pin%16U;
 
 	pReg = (GPIO_RegTypes *)Gpio_BaseAddress[moduleNo];
-	if( ((GlobalConfigPtr[Pin]).PinMode)==PIN_MODE_GPIO && ((GlobalConfigPtr[Pin]).PinDirection==PORT_PIN_IN) )
+	if( (Mode)==PIN_MODE_GPIO && ((GlobalConfigPtr[Pin]).PinDirection==PORT_PIN_IN) )
 	{
-		REG_RMW32(&pReg->MODER.R,MASK_BITS(0x3U,Pin*2U),(PORT_PIN_IN)<<(Pin*2U));
+		REG_RMW32(&pReg->MODER.R,MASK_BITS(0x3U,PinNo*2U),(PORT_PIN_IN)<<(PinNo*2U));
 	}
-	else if (((GlobalConfigPtr[Pin]).PinMode)>=PIN_MODE_ALT_FUNC_0)
+	else if ((Mode)>=PIN_MODE_ALT_FUNC_0)
 	{
 		/** Select the Alternate Functionality in AFRL */
-		if( (((GlobalConfigPtr[Pin]).PinMode)<=PIN_MODE_ALT_FUNC_7))
+		if( (PinNo) < 8U )
 		{
-			REG_RMW32(&pReg->AFRL.R,MASK_BITS(0xFU,Pin*4U),(((GlobalConfigPtr[Pin]).PinMode-4U))<<(Pin*4U));
+			REG_RMW32(&pReg->AFRL.R,MASK_BITS(0xFU,PinNo*4U),(Mode-4U)<<(PinNo*4U));
 		}
 		else /** Select the Alternate Functionality in AFRH */
 		{
-			REG_RMW32(&pReg->AFRH.R,MASK_BITS(0xFU,Pin*4U),(((GlobalConfigPtr[Pin]).PinMode-4U))<<(Pin*4U));
+			REG_RMW32(&pReg->AFRH.R,MASK_BITS(0xFU,PinNo*4U),(Mode-4U)<<(PinNo*4U));
 		}
+		REG_RMW32(&pReg->MODER.R,MASK_BITS(0x3U,PinNo*2U),(0x2U)<<(PinNo*2U));
 	}
 	else
 	{
-		REG_RMW32(&pReg->MODER.R,MASK_BITS(0x3U,Pin*2U),((GlobalConfigPtr[Pin]).PinMode)<<(Pin*2U));
+		REG_RMW32(&pReg->MODER.R,MASK_BITS(0x3U,PinNo*2U),(Mode)<<(PinNo*2U));
 	}
 }
 #endif

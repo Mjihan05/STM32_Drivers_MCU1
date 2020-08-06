@@ -39,9 +39,9 @@ RCC.c:716:6:RCC_AHB3DisablePerSleepMode	16	static
 RCC.c:721:6:RCC_APB1DisablePerSleepMode	16	static
 RCC.c:726:6:RCC_APB2DisablePerSleepMode	16	static
 RCC.c:731:6:RCC_ResetAHB1Peripheral	16	static
-RCC.c:736:6:RCC_ResetAHB2Peripheral	16	static
-RCC.c:741:6:RCC_ResetAHB3Peripheral	16	static
-RCC.c:746:6:RCC_ResetAPB1Peripheral	16	static
-RCC.c:751:6:RCC_ResetAPB2Peripheral	16	static
-RCC.c:756:6:RCC_ResetBackupDomain	4	static
-RCC.c:761:19:RCC_GetResetStatus	16	static
+RCC.c:737:6:RCC_ResetAHB2Peripheral	16	static
+RCC.c:743:6:RCC_ResetAHB3Peripheral	16	static
+RCC.c:749:6:RCC_ResetAPB1Peripheral	16	static
+RCC.c:755:6:RCC_ResetAPB2Peripheral	16	static
+RCC.c:761:6:RCC_ResetBackupDomain	4	static
+RCC.c:766:19:RCC_GetResetStatus	16	static

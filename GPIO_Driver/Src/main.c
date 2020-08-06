@@ -20,7 +20,17 @@ int main(void)
 {
 	//RCC_AHB1PeripheralClkEnable(EN_GPIOA);
 	Port_Init (&Port_Config0);
-	GPIO_A.MODER.B.ModeR12 = 0x1U;
+
+#if(GPIO_PORT_LOCK == STD_ON)
+	GPIO_A.MODER.B.ModeR1 = 0x1U; /** should not change*/
+	GPIO_Port_Unlock(0U);
+	GPIO_A.MODER.B.ModeR1 = 0x1U; /** should change*/
+#endif
+	Port_SetPinDirection(GPIO_A_PIN_1,PORT_PIN_OUT);
+	Port_RefreshPortDirection();
+	Port_SetPinMode(GPIO_A_PIN_1,PIN_MODE_ANALOG);
+	Port_SetPinMode(GPIO_A_PIN_1,PIN_MODE_ALT_FUNC_8);
+	Port_SetPinMode(GPIO_A_PIN_1,PIN_MODE_GPIO);
 
 #if 0
 	RCC_AHB1PeripheralClkEnable(EN_GPIOD);
