@@ -11,6 +11,7 @@
 #define DIO_CFG_DIO_PBCFG_H_
 
 /** Configured Pins  */
+#define DIO_PINS_CONFIGURED (8U)
 #define DIO_PIN_A0  (0U)
 #define DIO_PIN_A1  (1U)
 #define DIO_PIN_B2  (18U)

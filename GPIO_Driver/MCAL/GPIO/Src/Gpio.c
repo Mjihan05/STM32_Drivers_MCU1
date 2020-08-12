@@ -68,7 +68,7 @@ void Port_Init (const Port_ConfigType* ConfigPtr)
 			}
 			else
 			{
-				REG_RMW32(&pReg->BSRR.R,MASK_BITS(0x1U,pinNo),(SET)<<(pinNo+16U));
+				REG_RMW32(&pReg->BSRR.R,MASK_BITS(0x1U,pinNo+16U),(SET)<<(pinNo+16U));
 			}
 
 			/** Set the mode of the GPIO Pins */
