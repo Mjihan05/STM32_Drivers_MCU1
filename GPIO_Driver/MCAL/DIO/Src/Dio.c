@@ -17,7 +17,12 @@
 #include "GPIO_regTypes.h"
 #include "Dio.h"
 
+uint16_t gu16_Port_IpPinsMask[TOTAL_NO_OF_PORTS]= {};
+uint16_t gu16_Port_OpPinsMask[TOTAL_NO_OF_PORTS]= {};
 
+/** Local Function Prototypes */
+uint16_t Dio_GetIpPortMask(uint8_t PortId);
+uint16_t Dio_GetOpPortMask(uint8_t PortId);
 
 Dio_LevelType Dio_ReadChannel (Dio_ChannelType ChannelId)
 {
@@ -44,7 +49,14 @@ Dio_LevelType Dio_ReadChannel (Dio_ChannelType ChannelId)
 	uint8_t pinNo = ChannelId%16U;
 	volatile  GPIO_RegTypes * pReg = (GPIO_RegTypes *)Gpio_BaseAddress[moduleNo];
 
-	return ((REG_READ32(&pReg->IDR.R))>>pinNo)&0x1U;
+	if(GlobalConfigPtr[ChannelId].PinDirection == PORT_PIN_IN)
+	{
+		return ((REG_READ32(&pReg->IDR.R))>>pinNo)&0x1U;
+	}
+	else
+	{
+		return ((REG_READ32(&pReg->ODR.R))>>pinNo)&0x1U;
+	}
 }
 
 void Dio_WriteChannel (Dio_ChannelType ChannelId,Dio_LevelType Level)
@@ -90,10 +102,81 @@ void Dio_WriteChannel (Dio_ChannelType ChannelId,Dio_LevelType Level)
 	}
 }
 
+Dio_PortLevelType Dio_ReadPort (Dio_PortType PortId)
+{
+	/** Check if Port is Initialised */
+	if(gu8_PortInitStatus != MODULE_INITIALIZED)
+	{
+		return;
+	}
 
+	if(PortId>= TOTAL_NO_OF_PORTS)
+	{
+		return DIO_E_PARAM_INVALID_PORT_ID;
+	}
 
+	volatile  GPIO_RegTypes * pReg = (GPIO_RegTypes *)Gpio_BaseAddress[PortId];
 
+	/** Returns the level of all the DIO channels in the Port */
+	return (Dio_PortLevelType)((REG_READ32(&pReg->IDR.R))&(Dio_GetIpPortMask(PortId)));
+}
 
+void Dio_WritePort (Dio_PortType PortId,Dio_PortLevelType Level)
+{
+	/** Check if Port is Initialised */
+	if(gu8_PortInitStatus != MODULE_INITIALIZED)
+	{
+		return;
+	}
+
+	if(PortId>= TOTAL_NO_OF_PORTS)
+	{
+		return DIO_E_PARAM_INVALID_PORT_ID;
+	}
+
+	volatile  GPIO_RegTypes * pReg = (GPIO_RegTypes *)Gpio_BaseAddress[PortId];
+
+	REG_RMW32(&pReg->ODR.R,Dio_GetOpPortMask(PortId),Level);
+}
+
+void Dio_ConfigPortMasks(void)
+{
+	/** Check if Port is Initialised */
+	if(gu8_PortInitStatus != MODULE_INITIALIZED)
+	{
+		return;
+	}
+
+	uint16_t channelId;
+	uint8_t portId;
+	uint8_t pinNo;
+
+	for(uint8_t loopItr=0U; loopItr<DIO_PINS_CONFIGURED; loopItr++)
+	{
+		channelId = Dio_ChannelUsed[loopItr];
+		portId = channelId/16U;
+		pinNo = channelId%16U;
+
+		if(GlobalConfigPtr[channelId].PinDirection == PORT_PIN_IN)
+		{
+			gu16_Port_IpPinsMask[portId] =  (gu16_Port_IpPinsMask[portId]|(SET<<pinNo));
+		}
+		else
+		{
+			gu16_Port_OpPinsMask[portId] =  (gu16_Port_OpPinsMask[portId]|(SET<<pinNo));
+		}
+	}
+}
+
+uint16_t Dio_GetIpPortMask(uint8_t PortId)
+{
+	return (uint16_t)(gu16_Port_IpPinsMask[PortId]);
+}
+
+uint16_t Dio_GetOpPortMask(uint8_t PortId)
+{
+	return (uint16_t)(gu16_Port_OpPinsMask[PortId]);
+}
 
 
 
