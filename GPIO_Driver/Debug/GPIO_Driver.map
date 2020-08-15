@@ -82,9 +82,9 @@ Discarded input sections
  .text          0x0000000000000000        0x0 MCAL/DIO/Src/Dio.o
  .data          0x0000000000000000        0x0 MCAL/DIO/Src/Dio.o
  .bss           0x0000000000000000        0x0 MCAL/DIO/Src/Dio.o
- .data.gu16_Port_IpPinsMask
+ .bss.gu16_Port_IpPinsMask
                 0x0000000000000000       0x12 MCAL/DIO/Src/Dio.o
- .data.gu16_Port_OpPinsMask
+ .bss.gu16_Port_OpPinsMask
                 0x0000000000000000       0x12 MCAL/DIO/Src/Dio.o
  .text.Dio_ReadChannel
                 0x0000000000000000       0xac MCAL/DIO/Src/Dio.o

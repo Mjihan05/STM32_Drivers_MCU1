@@ -17,8 +17,8 @@
 #include "GPIO_regTypes.h"
 #include "Dio.h"
 
-uint16_t gu16_Port_IpPinsMask[TOTAL_NO_OF_PORTS]= {0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,};
-uint16_t gu16_Port_OpPinsMask[TOTAL_NO_OF_PORTS]= {0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,};
+uint16_t gu16_Port_IpPinsMask[TOTAL_NO_OF_PORTS]= {0};
+uint16_t gu16_Port_OpPinsMask[TOTAL_NO_OF_PORTS]= {0};
 
 /** Local Function Prototypes */
 uint16_t Dio_GetIpPortMask(uint8_t PortId);
@@ -102,6 +102,7 @@ void Dio_WriteChannel (Dio_ChannelType ChannelId,Dio_LevelType Level)
 	}
 }
 
+/** NOTE - Call Dio_ConfigPortMasks() first only once */
 Dio_PortLevelType Dio_ReadPort (Dio_PortType PortId)
 {
 	/** Check if Port is Initialised */
@@ -121,6 +122,7 @@ Dio_PortLevelType Dio_ReadPort (Dio_PortType PortId)
 	return (Dio_PortLevelType)((REG_READ32(&pReg->IDR.R))&(Dio_GetIpPortMask(PortId)));
 }
 
+/** NOTE - Call Dio_ConfigPortMasks() first only once */
 void Dio_WritePort (Dio_PortType PortId,Dio_PortLevelType Level)
 {
 	/** Check if Port is Initialised */
@@ -250,11 +252,11 @@ void Dio_ConfigPortMasks(void)
 
 		if(GlobalConfigPtr[channelId].PinDirection == PORT_PIN_IN)
 		{
-			gu16_Port_IpPinsMask[portId] =  ((gu16_Port_IpPinsMask[portId]&CLEAR_BIT(pinNo))|(SET<<pinNo));
+			gu16_Port_IpPinsMask[portId] =  ((gu16_Port_IpPinsMask[portId])|(SET<<pinNo));
 		}
 		else
 		{
-			gu16_Port_OpPinsMask[portId] =  ((gu16_Port_OpPinsMask[portId]&CLEAR_BIT(pinNo))|(SET<<pinNo));
+			gu16_Port_OpPinsMask[portId] =  ((gu16_Port_OpPinsMask[portId])|(SET<<pinNo));
 		}
 	}
 }
