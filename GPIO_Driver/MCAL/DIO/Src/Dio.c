@@ -17,8 +17,8 @@
 #include "GPIO_regTypes.h"
 #include "Dio.h"
 
-uint16_t gu16_Port_IpPinsMask[TOTAL_NO_OF_PORTS]= {};
-uint16_t gu16_Port_OpPinsMask[TOTAL_NO_OF_PORTS]= {};
+uint16_t gu16_Port_IpPinsMask[TOTAL_NO_OF_PORTS]= {0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,};
+uint16_t gu16_Port_OpPinsMask[TOTAL_NO_OF_PORTS]= {0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,};
 
 /** Local Function Prototypes */
 uint16_t Dio_GetIpPortMask(uint8_t PortId);
@@ -29,7 +29,7 @@ Dio_LevelType Dio_ReadChannel (Dio_ChannelType ChannelId)
 	/** Check if Port is Initialised */
 	if(gu8_PortInitStatus != MODULE_INITIALIZED)
 	{
-		return;
+		return MODULE_UNINITIALIZED;
 	}
 
 	/** Parameter Checking */
@@ -76,7 +76,7 @@ void Dio_WriteChannel (Dio_ChannelType ChannelId,Dio_LevelType Level)
 		}
 		else if (loopItr == (DIO_PINS_CONFIGURED-1U))
 		{
-			return DIO_E_PARAM_INVALID_CHANNEL_ID; /** TODO- This error needs to be reported in DET   and the return value should be 0*/
+			return; //DIO_E_PARAM_INVALID_CHANNEL_ID; /** TODO- This error needs to be reported in DET   and the return value should be 0*/
 		}
 	}
 
@@ -97,7 +97,7 @@ void Dio_WriteChannel (Dio_ChannelType ChannelId,Dio_LevelType Level)
 		}
 		else
 		{
-			REG_RMW32(&pReg->BSRR.R,MASK_BITS(0x1U,pinNo+16U),(SET)<<(pinNo+16U));
+			REG_RMW32(&pReg->BSRR.R,MASK_BITS(0x1U,(pinNo+16U)),(SET)<<(pinNo+16U));
 		}
 	}
 }
@@ -107,7 +107,7 @@ Dio_PortLevelType Dio_ReadPort (Dio_PortType PortId)
 	/** Check if Port is Initialised */
 	if(gu8_PortInitStatus != MODULE_INITIALIZED)
 	{
-		return;
+		return MODULE_UNINITIALIZED;
 	}
 
 	if(PortId>= TOTAL_NO_OF_PORTS)
@@ -131,12 +131,103 @@ void Dio_WritePort (Dio_PortType PortId,Dio_PortLevelType Level)
 
 	if(PortId>= TOTAL_NO_OF_PORTS)
 	{
-		return DIO_E_PARAM_INVALID_PORT_ID;
+		return; //DIO_E_PARAM_INVALID_PORT_ID;/** TODO- This error needs to be reported in DET   and the return value should be 0*/
 	}
 
 	volatile  GPIO_RegTypes * pReg = (GPIO_RegTypes *)Gpio_BaseAddress[PortId];
 
 	REG_RMW32(&pReg->ODR.R,Dio_GetOpPortMask(PortId),Level);
+}
+
+Dio_PortLevelType Dio_ReadChannelGroup (const Dio_ChannelGroupType* ChannelGroupIdPtr)
+{
+	/** Check if Port is Initialised */
+	if(gu8_PortInitStatus != MODULE_INITIALIZED)
+	{
+		return MODULE_UNINITIALIZED;
+	}
+
+	if(ChannelGroupIdPtr == NULL_PTR)
+	{
+		return DIO_E_PARAM_INVALID_GROUP;
+	}
+
+	volatile  GPIO_RegTypes * pReg = (GPIO_RegTypes *)Gpio_BaseAddress[ChannelGroupIdPtr->port];
+
+	/** Returns the level of all the DIO channels in the Group */
+	return (Dio_PortLevelType)( ((REG_READ32(&pReg->IDR.R))&(ChannelGroupIdPtr->mask))>>ChannelGroupIdPtr->offset );
+}
+
+void Dio_WriteChannelGroup (const Dio_ChannelGroupType* ChannelGroupIdPtr,Dio_PortLevelType Level)
+{
+	/** Check if Port is Initialised */
+	if(gu8_PortInitStatus != MODULE_INITIALIZED)
+	{
+		return;
+	}
+
+	if(ChannelGroupIdPtr == NULL_PTR)
+	{
+		return; // DIO_E_PARAM_INVALID_GROUP;/** TODO- This error needs to be reported in DET   and the return value should be 0*/
+	}
+
+	volatile  GPIO_RegTypes * pReg = (GPIO_RegTypes *)Gpio_BaseAddress[ChannelGroupIdPtr->port];
+
+	REG_RMW32(&pReg->ODR.R,(ChannelGroupIdPtr->mask),(Level<<(ChannelGroupIdPtr->offset)));
+}
+
+Dio_LevelType Dio_FlipChannel (Dio_ChannelType ChannelId)
+{
+	/** Check if Port is Initialised */
+	if(gu8_PortInitStatus != MODULE_INITIALIZED)
+	{
+		return MODULE_UNINITIALIZED;
+	}
+
+	/** Parameter Checking */
+	for(uint8_t loopItr=0; loopItr<DIO_PINS_CONFIGURED; loopItr++)
+	{
+		if(Dio_ChannelUsed[loopItr] == ChannelId)
+		{
+			break;
+		}
+		else if (loopItr == (DIO_PINS_CONFIGURED-1U))
+		{
+			return DIO_E_PARAM_INVALID_CHANNEL_ID; /** TODO- This error needs to be reported in DET   and the return value should be 0*/
+		}
+	}
+
+	uint8_t moduleNo = ChannelId/16U;
+	uint8_t pinNo = ChannelId%16U;
+	volatile  GPIO_RegTypes * pReg = (GPIO_RegTypes *)Gpio_BaseAddress[moduleNo];
+
+	if(GlobalConfigPtr[ChannelId].PinDirection == PORT_PIN_IN)
+	{
+		return (Dio_LevelType)((REG_READ32(&pReg->ODR.R)&MASK_BIT(pinNo))>>pinNo);
+	}
+	else
+	{
+		REG_RMW32(&pReg->ODR.R,(MASK_BIT(pinNo)),~(REG_READ32(&pReg->ODR.R) ));
+		return (Dio_LevelType)((REG_READ32(&pReg->ODR.R)&MASK_BIT(pinNo))>>pinNo);
+	}
+}
+
+void Dio_MaskedWritePort (Dio_PortType PortId,Dio_PortLevelType Level,Dio_PortLevelType Mask)
+{
+	/** Check if Port is Initialised */
+	if(gu8_PortInitStatus != MODULE_INITIALIZED)
+	{
+		return;
+	}
+
+	if(PortId>= TOTAL_NO_OF_PORTS)
+	{
+		return; //DIO_E_PARAM_INVALID_PORT_ID;/** TODO- This error needs to be reported in DET   and the return value should be 0*/
+	}
+
+	volatile  GPIO_RegTypes * pReg = (GPIO_RegTypes *)Gpio_BaseAddress[PortId];
+
+	REG_RMW32(&pReg->ODR.R,Mask,Level);
 }
 
 void Dio_ConfigPortMasks(void)
@@ -159,11 +250,11 @@ void Dio_ConfigPortMasks(void)
 
 		if(GlobalConfigPtr[channelId].PinDirection == PORT_PIN_IN)
 		{
-			gu16_Port_IpPinsMask[portId] =  (gu16_Port_IpPinsMask[portId]|(SET<<pinNo));
+			gu16_Port_IpPinsMask[portId] =  ((gu16_Port_IpPinsMask[portId]&CLEAR_BIT(pinNo))|(SET<<pinNo));
 		}
 		else
 		{
-			gu16_Port_OpPinsMask[portId] =  (gu16_Port_OpPinsMask[portId]|(SET<<pinNo));
+			gu16_Port_OpPinsMask[portId] =  ((gu16_Port_OpPinsMask[portId]&CLEAR_BIT(pinNo))|(SET<<pinNo));
 		}
 	}
 }

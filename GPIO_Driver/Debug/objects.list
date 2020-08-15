@@ -1,3 +1,5 @@
+"MCAL/DIO/Cfg/Dio_PbCfg.o"
+"MCAL/DIO/Src/Dio.o"
 "MCAL/GPIO/Cfg/GPIO_PbCfg.o"
 "MCAL/GPIO/Src/Gpio.o"
 "MCAL/RCC/Cfg/RCC_PbCfg.o"

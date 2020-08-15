@@ -13,7 +13,7 @@
 #include "Dio_PbCfg.h"
 
 
-Dio_ChannelType Dio_ChannelUsed[] =
+Dio_ChannelType Dio_ChannelUsed[DIO_PINS_CONFIGURED] =
 {
 	DIO_PIN_A0,
 	DIO_PIN_A1,
@@ -25,16 +25,23 @@ Dio_ChannelType Dio_ChannelUsed[] =
 	DIO_PIN_B8,
 };
 
-Dio_PortType Dio_PortUsed[] =
+Dio_PortType Dio_PortUsed[DIO_PORT_CONFIGURED] =
 {
 	(0U),
 	(1U)
 };
 
-Dio_ChannelGroupType Dio_ChannelGroup[] =
+Dio_ChannelGroupType Dio_ChannelGroup[DIO_GROUP_CONFIGURED] =
 {
 	{
-
+		.mask = 0x0C,
+		.offset = 2U,
+		.port = 0U
+	},
+	{
+		.mask = 0x1C,
+		.offset = 2U,
+		.port = 1U
 	},
 };
 

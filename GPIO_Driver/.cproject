@@ -47,6 +47,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/GPIO_Driver/MCAL/RCC/Cfg}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/GPIO_Driver/MCAL/GPIO/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/GPIO_Driver/MCAL/GPIO/Cfg}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/GPIO_Driver/MCAL/DIO/Inc}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/GPIO_Driver/MCAL/DIO/Cfg}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.869508471" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
