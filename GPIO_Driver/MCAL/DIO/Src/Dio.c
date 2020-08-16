@@ -119,7 +119,7 @@ Dio_PortLevelType Dio_ReadPort (Dio_PortType PortId)
 	volatile  GPIO_RegTypes * pReg = (GPIO_RegTypes *)Gpio_BaseAddress[PortId];
 
 	/** Returns the level of all the DIO channels in the Port */
-	return (Dio_PortLevelType)((REG_READ32(&pReg->IDR.R))&(Dio_GetIpPortMask(PortId)));
+	return (Dio_PortLevelType)((REG_READ32(&pReg->IDR.R))&((uint16_t)(gu16_Port_IpPinsMask[PortId])));
 }
 
 /** NOTE - Call Dio_ConfigPortMasks() first only once */
@@ -138,7 +138,7 @@ void Dio_WritePort (Dio_PortType PortId,Dio_PortLevelType Level)
 
 	volatile  GPIO_RegTypes * pReg = (GPIO_RegTypes *)Gpio_BaseAddress[PortId];
 
-	REG_RMW32(&pReg->ODR.R,Dio_GetOpPortMask(PortId),Level);
+	REG_RMW32(&pReg->ODR.R,((uint16_t)(gu16_Port_OpPinsMask[PortId])),Level);
 }
 
 Dio_PortLevelType Dio_ReadChannelGroup (const Dio_ChannelGroupType* ChannelGroupIdPtr)

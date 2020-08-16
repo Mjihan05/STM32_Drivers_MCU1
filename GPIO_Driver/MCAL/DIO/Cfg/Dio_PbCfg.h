@@ -58,7 +58,7 @@ typedef struct
 
 
 extern Dio_ChannelType Dio_ChannelUsed[DIO_PINS_CONFIGURED];
-
+extern Dio_ChannelGroupType Dio_ChannelGroup[DIO_GROUP_CONFIGURED];
 
 
 
