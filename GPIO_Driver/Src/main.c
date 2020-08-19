@@ -17,10 +17,20 @@
 #include "Gpio.h"
 #include "Dio.h"
 
+#define BUTTON_LED_TOGGLE
+//#define API_TEST
+
+
+void delay (void)
+{
+	uint32_t i = 0;
+	for(i=0;i<500000; i++);
+}
+
 int main(void)
 {
 				/** GPIO/DIO Test Application  */
-
+#ifdef API_TEST
 	//RCC_AHB1PeripheralClkEnable(EN_GPIOA);
 	Port_Init (&Port_Config0);
 
@@ -57,6 +67,21 @@ int main(void)
 
 	Dio_WriteChannelGroup(&Dio_ChannelGroup[1U],0x4);
 	u16_result = Dio_ReadChannelGroup (&Dio_ChannelGroup[1U]);
+#endif
+
+#ifdef BUTTON_LED_TOGGLE
+	Port_Init (&Port_Config0);
+	while(1)
+	{
+		if(Dio_ReadChannel(GPIO_A_PIN_0) == 0x1U)
+		{
+			Dio_FlipChannel (GPIO_D_PIN_12);
+			delay();
+		}
+	}
+
+
+#endif /** (BUTTON_LED_TOGGLE) */
 
 #if 0
 	RCC_AHB1PeripheralClkEnable(EN_GPIOD);

@@ -11,7 +11,7 @@
 #define DIO_CFG_DIO_PBCFG_H_
 
 /** Configured Pins  */
-#define DIO_PINS_CONFIGURED  (8U)
+#define DIO_PINS_CONFIGURED  (9U)
 #define DIO_PORT_CONFIGURED  (2U)
 #define DIO_GROUP_CONFIGURED (2U)
 #define DIO_PIN_A0  (0U)
@@ -22,6 +22,7 @@
 #define DIO_PIN_B6  (22U)
 #define DIO_PIN_B7  (23U)
 #define DIO_PIN_B8  (24U)
+#define DIO_PIN_D12 (60U)
 
 
 
