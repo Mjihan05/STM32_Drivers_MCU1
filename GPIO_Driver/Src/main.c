@@ -16,6 +16,7 @@
 #include "RCC.h"
 #include "Gpio.h"
 #include "Dio.h"
+#include "NVIC_regTypes.h"
 
 #define BUTTON_LED_TOGGLE
 //#define API_TEST
@@ -69,6 +70,20 @@ int main(void)
 	u16_result = Dio_ReadChannelGroup (&Dio_ChannelGroup[1U]);
 #endif
 
+	NVIC.ISER[0] = 0x1;
+	//NVIC.ICER[0] = 0x1;
+	NVIC.ISER[2] = 0x1;
+	//NVIC.ICER[2] = 0x1;
+	NVIC.ISPR[0] = 0x1;
+	//NVIC.ISPR[2] = 0x1;
+	//NVIC.ICPR[0] = 0x1;
+	//NVIC.ICPR[2] = 0x1;
+	//NVIC.IABR[0] = 0x1;
+	//NVIC.IABR[2] = 0x1;
+	NVIC.IPR[0] = 0x4<<4U;
+	NVIC.IPR[1] = 0x4<<4U;
+	NVIC.STIR.INTID = 0x1;
+
 #ifdef BUTTON_LED_TOGGLE
 	Port_Init (&Port_Config0);
 	while(1)
@@ -79,7 +94,6 @@ int main(void)
 			delay();
 		}
 	}
-
 
 #endif /** (BUTTON_LED_TOGGLE) */
 
