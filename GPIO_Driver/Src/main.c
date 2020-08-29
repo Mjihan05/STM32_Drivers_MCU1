@@ -16,11 +16,15 @@
 #include "RCC.h"
 #include "Gpio.h"
 #include "Dio.h"
-
+#include "Nvic.h"
+#include "NVIC_regTypes.h"
 
 #define BUTTON_LED_TOGGLE
 //#define API_TEST
 
+extern RCC_GlobalConfigType RCC_Config0;
+#define RCC_GLOBAL_INTERRUPT (5U)
+#define EXTI_1_INTERRUPT     (6U)
 
 void delay (void)
 {
@@ -28,9 +32,48 @@ void delay (void)
 	for(i=0;i<500000; i++);
 }
 
+#ifdef NVIC_API_TEST
+uint8_t u8_status=0U;
+void RCC_IRQHandler(void)
+{
+	NVIC_SetPendingIRQ (EXTI_1_INTERRUPT);
+	u8_status = (uint8_t)(NVIC_GetActive (EXTI_1_INTERRUPT));
+	u8_status = (uint8_t)(NVIC_GetActive (RCC_GLOBAL_INTERRUPT));
+	u8_status = (uint8_t)(NVIC_GetPendingIRQ (EXTI_1_INTERRUPT));
+	NVIC_ClearPendingIRQ (EXTI_1_INTERRUPT);
+}
+#endif
+
 int main(void)
 {
 				/** GPIO/DIO Test Application  */
+
+#ifdef BUTTON_LED_TOGGLE
+	Port_Init (&Port_Config0);
+	while(1)
+	{
+		if(Dio_ReadChannel(GPIO_A_PIN_0) == 0x1U)
+		{
+			Dio_FlipChannel (GPIO_D_PIN_12);
+			delay();
+		}
+	}
+
+#endif /** (BUTTON_LED_TOGGLE) */
+
+
+#ifdef NVIC_API_TEST
+	NVIC_EnableIRQ(RCC_GLOBAL_INTERRUPT);
+	//NVIC_DisableIRQ(RCC_GLOBAL_INTERRUPT);
+	NVIC_EnableIRQ(EXTI_1_INTERRUPT);
+	NVIC_SetPriority (RCC_GLOBAL_INTERRUPT, 0x1);
+	NVIC_SetPriority (EXTI_1_INTERRUPT, 0x2);
+
+	NVIC_SoftwareTrig (RCC_GLOBAL_INTERRUPT);
+
+	u8_status = (uint8_t)(NVIC_GetPriority (RCC_GLOBAL_INTERRUPT));
+#endif
+
 #ifdef API_TEST
 	//RCC_AHB1PeripheralClkEnable(EN_GPIOA);
 	Port_Init (&Port_Config0);
@@ -70,29 +113,5 @@ int main(void)
 	u16_result = Dio_ReadChannelGroup (&Dio_ChannelGroup[1U]);
 #endif
 
-
-#ifdef BUTTON_LED_TOGGLE
-	Port_Init (&Port_Config0);
-	while(1)
-	{
-		if(Dio_ReadChannel(GPIO_A_PIN_0) == 0x1U)
-		{
-			Dio_FlipChannel (GPIO_D_PIN_12);
-			delay();
-		}
-	}
-
-#endif /** (BUTTON_LED_TOGGLE) */
-
-#if 0
-	RCC_AHB1PeripheralClkEnable(EN_GPIOD);
-	GPIO_D.MODER.B.ModeR1 = 0x1U;
-	GPIO_D.MODER.R = (0x1U<<2U);
-
-	if((GPIO_B.MODER.B.ModeR1)==0x1U)
-	{
-		RCC_AHB1PeripheralClkEnable(EN_GPIOC);
-	}
-#endif
 	for(;;);
 }

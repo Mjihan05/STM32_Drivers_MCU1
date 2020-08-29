@@ -22,5 +22,10 @@ uint32_t NVIC_GetPendingIRQ (IRQn_t IRQn);
 void NVIC_SetPendingIRQ (IRQn_t IRQn);
 void NVIC_ClearPendingIRQ (IRQn_t IRQn);
 uint32_t NVIC_GetActive (IRQn_t IRQn);
+void NVIC_SetPriority (IRQn_t IRQn, uint32_t priority);
+uint32_t NVIC_GetPriority (IRQn_t IRQn);
+
+/** Make sure to SET the USERSETMPEND bit in the SCR.CCR before call */
+void NVIC_SoftwareTrig (IRQn_t IRQn);
 
 #endif /* INTC_INC_NVIC_H_ */

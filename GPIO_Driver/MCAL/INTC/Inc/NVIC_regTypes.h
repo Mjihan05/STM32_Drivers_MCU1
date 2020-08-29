@@ -36,9 +36,8 @@ typedef uint32_t NVIC_IPR_Type;
 
 typedef struct
 {
-	uint16_t INTID:9;
-	uint16_t reserved1:7;
-	uint16_t reserved2;
+	uint32_t INTID:9;
+	uint32_t reserved1:23;
 }NVIC_STIR_Type;
 
 #define NVIC_ISER		(*(volatile NVIC_ISER_Type*)(NVIC_ISER_BASE_ADDRESS))
