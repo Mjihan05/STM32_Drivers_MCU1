@@ -16,10 +16,10 @@
 #include "RCC.h"
 #include "Gpio.h"
 #include "Dio.h"
-#include "Nvic.h"
-#include "NVIC_regTypes.h"
+#include "Intc.h"
 
 #define BUTTON_LED_TOGGLE
+#define BUTTON_LED_TOGGLE_INTERRUPT
 //#define API_TEST
 
 extern RCC_GlobalConfigType RCC_Config0;
@@ -31,6 +31,15 @@ void delay (void)
 	uint32_t i = 0;
 	for(i=0;i<500000; i++);
 }
+
+#ifdef BUTTON_LED_TOGGLE_INTERRUPT
+void EXTI0_IRQHandler(void)
+{
+	Dio_FlipChannel (GPIO_D_PIN_12);
+	EXTI_ClearPendingIRQ(EXTI_PA0);
+	delay();
+}
+#endif
 
 #ifdef NVIC_API_TEST
 uint8_t u8_status=0U;
@@ -47,16 +56,22 @@ void RCC_IRQHandler(void)
 int main(void)
 {
 				/** GPIO/DIO Test Application  */
+#ifdef BUTTON_LED_TOGGLE_INTERRUPT
+	EXTI_ConfigIRQ(EXTI_PA0,EXTI_FALLING_EDGE_TRIG,0x1U);
+#endif
+
 
 #ifdef BUTTON_LED_TOGGLE
 	Port_Init (&Port_Config0);
 	while(1)
 	{
+#ifndef BUTTON_LED_TOGGLE_INTERRUPT
 		if(Dio_ReadChannel(GPIO_A_PIN_0) == 0x1U)
 		{
 			Dio_FlipChannel (GPIO_D_PIN_12);
 			delay();
 		}
+#endif
 	}
 
 #endif /** (BUTTON_LED_TOGGLE) */

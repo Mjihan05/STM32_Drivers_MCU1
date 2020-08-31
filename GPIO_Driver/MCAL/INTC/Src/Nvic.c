@@ -11,9 +11,8 @@
 
 #include <stdint.h>
 #include <Reg_Macros.h>
-
+#include "Intc.h"
 #include "NVIC_regTypes.h"
-#include "Nvic.h"
 
 
 void NVIC_EnableIRQ(IRQn_t IRQn)

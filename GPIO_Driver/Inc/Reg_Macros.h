@@ -12,6 +12,8 @@
 #ifndef REG_MACROS_H
 #define REG_MACROS_H
 
+#include <stdint.h>
+
 #define GLOBAL
 #define NULL_PTR ((void*)0)
 
@@ -35,7 +37,7 @@
 
 typedef uint8_t Bool;
 
-typedef enum  /* Different port Output Type modes */
+typedef enum  /* Init Status */
 {
 	MODULE_UNINITIALIZED,
 	MODULE_INITIALIZED,
