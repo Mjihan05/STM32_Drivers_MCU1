@@ -12,3 +12,11 @@
 #include "Reg_Macros.h"
 #include "SPI_PbCfg.h"
 
+
+
+Spi_ConfigType Spi_Config0 =
+{
+
+};
+
+
