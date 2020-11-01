@@ -13,40 +13,71 @@
 
 #include "SPI_regTypes.h"
 
+/** Buffer used by the SPI Hw */
+typedef enum
+{
+	EN_INTERNAL_BUFFER,
+	EN_EXTERNAL_BUFFER
+}Spi_BufferType;
+
+/** Data Frame Format Types */
+typedef enum
+{
+	EN_8_BIT_DATA_FRAME,
+	EN_16_BIT_DATA_FRAME
+}Spi_DataFrameType;
+
+/** Type of Transmission */
+typedef enum
+{
+	EN_MSB_FIRST,
+	EN_LSB_FIRST
+}Spi_DataShiftType;
+
+/** Spi Hw units available in STM32 */
+typedef enum
+{
+	EN_SPI_1,
+	EN_SPI_2,
+	EN_SPI_3,
+	EN_SPI_4,
+	EN_SPI_5,
+	EN_SPI_6
+}Spi_HwType;
+
+/** Structure to hold Channel properties */
 typedef struct
 {
-/**
- * Buffer usage with EB/IB Channel
- * Transmit data width (1 up to 32 bits)
- * Number of data buffers for IB Channels (at least 1) or it is the maximum of data for EB Channels (a value of 0 makes no sense)
- * Transfer start LSB or MSB
- * Default transmit value*/
-}Spi_LChannelType;
+	Spi_ChannelType ChannelId;
+	Spi_BufferType BufferUsed; /** Internal or External , STM32 has internal buffers*/
+	Spi_DataFrameType DataFrame; /** Contains the width of the transmitted data, has to be under 16bits */
+	uint8_t NoOfBuffersUsed;  /** for IB Channels (at least 1) or it is the maximum of data for EB Channels (a value of 0 makes no sense) */
+	Spi_DataShiftType TransferStart; /** MSB first or LSB first transmission */
+	uint16_t DefaultTransmitValue;  /** Default Value to be used when Dataptr is NULL, 16bit value max */
+}Spi_ChannelConfigType;
 
 typedef struct
 {
-	/**
-	 * Assigned SPI HW Unit
-	 * Assigned Chip Select pin (it is possible to assign no pin)
-	 * Chip select functionality on/off
-	 * Chip select pin polarity high or low
-	 * Baud rate
-	 * Timing between clock and chip select
-	 *  Shift clock idle low or idle high
-	 *  Data shift with leading or trailing edge
-	 *  Priority (4 levels are available from 0, the lower to 3, the higher)
-	 *  Job finish end notification function
-	 *  MCU dependent properties for the Job (only if needed)
-	 *  Fixed link of Channels (at least one)*/
-}Spi_LJobType;
+	Spi_JobType JobId;
+	Spi_HwType HwUsed;		/** SPI Hw used */
+	uint8_t CsFunctionUsed;	/** Chip select functionality notUsed/SW/Hw */
+	uint16_t CsPinUsed;		/** if used on which pin*/
+	uint8_t CsPinPolarity;  /** And the selection polarity */
+	uint32_t BaudRate;		/** Baud rate in MHz */
+	uint32_t TimeClkandCs;	/** Time between CLk and CS (TODO - Check if this is needed) */
+	uint8_t ShiftClkIdleLevel; /** CPOL (clock polarity) bit controls the steady state value of the clock when no data is being transferred */
+	uint8_t DataShiftonEdge;	/**  CPHA (clock phase) bit Controls on which edge Tx takes place */
+	uint8_t Priority;			/** Priority */
+	void (*SpiJobEndNotification)();
+}Spi_JobConfigType;
 
 typedef struct
 {
-	/**
-	 * Collection of Jobs (at least one)
-	 * Interruptible or not interruptible after each Job
-	 * Sequence finish end notification function */
-}Spi_LSequenceType;
+	Spi_SequenceType SequenceId;
+	Spi_JobType Jobs[Max_Jobs];  /** Available jobs in sequence */
+	uint8_t SpiInterruptible;	 /** is the Sequence Interruptible */
+	void (*SpiSequenceEndNotification)();
+}Spi_SequenceConfigType;
 
 /** Structure shall contain the initialization data for the SPI Handler*/
 typedef struct
@@ -56,9 +87,9 @@ typedef struct
  Definition of Channels
  Definition of Jobs
  Definition of Sequences⌋*/
-	Spi_LChannelType* Channel;
-	Spi_LJobType* Job;
-	Spi_LSequenceType* Sequence;
+	Spi_ChannelConfigType* Channel;
+	Spi_JobConfigType* Job;
+	Spi_SequenceConfigType* Sequence;
 }Spi_ConfigType;
 
 
