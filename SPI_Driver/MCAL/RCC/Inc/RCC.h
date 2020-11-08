@@ -161,6 +161,11 @@ void RCC_BusConfig(Bus_Config_Type* config);
 void RCC_ResetBackupDomain(void);
 Reset_Status_Type RCC_GetResetStatus(void);
 
+uint32_t RCC_GetSysClk(void);   /** Returns the value of Sys Clk in MHz */
+uint32_t RCC_GetAHB1Clk(void);  /** Returns the value of AHB1 Clk in MHz */
+uint32_t RCC_GetAPB1Clk(void); 	/** Returns the value of APB1 Clk in MHz */
+uint32_t RCC_GetAPB2Clk(void);  /** Returns the value of APB2 Clk in MHz */
+
 void RCC_EnableIntFlag(Rcc_Int_Type IntFlag);
 Rcc_Int_Type RCC_ReadIntFlag(void);
 void RCC_ClearIntFlag(Rcc_Int_Type IntFlag);

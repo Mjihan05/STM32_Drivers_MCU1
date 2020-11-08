@@ -17,8 +17,21 @@
 
 Pll_PreScalerType PllPreScalerValues;
 
+uint8_t gu8_RccInitStatus = MODULE_UNINITIALIZED;
+
+/** Added for Get APB Clk Values in MHz  */
+static RCC_GlobalConfigType* RCC_GlobalConfig;
+
 void RCC_Init(RCC_GlobalConfigType* Config )
 {
+	if(Config == NULL_PTR)
+	{
+		gu8_RccInitStatus = MODULE_INIT_FAILED;
+		return;
+	}
+
+	RCC_GlobalConfig = (RCC_GlobalConfigType)(Config);
+
 #ifdef HSE_CLOCK_USED
 	RCC_HseConfigure(Config->HseConfig);
 #else
@@ -626,6 +639,35 @@ void RCC_ClearIntFlag(Rcc_Int_Type IntFlag)
 		break;
 
 	}
+}
+
+uint32_t RCC_GetSysClk(void)
+{
+#ifdef PLL_CLOCK_USED
+	return (uint32_t)(RCC_GlobalConfig->PllConfig->PllOutputFreq_SYSCLK);
+#endif
+#ifdef HSE_CLOCK_USED
+	return (uint32_t)(RCC_GlobalConfig->HseConfig->HseOutputFreq);
+#else
+	return (uint32_t)(16000000U); /** HSI Clk Value */
+}
+
+uint32_t RCC_GetAHB1Clk(void)
+{
+	uint32_t SysClk = (uint32_t)(RCC_GetSysClk());
+	return (uint32_t)(SysClk/(RCC_GlobalConfig->BusConfig->AHB_PreScaler));
+}
+
+uint32_t RCC_GetAPB1Clk(void)
+{
+	uint32_t Ahb1Clk = (uint32_t)(RCC_GetAHB1Clk());
+	return (uint32_t)(Ahb1Clk/(RCC_GlobalConfig->BusConfig->APB1_PreScaler));
+}
+
+uint32_t RCC_GetAPB2Clk(void)
+{
+	uint32_t Ahb1Clk = (uint32_t)(RCC_GetAHB1Clk());
+	return (uint32_t)(Ahb1Clk/(RCC_GlobalConfig->BusConfig->APB2_PreScaler));
 }
 
 void RCC_AHB1PeripheralClkEnable(Rcc_AHB1_Peripherals peripheral)

@@ -13,6 +13,10 @@
 
 #include "SPI_regTypes.h"
 
+#define TOTAL_NO_OF_SPI_HW_UNIT 	(EN_SPI_3)
+#define NO_OF_CHANNELS_CONFIGURED
+#define NO_OF_JOBS_CONFIGURED		(0U)
+
 /** Buffer used by the SPI Hw */
 typedef enum
 {
@@ -39,10 +43,7 @@ typedef enum
 {
 	EN_SPI_1,
 	EN_SPI_2,
-	EN_SPI_3,
-	EN_SPI_4,
-	EN_SPI_5,
-	EN_SPI_6
+	EN_SPI_3
 }Spi_HwType;
 
 /** Structure to hold Channel properties */
@@ -50,7 +51,7 @@ typedef struct
 {
 	Spi_ChannelType ChannelId;
 	Spi_BufferType BufferUsed; /** Internal or External , STM32 has internal buffers*/
-	Spi_DataFrameType DataFrame; /** Contains the width of the transmitted data, has to be under 16bits */
+	uint8_t DataFrame; /** Contains the width of the transmitted data, has to be under 16bits */
 	uint8_t NoOfBuffersUsed;  /** for IB Channels (at least 1) or it is the maximum of data for EB Channels (a value of 0 makes no sense) */
 	Spi_DataShiftType TransferStart; /** MSB first or LSB first transmission */
 	uint16_t DefaultTransmitValue;  /** Default Value to be used when Dataptr is NULL, 16bit value max */
