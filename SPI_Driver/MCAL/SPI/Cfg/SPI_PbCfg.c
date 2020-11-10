@@ -12,7 +12,12 @@
 #include "Reg_Macros.h"
 #include "SPI_PbCfg.h"
 
-
+uint32_t Spi_BaseAddress[] =
+{
+	SPI_1_BASE_ADDRESS,
+	SPI_2_BASE_ADDRESS,
+	SPI_3_BASE_ADDRESS
+};
 
 Spi_ConfigType Spi_Config0 =
 {

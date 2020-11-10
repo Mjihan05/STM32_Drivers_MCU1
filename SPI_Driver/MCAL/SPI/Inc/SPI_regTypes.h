@@ -13,9 +13,11 @@
 #define SPI_1_BASE_ADDRESS      (0x40013000U)
 #define SPI_2_BASE_ADDRESS      (0x40003800U)
 #define SPI_3_BASE_ADDRESS      (0x40003C00U)
-#define SPI_4_BASE_ADDRESS      (0x40013400U)
-#define SPI_5_BASE_ADDRESS      (0x40015000U)
-#define SPI_6_BASE_ADDRESS      (0x40015400U)
+#define SPI_4_BASE_ADDRESS      (0x40013400U) /** Not supported in F407*/
+#define SPI_5_BASE_ADDRESS      (0x40015000U) /** Not supported in F407*/
+#define SPI_6_BASE_ADDRESS      (0x40015400U) /** Not supported in F407*/
+
+extern uint32_t Spi_BaseAddress[];
 
 typedef union SPI_CR1_Tag
 {

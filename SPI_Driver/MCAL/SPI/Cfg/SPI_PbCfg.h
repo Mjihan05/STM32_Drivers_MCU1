@@ -38,6 +38,13 @@ typedef enum
 	EN_LSB_FIRST
 }Spi_DataShiftType;
 
+typedef enum
+{
+	EN_CS_NOT_USED,
+	EN_CS_SW_HANDLING,
+	EN_CS_HW_HANDLING
+}Spi_CsFunctionality;
+
 /** Spi Hw units available in STM32 */
 typedef enum
 {
@@ -64,7 +71,7 @@ typedef struct
 	uint8_t CsFunctionUsed;	/** Chip select functionality notUsed/SW/Hw */
 	uint16_t CsPinUsed;		/** if used on which pin*/
 	uint8_t CsPinPolarity;  /** And the selection polarity */
-	uint32_t BaudRate;		/** Baud rate in MHz */
+	uint32_t BaudRate;		/** Baud rate in MHz (User has to verify perClk/BaudRate = valid Prescaler) */
 	uint32_t TimeClkandCs;	/** Time between CLk and CS (TODO - Check if this is needed) */
 	uint8_t ShiftClkIdleLevel; /** CPOL (clock polarity) bit controls the steady state value of the clock when no data is being transferred */
 	uint8_t DataShiftonEdge;	/**  CPHA (clock phase) bit Controls on which edge Tx takes place */

@@ -55,6 +55,7 @@ typedef uint8_t Spi_HWUnitType;
 extern Spi_ConfigType Spi_Config0;
 
 void Spi_Init (const Spi_ConfigType* ConfigPtr);
+Std_ReturnType Spi_DeInit (void);
 Spi_StatusType Spi_GetStatus (void);
 Spi_JobResultType Spi_GetJobResult (Spi_JobType Job);
 Spi_SeqResultType Spi_GetSequenceResult (Spi_SequenceType Sequence);

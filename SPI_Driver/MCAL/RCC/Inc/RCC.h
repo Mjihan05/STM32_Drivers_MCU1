@@ -188,21 +188,25 @@ void RCC_AHB2PeripheralClkEnable(Rcc_AHB2_Peripherals peripheral);
 void RCC_AHB3PeripheralClkEnable(Rcc_AHB3_Peripherals peripheral);
 void RCC_APB1PeripheralClkEnable(Rcc_APB1_Peripherals peripheral);
 void RCC_APB2PeripheralClkEnable(Rcc_APB2_Peripherals peripheral);
+
 void RCC_AHB1EnablePerSleepMode(Rcc_AHB1_Peripherals peripheral);
 void RCC_AHB2EnablePerSleepMode(Rcc_AHB2_Peripherals peripheral);
 void RCC_AHB3EnablePerSleepMode(Rcc_AHB3_Peripherals peripheral);
 void RCC_APB1EnablePerSleepMode(Rcc_APB1_Peripherals peripheral);
 void RCC_APB2EnablePerSleepMode(Rcc_APB2_Peripherals peripheral);
+
 void RCC_AHB1PeripheralClkDisable(Rcc_AHB1_Peripherals peripheral);
 void RCC_AHB2PeripheralClkDisable(Rcc_AHB2_Peripherals peripheral);
 void RCC_AHB3PeripheralClkDisable(Rcc_AHB3_Peripherals peripheral);
 void RCC_APB1PeripheralClkDisable(Rcc_APB1_Peripherals peripheral);
 void RCC_APB2PeripheralClkDisable(Rcc_APB2_Peripherals peripheral);
+
 void RCC_AHB1DisablePerSleepMode(Rcc_AHB1_Peripherals peripheral);
 void RCC_AHB2DisablePerSleepMode(Rcc_AHB2_Peripherals peripheral);
 void RCC_AHB3DisablePerSleepMode(Rcc_AHB3_Peripherals peripheral);
 void RCC_APB1DisablePerSleepMode(Rcc_APB1_Peripherals peripheral);
 void RCC_APB2DisablePerSleepMode(Rcc_APB2_Peripherals peripheral);
+
 void RCC_ResetAHB1Peripheral(Rcc_AHB1_Peripherals peripheral);
 void RCC_ResetAHB2Peripheral(Rcc_AHB2_Peripherals peripheral);
 void RCC_ResetAHB3Peripheral(Rcc_AHB3_Peripherals peripheral);

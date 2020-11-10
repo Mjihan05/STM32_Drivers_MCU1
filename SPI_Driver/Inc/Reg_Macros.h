@@ -36,6 +36,11 @@
 #define REG_RMW32(regAddress,mask,value) REG_WRITE32(regAddress,( ( ((uint32_t)(*regAddress)) &(~mask) )|(value&mask)))
 
 typedef uint8_t Bool;
+typedef enum
+{
+	E_OK,
+	E_NOT_OK
+}Std_ReturnType;
 
 typedef enum  /* Init Status */
 {
