@@ -19,6 +19,8 @@ Spi_StatusType gEn_SpiStatus = SPI_UNINIT;
 
 uint8_t gu8_SpiInitStatus = MODULE_UNINITIALIZED;
 
+static const Spi_ConfigType* GlobalConfigPtr;
+
 static Spi_HwType Spi_getModuleNo (Spi_JobConfigType* JobConfig);
 static void Spi_Clk_Enable(Spi_HwType moduleNo);
 static uint8_t Spi_GetBaudratePrescaler(Spi_JobConfigType* JobConfig);
@@ -37,6 +39,8 @@ void Spi_Init (const Spi_ConfigType* ConfigPtr)
 	Spi_HwType moduleNo = 0U;
 	uint8_t loopItr0 = 0U;
 	uint8_t preScaler = 0U;
+
+	GlobalConfigPtr = ConfigPtr;
 
 	volatile  SPI_RegTypes * pReg = 0U;
 
@@ -91,6 +95,64 @@ Std_ReturnType Spi_DeInit (void)
 	gEn_SpiStatus = SPI_UNINIT;
 
 	return E_OK;
+}
+
+Std_ReturnType Spi_WriteIB (Spi_ChannelType Channel,const Spi_DataBufferType* DataBufferPtr)
+{
+	/** Check for module Init */
+	if(gEn_SpiStatus == SPI_UNINIT)
+	{
+		return E_NOT_OK;
+	}
+
+	/** Parameter Checking */
+	if((Channel >= NO_OF_CHANNELS_CONFIGURED) || (GlobalConfigPtr->Channel[Channel]->BufferUsed |= EN_INTERNAL_BUFFER))
+	{
+		return E_NOT_OK;
+	}
+
+	Spi_HwType moduleNo = 0U;
+	volatile  SPI_RegTypes * pReg = 0U;
+
+	/** TODO - Find a way to get module no */
+	moduleNo = Spi_getModuleNo(ConfigPtr->Job[loopItr0]);
+	pReg = (SPI_RegTypes *)Spi_BaseAddress[moduleNo];
+
+	/** If Data Buffer is Null then default transmit data is used */
+	if(DataBufferPtr == NULL_PTR)
+	{
+		DataBufferPtr = GlobalConfigPtr->Channel[Channel]->DefaultTransmitValue;
+	}
+
+	/** Reformat the data as per dataFrame */
+	if(GlobalConfigPtr->Channel[Channel]->DataFrame < 9U)
+	{
+		DataBufferPtr = DataBufferPtr & 0x00FF;
+	}
+	else if(GlobalConfigPtr->Channel[Channel]->DataFrame < 17U)
+	{
+		DataBufferPtr = DataBufferPtr & 0xFFFF;
+	}
+	else
+	{
+		DataBufferPtr = GlobalConfigPtr->Channel[Channel]->DefaultTransmitValue;
+	}
+
+	/** Select the type of transmission LSB first or MSB first */
+	if(GlobalConfigPtr->Channel[Channel]->TransferStart == EN_LSB_FIRST)
+	{
+		REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,7U),SET_BIT(7U));
+	}
+	else
+	{
+		REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,7U),CLEAR_BIT(7U));
+	}
+
+	/** Write the Data to internal buffer */
+	REG_WRITE32(&pReg->DR.R,DataBufferPtr);
+
+	return E_OK;
+
 }
 
 Spi_StatusType Spi_GetStatus (void)

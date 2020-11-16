@@ -14,7 +14,7 @@
 #include "SPI_regTypes.h"
 
 #define TOTAL_NO_OF_SPI_HW_UNIT 	(EN_SPI_3)
-#define NO_OF_CHANNELS_CONFIGURED
+#define NO_OF_CHANNELS_CONFIGURED	(0U)
 #define NO_OF_JOBS_CONFIGURED		(0U)
 
 /** Buffer used by the SPI Hw */
