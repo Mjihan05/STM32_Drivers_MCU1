@@ -16,6 +16,7 @@
 #define TOTAL_NO_OF_SPI_HW_UNIT 	(EN_SPI_3)
 #define NO_OF_CHANNELS_CONFIGURED	(0U)
 #define NO_OF_JOBS_CONFIGURED		(0U)
+#define NO_OF_SEQUENCES_CONFIGURED	(0U)
 
 /** Buffer used by the SPI Hw */
 typedef enum
@@ -44,6 +45,12 @@ typedef enum
 	EN_CS_SW_HANDLING,
 	EN_CS_HW_HANDLING
 }Spi_CsFunctionality;
+
+typedef enum
+{
+	EN_SHIFT_ON_RISING_EDGE,
+	EN_SHIFT_ON_FALLING_EDGE,
+};
 
 /** Spi Hw units available in STM32 */
 typedef enum
@@ -77,14 +84,15 @@ typedef struct
 	uint8_t DataShiftonEdge;	/**  CPHA (clock phase) bit Controls on which edge Tx takes place */
 	uint8_t Priority;			/** Priority */
 	void (*SpiJobEndNotification)();
+	Spi_ChannelType ChannelAssignment[NO_OF_CHANNELS_CONFIGURED];
 }Spi_JobConfigType;
 
 typedef struct
 {
 	Spi_SequenceType SequenceId;
-	Spi_JobType Jobs[Max_Jobs];  /** Available jobs in sequence */
 	uint8_t SpiInterruptible;	 /** is the Sequence Interruptible */
 	void (*SpiSequenceEndNotification)();
+	Spi_JobType Jobs[NO_OF_JOBS_CONFIGURED];  /** Available jobs in sequence */
 }Spi_SequenceConfigType;
 
 /** Structure shall contain the initialization data for the SPI Handler*/

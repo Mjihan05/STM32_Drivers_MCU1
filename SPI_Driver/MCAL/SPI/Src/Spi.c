@@ -19,6 +19,9 @@ Spi_StatusType gEn_SpiStatus = SPI_UNINIT;
 
 uint8_t gu8_SpiInitStatus = MODULE_UNINITIALIZED;
 
+Spi_JobResultType Spi_JobResult[NO_OF_JOBS_CONFIGURED];
+Spi_SeqResultType Spi_SeqResult[NO_OF_SEQS_CONFIGURED];
+
 static const Spi_ConfigType* GlobalConfigPtr;
 
 static Spi_HwType Spi_getModuleNo (Spi_JobConfigType* JobConfig);
@@ -74,6 +77,17 @@ void Spi_Init (const Spi_ConfigType* ConfigPtr)
 
 		gEn_SpiStatus= SPI_IDLE;
 	}
+
+	/** Initialise the Result for Sequence and jobs  */
+	for(loopItr0 = 0U; loopItr0 < NO_OF_JOBS_CONFIGURED; loopItr0++ )
+	{
+		Spi_JobResult[loopItr0] = SPI_JOB_OK;
+	}
+	for(loopItr0 = 0U; loopItr0 < NO_OF_SEQUENCES_CONFIGURED; loopItr0++ )
+	{
+		Spi_SeqResult[loopItr0] = SPI_SEQ_OK;
+	}
+
 
 	gu8_SpiInitStatus = MODULE_INITIALIZED;
 }
@@ -153,6 +167,23 @@ Std_ReturnType Spi_WriteIB (Spi_ChannelType Channel,const Spi_DataBufferType* Da
 
 	return E_OK;
 
+}
+
+Std_ReturnType Spi_AsyncTransmit (Spi_SequenceType Sequence)
+{
+	/** Check for module Init */
+	if(gEn_SpiStatus == SPI_UNINIT)
+	{
+		return E_NOT_OK;
+	}
+
+	/** Parameter Checking */
+	if(Sequence >= NO_OF_SEQUENCES_CONFIGURED)
+	{
+		return E_NOT_OK;
+	}
+
+	Spi_SequenceConfigType SequenceConfig = GlobalConfigPtr->Sequence[Sequence];
 }
 
 Spi_StatusType Spi_GetStatus (void)

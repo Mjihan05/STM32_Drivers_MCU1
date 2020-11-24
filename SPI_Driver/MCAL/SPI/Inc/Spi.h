@@ -57,6 +57,7 @@ extern Spi_ConfigType Spi_Config0;
 void Spi_Init (const Spi_ConfigType* ConfigPtr);
 Std_ReturnType Spi_DeInit (void);
 Std_ReturnType Spi_WriteIB (Spi_ChannelType Channel,const Spi_DataBufferType* DataBufferPtr);
+Std_ReturnType Spi_AsyncTransmit (Spi_SequenceType Sequence);
 Spi_StatusType Spi_GetStatus (void);
 Spi_JobResultType Spi_GetJobResult (Spi_JobType Job);
 Spi_SeqResultType Spi_GetSequenceResult (Spi_SequenceType Sequence);
