@@ -26,7 +26,7 @@ const Spi_SequenceConfigType Spi_SequenceConfig0[NO_OF_SEQUENCES_CONFIGURED] =
 			.SpiInterruptible = TRUE,
 			.SpiSequenceEndNotification = NULL_PTR,
 			.Jobs = {
-				0U,1U,
+				0U,1U,EOL,
 			},
 		},
 };
@@ -42,7 +42,7 @@ const Spi_JobConfigType Spi_JobConfig0[NO_OF_JOBS_CONFIGURED] =
 			.ShiftClkIdleLevel = STD_LOW,
 			.SpiJobEndNotification = NULL_PTR,
 			.ChannelAssignment = {
-					0U,1U
+					0U,1U,EOL,
 			},
 		},
 };

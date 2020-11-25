@@ -28,6 +28,7 @@ static Spi_HwType Spi_getModuleNo (Spi_JobConfigType* JobConfig);
 static void Spi_Clk_Enable(Spi_HwType moduleNo);
 static uint8_t Spi_GetBaudratePrescaler(Spi_JobConfigType* JobConfig);
 static void Spi_ResetModule (Spi_HwType moduleNo);
+static Std_ReturnType sSpi_CheckSharedJobs(Spi_SequenceType Sequence);
 
 /********************** Global Functions ******************************/
 
@@ -183,6 +184,18 @@ Std_ReturnType Spi_AsyncTransmit (Spi_SequenceType Sequence)
 		return E_NOT_OK;
 	}
 
+	/** if the sequence is already in pending state then return */
+	if(Spi_SeqResult[Sequence] == SPI_SEQ_PENDING)
+	{
+		return E_NOT_OK;
+	}
+
+	/** Check if the sequence shares any jobs with sequences already in pending */
+	if(sSpi_CheckSharedJobs(Sequence))
+	{
+		return E_NOT_OK;
+	}
+
 	Spi_SequenceConfigType SequenceConfig = GlobalConfigPtr->Sequence[Sequence];
 }
 
@@ -307,7 +320,48 @@ static void Spi_ResetModule (Spi_HwType moduleNo)
 		}
 }
 
+/** Function returns non zero value if shared Jobs exist else it returns 0 */
+static Std_ReturnType sSpi_CheckSharedJobs(Spi_SequenceType Sequence)
+{
+	uint32_t mask1 = 0U;
+	uint32_t mask2 = 0U;
+	uint8_t sequenceItr = 0U;
 
+	Spi_SequenceConfigType SequenceConfig = GlobalConfigPtr->Sequence[Sequence];
+	Spi_JobType *jobPtr = &SequenceConfig->Jobs[0];
+
+	while(*jobPtr != EOL)
+	{
+		mask1 |= SET_BIT((*jobPtr));
+		jobPtr++;
+	}
+
+	for(sequenceItr = 0U; sequenceItr < NO_OF_SEQUENCES_CONFIGURED; sequenceItr++)
+	{
+		if ((Spi_GetSequenceResult(sequenceItr)!=SPI_SEQ_PENDING)||(Sequence == sequenceItr))
+		{
+			continue;
+		}
+		else
+		{
+			SequenceConfig = GlobalConfigPtr->Sequence[sequenceItr];
+			jobPtr = &SequenceConfig->Jobs[0];
+
+			while(*jobPtr != EOL)
+			{
+				mask2 |= SET_BIT((*jobPtr));
+				jobPtr++;
+			}
+
+			if(mask1&mask2) /*non zero value if shared Jobs exist else 0*/
+			{
+				return E_NOT_OK;
+			}
+		}
+	}
+
+	return E_OK;
+}
 
 
 

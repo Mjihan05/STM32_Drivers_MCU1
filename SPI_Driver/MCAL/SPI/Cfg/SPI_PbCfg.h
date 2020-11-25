@@ -18,6 +18,8 @@
 #define NO_OF_JOBS_CONFIGURED		(0U)
 #define NO_OF_SEQUENCES_CONFIGURED	(0U)
 
+#define EOL (0xFFU)
+
 /** Buffer used by the SPI Hw */
 typedef enum
 {
