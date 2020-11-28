@@ -14,9 +14,15 @@
 #include "SPI_regTypes.h"
 
 #define TOTAL_NO_OF_SPI_HW_UNIT 	(EN_SPI_3)
+
 #define NO_OF_CHANNELS_CONFIGURED	(0U)
 #define NO_OF_JOBS_CONFIGURED		(0U)
 #define NO_OF_SEQUENCES_CONFIGURED	(0U)
+
+/** Usage 0: the SPI Handler/Driver manages only Internal Buffers.
+ 	Usage 1: the SPI Handler/Driver manages only External Buffers.
+ 	Usage 2: the SPI Handler/Driver manages both buffers types. */
+#define SPI_CHANNEL_BUFFERS_ALLOWED (2U)
 
 #define EOL (0xFFU)
 
@@ -61,6 +67,15 @@ typedef enum
 	EN_SPI_2,
 	EN_SPI_3
 }Spi_HwType;
+
+/** Structure to hold the IB information // Only used for channel with buffer used as Internal */
+typedef struct
+{
+	Spi_ChannelType ChannelId;
+	uint8_t BufferStart;
+	uint8_t BufferEnd;
+	Bool BufferInUse;
+}InternalBufferType;
 
 /** Structure to hold Channel properties */
 typedef struct

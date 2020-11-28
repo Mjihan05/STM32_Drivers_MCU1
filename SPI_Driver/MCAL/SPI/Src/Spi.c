@@ -15,6 +15,8 @@
 #include "Gpio.h"
 #include "Spi.h"
 
+#define IB_BUFFERS_AVAILABLE (100U)	/** (2bytes*x) Reserve 200Kb for Internal Buffers */
+
 Spi_StatusType gEn_SpiStatus = SPI_UNINIT;
 
 uint8_t gu8_SpiInitStatus = MODULE_UNINITIALIZED;
@@ -23,12 +25,15 @@ Spi_JobResultType Spi_JobResult[NO_OF_JOBS_CONFIGURED];
 Spi_SeqResultType Spi_SeqResult[NO_OF_SEQS_CONFIGURED];
 
 static const Spi_ConfigType* GlobalConfigPtr;
+static Spi_DataBufferType sInternalBuffer[IB_BUFFERS_AVAILABLE]; /** Reserve 200Kb for Internal Buffers */
+static InternalBufferType sIB_Config[NO_OF_CHANNELS_CONFIGURED];
 
 static Spi_HwType Spi_getModuleNo (Spi_JobConfigType* JobConfig);
 static void Spi_Clk_Enable(Spi_HwType moduleNo);
 static uint8_t Spi_GetBaudratePrescaler(Spi_JobConfigType* JobConfig);
 static void Spi_ResetModule (Spi_HwType moduleNo);
 static Std_ReturnType sSpi_CheckSharedJobs(Spi_SequenceType Sequence);
+static Std_ReturnType sSpi_AllocateIbMemory(Spi_ChannelType Channel,uint8_t NoOfBuffersUsed);
 
 /********************** Global Functions ******************************/
 
@@ -112,6 +117,7 @@ Std_ReturnType Spi_DeInit (void)
 	return E_OK;
 }
 
+#if(SPI_CHANNEL_BUFFERS_ALLOWED != (1U))
 Std_ReturnType Spi_WriteIB (Spi_ChannelType Channel,const Spi_DataBufferType* DataBufferPtr)
 {
 	/** Check for module Init */
@@ -126,49 +132,50 @@ Std_ReturnType Spi_WriteIB (Spi_ChannelType Channel,const Spi_DataBufferType* Da
 		return E_NOT_OK;
 	}
 
-	Spi_HwType moduleNo = 0U;
-	volatile  SPI_RegTypes * pReg = 0U;
+	uint8_t loopItr0 = 0U;
+	Spi_ChannelConfigType channelConfig = GlobalConfigPtr->Channel[Channel];
 
-	/** TODO - Find a way to get module no */
-	moduleNo = Spi_getModuleNo(ConfigPtr->Job[loopItr0]);
-	pReg = (SPI_RegTypes *)Spi_BaseAddress[moduleNo];
-
-	/** If Data Buffer is Null then default transmit data is used */
-	if(DataBufferPtr == NULL_PTR)
+	/** Allocate memory for the channel */
+	if((sSpi_AllocateIbMemory(Channel,channelConfig->NoOfBuffersUsed)) == E_NOT_OK)
 	{
-		DataBufferPtr = GlobalConfigPtr->Channel[Channel]->DefaultTransmitValue;
+		return E_NOT_OK;  /** Memory not available */
 	}
 
-	/** Reformat the data as per dataFrame */
-	if(GlobalConfigPtr->Channel[Channel]->DataFrame < 9U)
+	/** Write Data to the IB */
+	for(loopItr0 = 0U; loopItr0 < (channelConfig->NoOfBuffersUsed); loopItr0++)
 	{
-		DataBufferPtr = DataBufferPtr & 0x00FF;
-	}
-	else if(GlobalConfigPtr->Channel[Channel]->DataFrame < 17U)
-	{
-		DataBufferPtr = DataBufferPtr & 0xFFFF;
-	}
-	else
-	{
-		DataBufferPtr = GlobalConfigPtr->Channel[Channel]->DefaultTransmitValue;
-	}
+		/** If Data Buffer is Null then default transmit data is used */
+		if(DataBufferPtr == NULL_PTR)
+		{
+			sInternalBuffer[(sIB_Config[Channel].BufferStart+loopItr0)] = GlobalConfigPtr->Channel[Channel]->DefaultTransmitValue;
+		}
+		else
+		{
+			/** Reformat the data as per dataFrame */
+			if(GlobalConfigPtr->Channel[Channel]->DataFrame < 9U)
+			{
+				DataBufferPtr = DataBufferPtr & 0x00FF;
+			}
+			else if(GlobalConfigPtr->Channel[Channel]->DataFrame < 17U)
+			{
+				DataBufferPtr = DataBufferPtr & 0xFFFF;
+			}
+			else
+			{
+				DataBufferPtr = GlobalConfigPtr->Channel[Channel]->DefaultTransmitValue;
+			}
 
-	/** Select the type of transmission LSB first or MSB first */
-	if(GlobalConfigPtr->Channel[Channel]->TransferStart == EN_LSB_FIRST)
-	{
-		REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,7U),SET_BIT(7U));
+			/** Write the Data to Buffer */
+			sInternalBuffer[(sIB_Config[Channel].BufferStart+loopItr0)] = DataBufferPtr;
+			DataBufferPtr++;
+		}
 	}
-	else
-	{
-		REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,7U),CLEAR_BIT(7U));
-	}
-
-	/** Write the Data to internal buffer */
-	REG_WRITE32(&pReg->DR.R,DataBufferPtr);
+	sIB_Config[Channel].BufferInUse = TRUE;
 
 	return E_OK;
 
 }
+#endif /** (SPI_CHANNEL_BUFFERS_ALLOWED != (1U)) */
 
 Std_ReturnType Spi_AsyncTransmit (Spi_SequenceType Sequence)
 {
@@ -191,7 +198,7 @@ Std_ReturnType Spi_AsyncTransmit (Spi_SequenceType Sequence)
 	}
 
 	/** Check if the sequence shares any jobs with sequences already in pending */
-	if(sSpi_CheckSharedJobs(Sequence))
+	if((sSpi_CheckSharedJobs(Sequence)) == E_NOT_OK)
 	{
 		return E_NOT_OK;
 	}
@@ -363,7 +370,58 @@ static Std_ReturnType sSpi_CheckSharedJobs(Spi_SequenceType Sequence)
 	return E_OK;
 }
 
+static Std_ReturnType sSpi_AllocateIbMemory(Spi_ChannelType Channel,uint8_t NoOfBuffersUsed)
+{
+	uint8_t channelItr1 = 0U;
+	uint8_t channelItr2 = 0U;
+	uint8_t bufferStart = 0U;
+	uint8_t bufferEnd = 0U;
 
+	if(sIB_Config[Channel].BufferInUse == TRUE)
+	{
+		sIB_Config[Channel].BufferInUse = FALSE;
+		return E_OK;
+	}
+	else	/** sIB_Config[Channel].BufferInUse == FALSE */
+	{
+		for(channelItr1 = 0U; channelItr1 < NO_OF_CHANNELS_CONFIGURED; channelItr1++)
+		{
+			if(channelItr1 == Channel)
+			{
+				continue;
+			}
+			else if (sIB_Config[channelItr1].BufferInUse == TRUE)
+			{
+				bufferStart = sIB_Config[channelItr1].BufferEnd + 1U;
+				bufferEnd = bufferStart + NoOfBuffersUsed - 1U;
+				if(bufferEnd >= IB_BUFFERS_AVAILABLE )
+				{
+					bufferEnd = bufferEnd % IB_BUFFERS_AVAILABLE;
+				}
+				for(channelItr2 = 0U; channelItr2 < NO_OF_CHANNELS_CONFIGURED; channelItr2++)
+				{
+					if(sIB_Config[channelItr2].BufferInUse == TRUE)
+					{
+						if(((bufferStart >= sIB_Config[channelItr2].BufferStart)&&(bufferStart <= sIB_Config[channelItr2].BufferEnd)) ||
+						   ((bufferEnd >= sIB_Config[channelItr2].BufferStart)&&(bufferEnd <= sIB_Config[channelItr2].BufferEnd)))
+						{
+							break;
+						}
+						else /** Found Space */
+						{
+							sIB_Config[Channel].ChannelId = Channel;
+							sIB_Config[Channel].BufferStart = bufferStart;
+							sIB_Config[Channel].BufferEnd = bufferEnd;
+							return E_OK;
+						}
+						break;
+					}
+				}
+			}
+		}
+	}
+	return E_NOT_OK;
+}
 
 
 
