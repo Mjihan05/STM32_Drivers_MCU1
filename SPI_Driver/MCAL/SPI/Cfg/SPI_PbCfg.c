@@ -25,7 +25,7 @@ const Spi_SequenceConfigType Spi_SequenceConfig0[NO_OF_SEQUENCES_CONFIGURED] =
 			.SequenceId = 0U,
 			.SpiInterruptible = TRUE,
 			.SpiSequenceEndNotification = NULL_PTR,
-			.Jobs = {
+			.Jobs = {/** Jobs need to be filled in the order of priority  */
 				0U,1U,EOL,
 			},
 		},

@@ -15,6 +15,9 @@
 #include "SPI_regTypes.h"
 #include "SPI_PbCfg.h"
 
+
+#define QUEUE_SIZE (NO_OF_JOBS_CONFIGURED)
+
 typedef enum /** Defines a range of specific status for SPI Handler */
 {
 	SPI_UNINIT = 0U,
@@ -22,11 +25,13 @@ typedef enum /** Defines a range of specific status for SPI Handler */
 	SPI_BUSY,
 }Spi_StatusType;
 
+#if(SPI_LEVEL_DELIVERED == (2U))
 typedef enum /** Specifies the asynchronous mechanism mode for SPI busses handled asynchronously in LEVEL 2 */
 {
 	SPI_POLLING_MODE = 0U,
 	SPI_INTERRUPT_MODE,
 }Spi_AsyncModeType;
+#endif
 
 typedef enum /** Defines a range of specific Jobs status for SPI Handler/ */
 {
@@ -51,6 +56,21 @@ typedef uint16_t Spi_JobType;
 typedef uint8_t Spi_SequenceType;
 typedef uint8_t Spi_HWUnitType;
 
+typedef struct
+{
+	Spi_SequenceType sequenceId;
+	uint8_t startBufferIndex;
+	uint8_t endBufferIndex;
+	uint8_t noOfRetries;
+}Spi_BufferIndex;
+
+typedef struct
+{
+	Spi_StatusType SpiStatus;
+	Spi_JobType SpiQueuedJobsBuffer[QUEUE_SIZE];
+	Spi_BufferIndex BufferIndex[NO_OF_SEQUENCES_CONFIGURED]; /** Holds the index of the queued jobs of a sequence */
+	Spi_SequenceType NextSequence;
+}Spi_GlobalParams;
 
 extern Spi_ConfigType Spi_Config0;
 
@@ -61,5 +81,6 @@ Std_ReturnType Spi_AsyncTransmit (Spi_SequenceType Sequence);
 Spi_StatusType Spi_GetStatus (void);
 Spi_JobResultType Spi_GetJobResult (Spi_JobType Job);
 Spi_SeqResultType Spi_GetSequenceResult (Spi_SequenceType Sequence);
+void Spi_MainFunction_Handling (void);
 
 #endif /* SPI_INC_SPI_H_ */

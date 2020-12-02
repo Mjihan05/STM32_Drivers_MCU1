@@ -15,9 +15,16 @@
 
 #define TOTAL_NO_OF_SPI_HW_UNIT 	(EN_SPI_3)
 
+/** LEVEL 0, Simple Synchronous SPI Handler/Driver
+ *  LEVEL 1, Basic Asynchronous SPI Handler/Driver
+ *  LEVEL 2, Enhanced (Synchronous/Asynchronous) SPI Handler/Driver */
+#define SPI_LEVEL_DELIVERED 		(2U)
+
 #define NO_OF_CHANNELS_CONFIGURED	(0U)
 #define NO_OF_JOBS_CONFIGURED		(0U)
 #define NO_OF_SEQUENCES_CONFIGURED	(0U)
+
+#define NO_OF_SEQ_RETRIES 			(5U)
 
 /** Usage 0: the SPI Handler/Driver manages only Internal Buffers.
  	Usage 1: the SPI Handler/Driver manages only External Buffers.
@@ -99,7 +106,7 @@ typedef struct
 	uint32_t TimeClkandCs;	/** Time between CLk and CS (TODO - Check if this is needed) */
 	uint8_t ShiftClkIdleLevel; /** CPOL (clock polarity) bit controls the steady state value of the clock when no data is being transferred */
 	uint8_t DataShiftonEdge;	/**  CPHA (clock phase) bit Controls on which edge Tx takes place */
-	uint8_t Priority;			/** Priority */
+	uint8_t Priority;			/** Priority from 0 lower to 3 highest */
 	void (*SpiJobEndNotification)();
 	Spi_ChannelType ChannelAssignment[NO_OF_CHANNELS_CONFIGURED];
 }Spi_JobConfigType;
