@@ -68,6 +68,11 @@ void Dio_WriteChannel (Dio_ChannelType ChannelId,Dio_LevelType Level)
 	}
 
 	/** Parameter Checking */
+	if(ChannelId== DIO_PIN_UNUSED)
+	{
+		return;//DIO_E_PARAM_INVALID_CHANNEL_ID; /** TODO- This error needs to be reported in DET
+	}
+
 	for(uint8_t loopItr=0; loopItr<DIO_PINS_CONFIGURED; loopItr++)
 	{
 		if(Dio_ChannelUsed[loopItr] == ChannelId)

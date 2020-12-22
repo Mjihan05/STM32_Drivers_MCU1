@@ -99,8 +99,8 @@ typedef struct
 {
 	Spi_JobType JobId;
 	Spi_HwType HwUsed;		/** SPI Hw used */
-	uint8_t CsFunctionUsed;	/** Chip select functionality notUsed/SW/Hw */
-	uint16_t CsPinUsed;		/** if used on which pin*/
+	Spi_CsFunctionality CsFunctionUsed;	/** Chip select functionality notUsed/SW/Hw */
+	Dio_ChannelType CsPinUsed;		/** if used on which pin*/
 	uint8_t CsPinPolarity;  /** And the selection polarity */
 	uint32_t BaudRate;		/** Baud rate in MHz (User has to verify perClk/BaudRate = valid Prescaler) */
 	uint32_t TimeClkandCs;	/** Time between CLk and CS (TODO - Check if this is needed) */

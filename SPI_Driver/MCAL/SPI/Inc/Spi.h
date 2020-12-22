@@ -56,6 +56,13 @@ typedef uint16_t Spi_JobType;
 typedef uint8_t Spi_SequenceType;
 typedef uint8_t Spi_HWUnitType;
 
+typedef struct {
+	Spi_DataBufferType * TxBuffer;    /** Pointer to source buffer */
+	Spi_DataBufferType * RxBuffer;   /** Pointer to destination buffer */
+	Spi_NumberOfDataType length; // Number of elements of Spi_DataBufferType in destination buffer
+	Bool active; /** Set if the buffer is configured */
+} Spi_EbType;
+
 typedef struct
 {
 	Spi_SequenceType sequenceId;
@@ -64,6 +71,7 @@ typedef struct
 	uint8_t noOfRetries;
 }Spi_BufferIndex;
 
+/* TODO - check sExternalBuffer implementation, this also can be implemented with ptr */
 typedef struct
 {
 	Spi_StatusType SpiStatus;
