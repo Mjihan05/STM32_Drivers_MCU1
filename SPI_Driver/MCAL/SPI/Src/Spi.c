@@ -56,6 +56,13 @@ void Spi_Init (const Spi_ConfigType* ConfigPtr)
 
 	volatile  SPI_RegTypes * pReg = 0U;
 
+	/** Initialise internal Buffers for channels using IB */
+	if((sSpi_AllocateIbMemory()) == E_NOT_OK)
+	{
+		/** NO MEMORY FOUND */
+		/** TODO - Report DET Error */
+	}
+
 	for(loopItr0 = 0U; loopItr0 < NO_OF_JOBS_CONFIGURED; loopItr0++ )
 	{
 		moduleNo = Spi_getModuleNo(ConfigPtr->Job[loopItr0]);
@@ -244,7 +251,23 @@ Std_ReturnType Spi_AsyncTransmit (Spi_SequenceType Sequence)
 	/** Fill the Queue with jobs as per Priority */
 	sSpi_FillJobQueue(SequenceConfig);
 
+	return E_OK;
 
+}
+
+Std_ReturnType Spi_ReadIB (Spi_ChannelType Channel,Spi_DataBufferType* DataBufferPointer)
+{
+	/** Check for module Init */
+	if(GlobalParams.gEn_SpiStatus == SPI_UNINIT)
+	{
+		return E_NOT_OK;
+	}
+
+	/** Parameter Checking */
+	if((Channel >= NO_OF_CHANNELS_CONFIGURED) || (GlobalConfigPtr->Channel[Channel]->BufferUsed |= EN_INTERNAL_BUFFER))
+	{
+		return E_NOT_OK;
+	}
 }
 
 Spi_StatusType Spi_GetStatus (void)
@@ -416,7 +439,39 @@ static Std_ReturnType sSpi_CheckSharedJobs(Spi_SequenceType Sequence)
 	return E_OK;
 }
 
-static Std_ReturnType sSpi_AllocateIbMemory(Spi_ChannelType Channel,uint8_t NoOfBuffersUsed)
+static Std_ReturnType sSpi_AllocateIbMemory(void)
+{
+	uint8_t channelItr1 = 0U;
+	uint8_t bufferStart = 0U;
+	uint8_t bufferEnd = 0U;
+
+	for(channelItr1 = 0U; channelItr1 < NO_OF_CHANNELS_CONFIGURED; channelItr1++)
+	{
+		if(GlobalConfigPtr->Channel[channelItr1]->BufferUsed == EN_INTERNAL_BUFFER)
+		{
+			bufferEnd = (bufferStart + GlobalConfigPtr->Channel[channelItr1]->NoOfBuffersUsed) -1U;
+
+			if((bufferEnd >= IB_BUFFERS_AVAILABLE) || (bufferStart >= IB_BUFFERS_AVAILABLE))
+			{
+				/** Memory Overflow */
+				return E_NOT_OK;
+			}
+
+			/** Memory found update the parameters */
+			sIB_Config[channelItr1].BufferInUse = FALSE;
+			sIB_Config[channelItr1].BufferStart = bufferStart;
+			sIB_Config[channelItr1].BufferEnd = bufferEnd;
+			sIB_Config[channelItr1].ChannelId = channelItr1;
+
+			/** Update parameters for next iteration */
+			bufferStart = bufferEnd +1U;
+		}
+	}
+	return E_OK;
+}
+
+#if 0
+static Std_ReturnType sSpi_xyzIbMemory(Spi_ChannelType Channel,uint8_t NoOfBuffersUsed)
 {
 	uint8_t channelItr1 = 0U;
 	uint8_t channelItr2 = 0U;
@@ -468,6 +523,7 @@ static Std_ReturnType sSpi_AllocateIbMemory(Spi_ChannelType Channel,uint8_t NoOf
 	}
 	return E_NOT_OK;
 }
+#endif
 
 static Spi_StatusType sSpi_GetHwStatus(Spi_HwType en_moduleNo)
 {
@@ -563,18 +619,28 @@ static void sSpi_StartQueuedSequence(void)
 	GlobalConfigPtr->Sequence[SequenceId]->SpiSequenceEndNotification();
 
 	/** Schedule Next sequence */
-	while((GlobalParams.BufferIndex[sequenceIndex].sequenceId != EOL) &&
-					(GlobalParams.BufferIndex[sequenceIndex].sequenceId != SEQUENCE_COMPLETED))
+	while((GlobalParams.BufferIndex[sequenceIndex].sequenceId == EOL) ||
+					(GlobalParams.BufferIndex[sequenceIndex].sequenceId == SEQUENCE_COMPLETED))
 	{
 		sequenceIndex++;
 		if((sequenceIndex) == NO_OF_SEQUENCES_CONFIGURED)
 		{
 			sequenceIndex = 0U;
 		}
+
 		if((sequenceIndex == loopItr1))
 		{
+			/** No more pending sequences */
+			GlobalParams.NextSequence = EOL;
+			GlobalParams.gEn_SpiStatus = SPI_IDLE;
 			break;
 		}
+	}
+
+	if(sequenceIndex != loopItr1)
+	{
+		/** Store the sequence id  */
+		GlobalParams.NextSequence = GlobalParams.BufferIndex[sequenceIndex].sequenceId;
 	}
 
 	}while((sequenceIndex!= loopItr1));
@@ -648,8 +714,8 @@ static void sSpi_UpdateSequenceBuffer(uint8_t sequenceIndex,Spi_SeqResultType Re
 		GlobalParams.BufferIndex[sequenceIndex].sequenceId = SEQUENCE_COMPLETED;
 		loopbreaker = sequenceIndex;
 
-		while((GlobalParams.BufferIndex[sequenceIndex].sequenceId != EOL) &&
-				(GlobalParams.BufferIndex[sequenceIndex].sequenceId != SEQUENCE_COMPLETED))
+		while((GlobalParams.BufferIndex[sequenceIndex].sequenceId == EOL) ||
+				(GlobalParams.BufferIndex[sequenceIndex].sequenceId == SEQUENCE_COMPLETED))
 		{
 			sequenceIndex++;
 			if((sequenceIndex) == NO_OF_SEQUENCES_CONFIGURED)
