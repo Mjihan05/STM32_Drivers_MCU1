@@ -18,6 +18,13 @@
 #define IB_BUFFERS_AVAILABLE (128U)	/** (2bytes*x) Reserve 256 Bytes for Internal Buffers */
 #define SEQUENCE_COMPLETED   (NO_OF_SEQUENCES_CONFIGURED)	/** Dummy value needed in sSpi_FillJobQueue */
 
+typedef enum /** Defines a range of specific status for SPI Handler */
+{
+	SPI_BUFFER_EMPTY = 0U,
+	SPI_BUFFER_NOT_EMPTY,
+}Spi_BufferStatusType;
+
+
 //Spi_StatusType gEn_SpiStatus = SPI_UNINIT;
 
 Spi_GlobalParams GlobalParams;
@@ -161,11 +168,13 @@ Std_ReturnType Spi_WriteIB (Spi_ChannelType Channel,const Spi_DataBufferType* Da
 	uint8_t loopItr0 = 0U;
 	Spi_ChannelConfigType channelConfig = GlobalConfigPtr->Channel[Channel];
 
+#if 0
 	/** Allocate memory for the channel */
 	if((sSpi_AllocateIbMemory(Channel,channelConfig->NoOfBuffersUsed)) == E_NOT_OK)
 	{
 		return E_NOT_OK;  /** Memory not available */
 	}
+#endif
 
 	/** Write Data to the IB */
 	for(loopItr0 = 0U; loopItr0 < (channelConfig->NoOfBuffersUsed); loopItr0++)
@@ -192,11 +201,11 @@ Std_ReturnType Spi_WriteIB (Spi_ChannelType Channel,const Spi_DataBufferType* Da
 			}
 
 			/** Write the Data to Buffer */
-			sInternalBuffer[(sIB_Config[Channel].BufferStart+loopItr0)] = DataBufferPtr;
+			sInternalBuffer[(sIB_Config[Channel].TxBuffer.Start+loopItr0)] = DataBufferPtr;
 			DataBufferPtr++;
 		}
 	}
-	sIB_Config[Channel].BufferInUse = TRUE;
+	sIB_Config[Channel].TxBuffer.InUse = TRUE;
 
 	return E_OK;
 
@@ -268,6 +277,28 @@ Std_ReturnType Spi_ReadIB (Spi_ChannelType Channel,Spi_DataBufferType* DataBuffe
 	{
 		return E_NOT_OK;
 	}
+	if(DataBufferPointer == NULL_PTR)
+	{
+		return E_NOT_OK;
+	}
+
+	uint8_t loopItr0 = 0U;
+	uint8_t bufferIndex = 0U;
+	Spi_ChannelConfigType channelConfig = GlobalConfigPtr->Channel[Channel];
+
+	/** Read Data from IB and copy it to the DataBufferPtr */
+	/** If no new data is received then copy old data */
+	for(loopItr0 = 0U; loopItr0 < (channelConfig->NoOfBuffersUsed); loopItr0++)
+	{
+		bufferIndex = sIB_Config[Channel].RxBuffer.Start+loopItr0;
+
+		/** Write the Data from IB to DataBufferPointer */
+		DataBufferPointer = sInternalBuffer[bufferIndex];
+		DataBufferPointer++;
+	}
+
+	sIB_Config[Channel].RxBuffer.InUse = FALSE;
+	return E_OK;
 }
 
 Spi_StatusType Spi_GetStatus (void)
@@ -303,6 +334,13 @@ SPI_SEQ_FAILED when the last transmission of the Sequence has failed
 
 void Spi_MainFunction_Handling (void)
 {
+	/** Check for module Init */
+	if(GlobalParams.gEn_SpiStatus == SPI_UNINIT)
+	{
+		return;
+	}
+
+	sSpi_StartRxForJobs();
 	sSpi_StartQueuedSequence();
 }
 
@@ -442,6 +480,7 @@ static Std_ReturnType sSpi_CheckSharedJobs(Spi_SequenceType Sequence)
 static Std_ReturnType sSpi_AllocateIbMemory(void)
 {
 	uint8_t channelItr1 = 0U;
+	uint8_t bufferItr1 = 0U;
 	uint8_t bufferStart = 0U;
 	uint8_t bufferEnd = 0U;
 
@@ -449,22 +488,35 @@ static Std_ReturnType sSpi_AllocateIbMemory(void)
 	{
 		if(GlobalConfigPtr->Channel[channelItr1]->BufferUsed == EN_INTERNAL_BUFFER)
 		{
-			bufferEnd = (bufferStart + GlobalConfigPtr->Channel[channelItr1]->NoOfBuffersUsed) -1U;
-
-			if((bufferEnd >= IB_BUFFERS_AVAILABLE) || (bufferStart >= IB_BUFFERS_AVAILABLE))
+			/** Allocate memory for both Tx and Rx Buffers  */
+			for(bufferItr1 = 0U; bufferItr1 < 2U; bufferItr1++)
 			{
-				/** Memory Overflow */
-				return E_NOT_OK;
+				bufferEnd = (bufferStart + GlobalConfigPtr->Channel[channelItr1]->NoOfBuffersUsed) -1U;
+
+				if((bufferEnd >= IB_BUFFERS_AVAILABLE) || (bufferStart >= IB_BUFFERS_AVAILABLE))
+				{
+					/** Memory Overflow */
+					return E_NOT_OK;
+				}
+
+				/** Memory found update the parameters */
+				if(bufferItr1 == 0U)
+				{
+					sIB_Config[channelItr1].RxBuffer.Start = bufferStart;
+					sIB_Config[channelItr1].RxBuffer.End = bufferEnd;
+					sIB_Config[channelItr1].RxBuffer.InUse = FALSE;
+				}
+				else /** bufferItr1 == 1U */
+				{
+					sIB_Config[channelItr1].TxBuffer.Start = bufferStart;
+					sIB_Config[channelItr1].TxBuffer.End = bufferEnd;
+					sIB_Config[channelItr1].TxBuffer.InUse = FALSE;
+				}
+				sIB_Config[channelItr1].ChannelId = channelItr1;
+
+				/** Update parameters for next iteration */
+				bufferStart = bufferEnd +1U;
 			}
-
-			/** Memory found update the parameters */
-			sIB_Config[channelItr1].BufferInUse = FALSE;
-			sIB_Config[channelItr1].BufferStart = bufferStart;
-			sIB_Config[channelItr1].BufferEnd = bufferEnd;
-			sIB_Config[channelItr1].ChannelId = channelItr1;
-
-			/** Update parameters for next iteration */
-			bufferStart = bufferEnd +1U;
 		}
 	}
 	return E_OK;
@@ -535,6 +587,30 @@ static Spi_StatusType sSpi_GetHwStatus(Spi_HwType en_moduleNo)
 		return SPI_BUSY;
 	}
 	return SPI_IDLE;
+}
+
+static Spi_BufferStatusType sSpi_GetRxBufferStatus(Spi_HwType en_moduleNo)
+{
+	volatile  SPI_RegTypes * pReg = (SPI_RegTypes *)Spi_BaseAddress[moduleNo];
+	uint8_t u8_statusFlag = REG_READ32(&pReg->SR.R);
+
+	if(((REG_READ32(&pReg->SR.R)) & MASK_BIT(0U)) == SET)
+	{
+		return SPI_BUFFER_NOT_EMPTY;
+	}
+	return SPI_BUFFER_EMPTY;
+}
+
+static Spi_BufferStatusType sSpi_GetTxBufferStatus(Spi_HwType en_moduleNo)
+{
+	volatile  SPI_RegTypes * pReg = (SPI_RegTypes *)Spi_BaseAddress[moduleNo];
+	uint8_t u8_statusFlag = REG_READ32(&pReg->SR.R);
+
+	if(((REG_READ32(&pReg->SR.R)) & MASK_BIT(1U)) == SET)
+	{
+		return SPI_BUFFER_EMPTY;
+	}
+	return SPI_BUFFER_NOT_EMPTY;
 }
 
 /** TODO - 1. Interruptible sequence is not handled
@@ -790,7 +866,7 @@ static void sSpi_StartJob(Spi_JobConfigType* JobConfig)
 			for(loopItr1 = 0U; loopItr1<(channelConfig->NoOfBuffersUsed); loopItr1++)
 			{
 				/** Check if Tx buffer is empty and write data*/
-				while( (REG_READ32((&pReg->SR.B.TXE))) != SET );
+				while( (sSpi_GetTxBufferStatus(en_moduleNo)) != SPI_BUFFER_EMPTY );
 
 				if(sIB_Config[channelId].BufferInUse == FALSE)
 				{
@@ -833,6 +909,58 @@ static void sSpi_StartJob(Spi_JobConfigType* JobConfig)
 
 	/** Call the notification function */
 	JobConfig->SpiJobEndNotification();
+}
+
+static void sSpi_StartRxForJobs(void)
+{
+	Spi_HwType en_moduleNo = 0U;
+	Spi_JobType jobId = 0U;
+	Spi_JobConfigType jobConfig = 0U;
+	Spi_ChannelConfigType channelConfig = 0U;
+	Spi_ChannelType channelId = 0U;
+	uint8_t channelItr = 0U;
+	Spi_DataBufferType * destBufferPtr = 0U;
+
+
+	for(jobId = 0U; jobId < NO_OF_JOBS_CONFIGURED; jobId++)
+	{
+		jobConfig = GlobalConfigPtr->Job[jobId];
+		en_moduleNo = jobConfig->HwUsed;
+		channelItr = 0U;
+
+		while(sSpi_GetHwStatus(en_moduleNo) == SPI_BUSY);
+
+		/** Skip iteration if no messages in Rx buffer */
+		if(sSpi_GetRxBufferStatus(en_moduleNo) == SPI_BUFFER_EMPTY)
+		{
+			continue;
+		}
+
+		/** Copy data from Hw Buffer to Channel Buffer  */
+		while(sSpi_GetRxBufferStatus(en_moduleNo) == SPI_BUFFER_NOT_EMPTY)
+		{
+			channelId = jobConfig->ChannelAssignment[channelItr];
+
+			/** If channel exists copy it to buffer */
+			if(channelId != EOL)
+			{
+				channelConfig = GlobalConfigPtr->Channel[channelId];
+
+				/** Get Buffer Type */
+				if(channelConfig->BufferUsed == EN_INTERNAL_BUFFER)
+				{
+					destBufferPtr = sInternalBuffer[sIB_Config[channelId].RxBuffer.Start];
+				}
+				else /** channelConfig->BufferUsed == EN_EXTERNAL_BUFFER */
+				{
+					destBufferPtr = sExternalBuffer[channelId].RxBuffer;
+				}
+
+			}
+		}
+
+
+	}
 }
 
 static void sSpi_SetSeqResult (Spi_SequenceType Sequence,Spi_SeqResultType Result)

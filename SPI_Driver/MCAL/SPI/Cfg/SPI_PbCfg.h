@@ -13,7 +13,7 @@
 
 #include "SPI_regTypes.h"
 
-#define TOTAL_NO_OF_SPI_HW_UNIT 	(EN_SPI_3)
+#define TOTAL_NO_OF_SPI_HW_UNIT 	(EN_SPI_3 + 1U)
 
 /** LEVEL 0, Simple Synchronous SPI Handler/Driver
  *  LEVEL 1, Basic Asynchronous SPI Handler/Driver
@@ -78,10 +78,15 @@ typedef enum
 /** Structure to hold the IB information // Only used for channel with buffer used as Internal */
 typedef struct
 {
+	uint8_t Start;
+	uint8_t End;
+	Bool InUse;
+}Ib_Type;
+typedef struct
+{
 	Spi_ChannelType ChannelId;
-	uint8_t BufferStart;
-	uint8_t BufferEnd;
-	Bool BufferInUse;
+	Ib_Type TxBuffer;
+	Ib_Type RxBuffer;
 }InternalBufferType;
 
 /** Structure to hold Channel properties */
