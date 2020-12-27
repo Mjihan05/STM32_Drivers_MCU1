@@ -920,7 +920,9 @@ static void sSpi_StartRxForJobs(void)
 	Spi_ChannelType channelId = 0U;
 	uint8_t channelItr = 0U;
 	Spi_DataBufferType * destBufferPtr = 0U;
+	uint8_t loopItr0 = 0U;
 
+	volatile  SPI_RegTypes * pReg = 0U;
 
 	for(jobId = 0U; jobId < NO_OF_JOBS_CONFIGURED; jobId++)
 	{
@@ -929,6 +931,8 @@ static void sSpi_StartRxForJobs(void)
 		channelItr = 0U;
 
 		while(sSpi_GetHwStatus(en_moduleNo) == SPI_BUSY);
+
+		pReg = (SPI_RegTypes *)Spi_BaseAddress[en_moduleNo];
 
 		/** Skip iteration if no messages in Rx buffer */
 		if(sSpi_GetRxBufferStatus(en_moduleNo) == SPI_BUFFER_EMPTY)
@@ -950,12 +954,35 @@ static void sSpi_StartRxForJobs(void)
 				if(channelConfig->BufferUsed == EN_INTERNAL_BUFFER)
 				{
 					destBufferPtr = sInternalBuffer[sIB_Config[channelId].RxBuffer.Start];
+					sIB_Config[channelId].RxBuffer.InUse = TRUE;
 				}
 				else /** channelConfig->BufferUsed == EN_EXTERNAL_BUFFER */
 				{
 					destBufferPtr = sExternalBuffer[channelId].RxBuffer;
+					sExternalBuffer[channelId].active = TRUE;
 				}
 
+				/** Copy data to Buffer */
+				for(loopItr0 = 0U; loopItr0 = channelConfig->NoOfBuffersUsed; loopItr0++)
+				{
+					if(sSpi_GetRxBufferStatus(en_moduleNo) == SPI_BUFFER_NOT_EMPTY)
+					{
+						(*destBufferPtr) = REG_READ32(&pReg->DR.R);
+					}
+					else
+					{
+						(*destBufferPtr) = 0U;
+					}
+				}
+				channelItr++;
+			}
+			else /** Channel buffers are full but data is still coming */
+			{
+				/** TODO - Figure out what to do, currently just reading the register to clear the data */
+				while(sSpi_GetRxBufferStatus(en_moduleNo) == SPI_BUFFER_NOT_EMPTY)
+				{
+					REG_READ32(&pReg->DR.R);
+				}
 			}
 		}
 
