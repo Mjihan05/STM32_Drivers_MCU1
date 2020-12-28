@@ -87,10 +87,14 @@ Std_ReturnType Spi_DeInit (void);
 Std_ReturnType Spi_WriteIB (Spi_ChannelType Channel,const Spi_DataBufferType* DataBufferPtr);
 Std_ReturnType Spi_AsyncTransmit (Spi_SequenceType Sequence);
 Std_ReturnType Spi_ReadIB (Spi_ChannelType Channel,Spi_DataBufferType* DataBufferPointer);
-
+Std_ReturnType Spi_SetupEB (Spi_ChannelType Channel,const Spi_DataBufferType* SrcDataBufferPtr,
+							Spi_DataBufferType* DesDataBufferPtr,Spi_NumberOfDataType Length);
 Spi_StatusType Spi_GetStatus (void);
 Spi_JobResultType Spi_GetJobResult (Spi_JobType Job);
 Spi_SeqResultType Spi_GetSequenceResult (Spi_SequenceType Sequence);
+Std_ReturnType Spi_SyncTransmit (Spi_SequenceType Sequence);
+Spi_StatusType Spi_GetHWUnitStatus (Spi_HWUnitType HWUnit);
+void Spi_Cancel (Spi_SequenceType Sequence);
 void Spi_MainFunction_Handling (void);
 
 #endif /* SPI_INC_SPI_H_ */

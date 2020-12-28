@@ -140,6 +140,8 @@ Std_ReturnType Spi_DeInit (void)
 
 	uint8_t loopItr = 0U;
 
+	/** TODO - Perform safe shutdown before resetting the module */
+
 	for(loopItr = 0U; loopItr<TOTAL_NO_OF_SPI_HW_UNIT; loopItr++)
 	{
 		Spi_ResetModule(loopItr);
@@ -293,12 +295,56 @@ Std_ReturnType Spi_ReadIB (Spi_ChannelType Channel,Spi_DataBufferType* DataBuffe
 		bufferIndex = sIB_Config[Channel].RxBuffer.Start+loopItr0;
 
 		/** Write the Data from IB to DataBufferPointer */
-		DataBufferPointer = sInternalBuffer[bufferIndex];
+		(*DataBufferPointer) = sInternalBuffer[bufferIndex];
 		DataBufferPointer++;
 	}
 
 	sIB_Config[Channel].RxBuffer.InUse = FALSE;
 	return E_OK;
+}
+
+Std_ReturnType Spi_SetupEB (Spi_ChannelType Channel,const Spi_DataBufferType* SrcDataBufferPtr,
+							Spi_DataBufferType* DesDataBufferPtr,Spi_NumberOfDataType Length)
+{
+	/** Check for module Init */
+	if(GlobalParams.gEn_SpiStatus == SPI_UNINIT)
+	{
+		return E_NOT_OK;
+	}
+
+	/** Parameter Checking */
+	if(Channel >= NO_OF_CHANNELS_CONFIGURED)
+	{
+		return E_NOT_OK;
+	}
+
+	/** Configure the buffers */
+	if(SrcDataBufferPtr == NULL_PTR)
+	{
+		sExternalBuffer[Channel].TxBuffer = NULL_PTR;
+	}
+	else /** (SrcDataBufferPtr != NULL_PTR) */
+	{
+		sExternalBuffer[Channel].TxBuffer = SrcDataBufferPtr;
+	}
+
+	if(DesDataBufferPtr == NULL_PTR)
+	{
+		sExternalBuffer[Channel].RxBuffer = NULL_PTR;
+	}
+	else /** (SrcDataBufferPtr != NULL_PTR) */
+	{
+		sExternalBuffer[Channel].RxBuffer = DesDataBufferPtr;
+	}
+
+	/** Configure the Length of the buffer*/
+	sExternalBuffer[Channel].length = Length;
+
+
+
+	return E_OK;
+
+
 }
 
 Spi_StatusType Spi_GetStatus (void)
@@ -311,25 +357,89 @@ Spi_StatusType Spi_GetStatus (void)
 	 *	API service Spi_GetStatus shall return SPI_BUSY when The
 		SPI Handler/Driver is performing a SPI Job transmit
 	 */
+	return (Spi_StatusType)(GlobalParams.gEn_SpiStatus);
 }
 
 Spi_JobResultType Spi_GetJobResult (Spi_JobType Job)
 {
-	/**
-	 * The function Spi_GetJobResult shall return SPI_JOB_OK
-when the last transmission of the Job has been finished successfully*/
+	if(Job >= NO_OF_JOBS_CONFIGURED)
+	{
+		return;
+	}
+
+	return (Spi_JobResultType)(Spi_JobResult[Job]);
 }
 
 Spi_SeqResultType Spi_GetSequenceResult (Spi_SequenceType Sequence)
 {
-	/**
-	 *  Spi_GetSequenceResult function shall return SPI_SEQ_OK
-when the last transmission of the Sequence has been finished successfully
-	 *  Spi_GetSequenceResult function shall return SPI_SEQ_PENDING
- when the SPI Handler/Driver is performing a SPI Sequence.
-	 *  Spi_GetSequenceResult function shall return
-SPI_SEQ_FAILED when the last transmission of the Sequence has failed
-	 * */
+	if(Sequence >= NO_OF_SEQUENCES_CONFIGURED)
+	{
+		return;
+	}
+
+	return (Spi_SeqResultType)(Spi_SeqResult[Sequence]);
+}
+
+Std_ReturnType Spi_SyncTransmit (Spi_SequenceType Sequence)
+{
+	/** Check for module Init */
+	if(GlobalParams.gEn_SpiStatus == SPI_UNINIT)
+	{
+		return E_NOT_OK;
+	}
+
+	/** Parameter Checking */
+	if(Sequence >= NO_OF_SEQUENCES_CONFIGURED)
+	{
+		return E_NOT_OK;
+	}
+
+	/** if the sequence is already in pending state then return */
+	if(Spi_SeqResult[Sequence] == SPI_SEQ_PENDING)
+	{
+		return E_NOT_OK;
+	}
+
+	Spi_SequenceConfigType SequenceConfig = GlobalConfigPtr->Sequence[Sequence];
+	Spi_StatusType moduleStatus = Spi_GetStatus();
+
+	/** Put the Sequence in pending and start transmission of the sequence */
+	GlobalParams.gEn_SpiStatus = SPI_BUSY;
+	sSpi_SetSeqResult(Sequence,SPI_SEQ_PENDING);
+
+	Spi_JobType * jobPtr = &SequenceConfig->Jobs[0U];
+
+	while(*jobPtr != EOL)
+	{
+		sSpi_SetJobResult(*jobPtr,SPI_JOB_QUEUED);
+	}
+
+	sSpi_StartSyncTransmit(Sequence);
+
+	GlobalParams.gEn_SpiStatus = moduleStatus;
+
+	return E_OK;
+}
+
+Spi_StatusType Spi_GetHWUnitStatus (Spi_HWUnitType HWUnit)
+{
+	if(HWUnit >= TOTAL_NO_OF_SPI_HW_UNIT)
+	{
+		return;
+	}
+
+	return (Spi_StatusType)(sSpi_GetHwStatus(HWUnit));
+}
+
+void Spi_Cancel (Spi_SequenceType Sequence)
+{
+	/** Parameter Checking */
+	if(Sequence >= NO_OF_SEQUENCES_CONFIGURED)
+	{
+		return ;
+	}
+
+	sSpi_CancelSequence(Sequence);
 }
 
 void Spi_MainFunction_Handling (void)
@@ -784,7 +894,7 @@ static void sSpi_UpdateSequenceBuffer(uint8_t sequenceIndex,Spi_SeqResultType Re
 			sSpi_SetJobResult(*jobPtr,SPI_JOB_FAILED);
 		}
 
-		sSpi_SetSeqResult(seqId,SPI_SEQ_FAILED);
+		sSpi_SetSeqResult(seqId,Result);
 
 		/** Delete the sequence */
 		GlobalParams.BufferIndex[sequenceIndex].sequenceId = SEQUENCE_COMPLETED;
@@ -886,11 +996,11 @@ static void sSpi_StartJob(Spi_JobConfigType* JobConfig)
 				/** Check if Tx buffer is empty and write data*/
 				while( (REG_READ32((&pReg->SR.B.TXE))) != SET );
 
-				if(sExternalBuffer[channelId].active == FALSE)
+				if(sExternalBuffer[channelId].TxBuffer == NULL_PTR)
 				{
 					REG_WRITE32(&pReg->DR.R,(channelConfig->DefaultTransmitValue)&0xFFFF);
 				}
-				else /** (sExternalBuffer[channelId].active == TRUE) */
+				else /** (sExternalBuffer[channelId].TxBuffer != NULL_PTR) */
 				{
 					REG_WRITE32(&pReg->DR.R,(sExternalBuffer[channelId].TxBuffer[loopItr1]));
 				}
@@ -913,57 +1023,68 @@ static void sSpi_StartJob(Spi_JobConfigType* JobConfig)
 
 static void sSpi_StartRxForJobs(void)
 {
-	Spi_HwType en_moduleNo = 0U;
 	Spi_JobType jobId = 0U;
+
+	for(jobId = 0U; jobId < NO_OF_JOBS_CONFIGURED; jobId++)
+	{
+		sSpi_CopyDataToChannelBuffer(jobId);
+	}
+}
+
+static void sSpi_CopyDataToChannelBuffer(Spi_JobType jobId)
+{
+	Spi_HwType en_moduleNo = 0U;
 	Spi_JobConfigType jobConfig = 0U;
 	Spi_ChannelConfigType channelConfig = 0U;
 	Spi_ChannelType channelId = 0U;
 	uint8_t channelItr = 0U;
 	Spi_DataBufferType * destBufferPtr = 0U;
 	uint8_t loopItr0 = 0U;
+	uint16_t noOfBuffers = 0U;
 
 	volatile  SPI_RegTypes * pReg = 0U;
 
-	for(jobId = 0U; jobId < NO_OF_JOBS_CONFIGURED; jobId++)
+	jobConfig = GlobalConfigPtr->Job[jobId];
+	en_moduleNo = jobConfig->HwUsed;
+
+	while(sSpi_GetHwStatus(en_moduleNo) == SPI_BUSY);
+
+	pReg = (SPI_RegTypes *)Spi_BaseAddress[en_moduleNo];
+
+	/** Skip iteration if no messages in Rx buffer */
+	if(sSpi_GetRxBufferStatus(en_moduleNo) == SPI_BUFFER_EMPTY)
 	{
-		jobConfig = GlobalConfigPtr->Job[jobId];
-		en_moduleNo = jobConfig->HwUsed;
-		channelItr = 0U;
+		return;
+	}
 
-		while(sSpi_GetHwStatus(en_moduleNo) == SPI_BUSY);
+	/** Copy data from Hw Buffer to Channel Buffer  */
+	while(sSpi_GetRxBufferStatus(en_moduleNo) == SPI_BUFFER_NOT_EMPTY)
+	{
+		channelId = jobConfig->ChannelAssignment[channelItr];
 
-		pReg = (SPI_RegTypes *)Spi_BaseAddress[en_moduleNo];
-
-		/** Skip iteration if no messages in Rx buffer */
-		if(sSpi_GetRxBufferStatus(en_moduleNo) == SPI_BUFFER_EMPTY)
+		/** If channel exists copy it to buffer */
+		if(channelId != EOL)
 		{
-			continue;
-		}
+			channelConfig = GlobalConfigPtr->Channel[channelId];
 
-		/** Copy data from Hw Buffer to Channel Buffer  */
-		while(sSpi_GetRxBufferStatus(en_moduleNo) == SPI_BUFFER_NOT_EMPTY)
-		{
-			channelId = jobConfig->ChannelAssignment[channelItr];
-
-			/** If channel exists copy it to buffer */
-			if(channelId != EOL)
+			/** Get Buffer Type */
+			if(channelConfig->BufferUsed == EN_INTERNAL_BUFFER)
 			{
-				channelConfig = GlobalConfigPtr->Channel[channelId];
+				destBufferPtr = &sInternalBuffer[sIB_Config[channelId].RxBuffer.Start];
+				noOfBuffers = channelConfig->NoOfBuffersUsed;
+				sIB_Config[channelId].RxBuffer.InUse = TRUE;
+			}
+			else /** channelConfig->BufferUsed == EN_EXTERNAL_BUFFER */
+			{
+				destBufferPtr = sExternalBuffer[channelId].RxBuffer;
+				noOfBuffers = sExternalBuffer[channelId].length;
+				sExternalBuffer[channelId].active = TRUE;
+			}
 
-				/** Get Buffer Type */
-				if(channelConfig->BufferUsed == EN_INTERNAL_BUFFER)
-				{
-					destBufferPtr = sInternalBuffer[sIB_Config[channelId].RxBuffer.Start];
-					sIB_Config[channelId].RxBuffer.InUse = TRUE;
-				}
-				else /** channelConfig->BufferUsed == EN_EXTERNAL_BUFFER */
-				{
-					destBufferPtr = sExternalBuffer[channelId].RxBuffer;
-					sExternalBuffer[channelId].active = TRUE;
-				}
-
-				/** Copy data to Buffer */
-				for(loopItr0 = 0U; loopItr0 = channelConfig->NoOfBuffersUsed; loopItr0++)
+			/** Copy data to Buffer */
+			if(destBufferPtr != NULL_PTR)
+			{
+				for(loopItr0 = 0U; loopItr0 = noOfBuffers; loopItr0++)
 				{
 					if(sSpi_GetRxBufferStatus(en_moduleNo) == SPI_BUFFER_NOT_EMPTY)
 					{
@@ -973,20 +1094,91 @@ static void sSpi_StartRxForJobs(void)
 					{
 						(*destBufferPtr) = 0U;
 					}
+					destBufferPtr++;
 				}
-				channelItr++;
 			}
-			else /** Channel buffers are full but data is still coming */
+
+			channelItr++;
+		}
+		else /** Channel buffers are full but data is still coming */
+		{
+			/** TODO - Figure out what to do, currently just reading the register to clear the data */
+			while(sSpi_GetRxBufferStatus(en_moduleNo) == SPI_BUFFER_NOT_EMPTY)
 			{
-				/** TODO - Figure out what to do, currently just reading the register to clear the data */
-				while(sSpi_GetRxBufferStatus(en_moduleNo) == SPI_BUFFER_NOT_EMPTY)
-				{
-					REG_READ32(&pReg->DR.R);
-				}
+				REG_READ32(&pReg->DR.R);
 			}
 		}
+	}
+}
+
+static void sSpi_StartSyncTransmit(Spi_SequenceType Sequence)
+{
+	Spi_SequenceConfigType sequenceConfig = GlobalConfigPtr->Sequence[Sequence];
+	uint8_t jobItr = sequenceConfig->Jobs[0U];
+	Spi_JobConfigType jobConfig = 0U;
+	Spi_StatusType en_moduleNo = 0U;
+
+	while(jobItr != EOL)
+	{
+		jobConfig = GlobalConfigPtr->Job[jobItr];
+		en_moduleNo = Spi_getModuleNo(jobConfig);
+
+		/** Wait for the Hw to get free */
+		while(sSpi_GetHwStatus(en_moduleNo) == SPI_BUSY);
+
+		/** Start the job */
+		sSpi_StartJob(jobConfig);
+	}
+
+	/** Now that all the jobs have been executed call the notification function */
+	sSpi_SetSeqResult(SequenceId,SPI_SEQ_OK);
+	/** Call Notification function */
+	GlobalConfigPtr->Sequence[SequenceId]->SpiSequenceEndNotification();
+}
+
+static void sSpi_CancelSequence(Spi_SequenceType Sequence)
+{
+	uint8_t loopItr1 = 0U;
+	uint8_t sequenceIndex = 0U;
+
+	/** Get the Index values of the job buffer for the next pending sequence */
+	for(loopItr1 = 0U; loopItr1 < NO_OF_SEQUENCES_CONFIGURED; loopItr1++ )
+	{
+		if(GlobalParams.BufferIndex[loopItr1].sequenceId == Sequence)
+		{
+			sequenceIndex = loopItr1;
+			break;
+		}
+	}
+
+	/** Mark the sequence complete so that the execution does not happen */
+	GlobalParams.BufferIndex[sequenceIndex].sequenceId = SEQUENCE_COMPLETED;
+	sSpi_SetSeqResult(SequenceId,SPI_SEQ_CANCELED);
+	/** Call Notification function */
+	GlobalConfigPtr->Sequence[SequenceId]->SpiSequenceEndNotification();
 
 
+	/** If the cancelled sequence is the next pending sequence then update the Next Sequence */
+	if(GlobalParams.NextSequence == Sequence)
+	{
+		/** Schedule Next sequence */
+		while((GlobalParams.BufferIndex[sequenceIndex].sequenceId == EOL) ||
+				(GlobalParams.BufferIndex[sequenceIndex].sequenceId == SEQUENCE_COMPLETED))
+		{
+			sequenceIndex++;
+			if((sequenceIndex) == NO_OF_SEQUENCES_CONFIGURED)
+			{
+				sequenceIndex = 0U;
+			}
+
+			if((sequenceIndex == loopItr1))
+			{
+				/** No more pending sequences */
+				GlobalParams.NextSequence = EOL;
+				GlobalParams.gEn_SpiStatus = SPI_IDLE;
+				break;
+			}
+		}
 	}
 }
 
