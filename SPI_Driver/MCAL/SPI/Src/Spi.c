@@ -888,13 +888,18 @@ static void sSpi_UpdateSequenceBuffer(uint8_t sequenceIndex,Spi_SeqResultType Re
 		/** Update job and sequence results */
 		Spi_SequenceConfigType SequenceConfig = GlobalConfigPtr->Sequence[seqId];
 		Spi_JobType * jobPtr = &SequenceConfig->Jobs[0U];
+		Spi_JobConfigType JobConfig = GlobalConfigPtr->Job[*jobPtr];
 
 		while(*jobPtr != EOL)
 		{
 			sSpi_SetJobResult(*jobPtr,SPI_JOB_FAILED);
+			/** Call the notification function */
+			JobConfig->SpiJobEndNotification();
 		}
 
 		sSpi_SetSeqResult(seqId,Result);
+		/** Call the notification function */
+		SequenceConfig->SpiSequenceEndNotification();
 
 		/** Delete the sequence */
 		GlobalParams.BufferIndex[sequenceIndex].sequenceId = SEQUENCE_COMPLETED;
@@ -1140,6 +1145,7 @@ static void sSpi_CancelSequence(Spi_SequenceType Sequence)
 {
 	uint8_t loopItr1 = 0U;
 	uint8_t sequenceIndex = 0U;
+	Spi_JobConfigType jobConfig = 0U;
 
 	/** Get the Index values of the job buffer for the next pending sequence */
 	for(loopItr1 = 0U; loopItr1 < NO_OF_SEQUENCES_CONFIGURED; loopItr1++ )
@@ -1153,7 +1159,16 @@ static void sSpi_CancelSequence(Spi_SequenceType Sequence)
 
 	/** Mark the sequence complete so that the execution does not happen */
 	GlobalParams.BufferIndex[sequenceIndex].sequenceId = SEQUENCE_COMPLETED;
+
+	/** Update Job and Sequence results */
+	for(loopItr2 = GlobalParams.BufferIndex[sequenceIndex].startBufferIndex;
+				(loopItr2 != GlobalParams.BufferIndex[sequenceIndex].endBufferIndex); loopItr2++ )
+	{
+		jobConfig = GlobalConfigPtr->Job[(GlobalParams.SpiQueuedJobsBuffer[loopItr2])];
+		sSpi_SetJobResult(jobConfig->JobId,SPI_JOB_OK);
+	}
 	sSpi_SetSeqResult(SequenceId,SPI_SEQ_CANCELED);
+
 	/** Call Notification function */
 	GlobalConfigPtr->Sequence[SequenceId]->SpiSequenceEndNotification();
 
@@ -1179,6 +1194,12 @@ static void sSpi_CancelSequence(Spi_SequenceType Sequence)
 				break;
 			}
 		}
+
+		if(sequenceIndex != loopItr1)
+		{
+			GlobalParams.NextSequence = GlobalParams.BufferIndex[sequenceIndex].sequenceId;
+		}
+
 	}
 }
 
