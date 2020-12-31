@@ -96,7 +96,7 @@ void Dio_WriteChannel (Dio_ChannelType ChannelId,Dio_LevelType Level)
 		uint8_t pinNo = ChannelId%16U;
 		volatile  GPIO_RegTypes * pReg = (GPIO_RegTypes *)Gpio_BaseAddress[moduleNo];
 
-		if(Level == STD_HIGH)
+		if(Level == DIO_HIGH)
 		{
 			REG_RMW32(&pReg->BSRR.R,MASK_BITS(0x1U,pinNo),(SET)<<(pinNo));
 		}

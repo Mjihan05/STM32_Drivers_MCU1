@@ -36,8 +36,8 @@ typedef uint16_t Dio_PortLevelType;
 
 typedef enum
 {
-	STD_LOW,
-	STD_HIGH,
+	DIO_LOW,
+	DIO_HIGH,
 }Dio_LevelType;
 
 typedef struct
