@@ -26,8 +26,8 @@
 #define STD_ON  TRUE
 #define STD_OFF FALSE
 
-#define STD_HIGH STD_ON
-#define STD_LOW STD_OFF
+//#define STD_HIGH STD_ON
+//#define STD_LOW STD_OFF
 
 #define SET_BIT(x)  (SET<<x)
 #define CLEAR_BIT(x) ((~(SET<<x))&MASK_BIT(x))

@@ -12,6 +12,7 @@
 #define SPI_CFG_SPI_PBCFG_H_
 
 #include "SPI_regTypes.h"
+#include "Dio_PbCfg.h"
 
 #define TOTAL_NO_OF_SPI_HW_UNIT 	(EN_SPI_3 + 1U)
 
@@ -20,9 +21,9 @@
  *  LEVEL 2, Enhanced (Synchronous/Asynchronous) SPI Handler/Driver */
 #define SPI_LEVEL_DELIVERED 		(2U)
 
-#define NO_OF_CHANNELS_CONFIGURED	(0U)
-#define NO_OF_JOBS_CONFIGURED		(0U)
-#define NO_OF_SEQUENCES_CONFIGURED	(0U)
+#define NO_OF_CHANNELS_CONFIGURED	(3U)
+#define NO_OF_JOBS_CONFIGURED		(3U)
+#define NO_OF_SEQUENCES_CONFIGURED	(3U)
 
 #define NO_OF_SEQ_RETRIES 			(5U)
 
@@ -31,7 +32,15 @@
  	Usage 2: the SPI Handler/Driver manages both buffers types. */
 #define SPI_CHANNEL_BUFFERS_ALLOWED (2U)
 
+
 #define EOL (0xFFU)
+
+typedef uint16_t Spi_DataBufferType;
+typedef uint16_t Spi_NumberOfDataType;
+typedef uint8_t Spi_ChannelType;
+typedef uint16_t Spi_JobType;
+typedef uint8_t Spi_SequenceType;
+typedef uint8_t Spi_HWUnitType;
 
 /** Buffer used by the SPI Hw */
 typedef enum
@@ -65,7 +74,7 @@ typedef enum
 {
 	EN_SHIFT_ON_RISING_EDGE,
 	EN_SHIFT_ON_FALLING_EDGE,
-};
+}Spi_ShiftEdgeType;
 
 /** Spi Hw units available in STM32 */
 typedef enum
@@ -94,7 +103,7 @@ typedef struct
 {
 	Spi_ChannelType ChannelId;
 	Spi_BufferType BufferUsed; /** Internal or External , STM32 has internal buffers*/
-	uint8_t DataFrame; /** Contains the width of the transmitted data, has to be under 16bits */
+	Spi_DataFrameType DataFrame; /** Contains the width of the transmitted data, has to be under 16bits */
 	uint8_t NoOfBuffersUsed;  /** for IB Channels (at least 1) or it is the maximum of data for EB Channels (a value of 0 makes no sense) */
 	Spi_DataShiftType TransferStart; /** MSB first or LSB first transmission */
 	uint16_t DefaultTransmitValue;  /** Default Value to be used when Dataptr is NULL, 16bit value max */
@@ -110,7 +119,7 @@ typedef struct
 	uint32_t BaudRate;		/** Baud rate in MHz (User has to verify perClk/BaudRate = valid Prescaler) */
 	uint32_t TimeClkandCs;	/** Time between CLk and CS (TODO - Check if this is needed) */
 	uint8_t ShiftClkIdleLevel; /** CPOL (clock polarity) bit controls the steady state value of the clock when no data is being transferred */
-	uint8_t DataShiftonEdge;	/**  CPHA (clock phase) bit Controls on which edge Tx takes place */
+	Spi_ShiftEdgeType DataShiftonEdge;	/**  CPHA (clock phase) bit Controls on which edge Tx takes place */
 	uint8_t Priority;			/** Priority from 0 lower to 3 highest */
 	void (*SpiJobEndNotification)();
 	Spi_ChannelType ChannelAssignment[NO_OF_CHANNELS_CONFIGURED];
@@ -132,9 +141,9 @@ typedef struct
  Definition of Channels
  Definition of Jobs
  Definition of Sequences⌋*/
-	Spi_ChannelConfigType* Channel;
-	Spi_JobConfigType* Job;
-	Spi_SequenceConfigType* Sequence;
+	const Spi_ChannelConfigType* Channel;
+	const Spi_JobConfigType* Job;
+	const Spi_SequenceConfigType* Sequence;
 }Spi_ConfigType;
 
 

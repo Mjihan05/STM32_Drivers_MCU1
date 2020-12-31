@@ -13,8 +13,8 @@
 #define SPI_INC_SPI_H_
 
 #include "SPI_regTypes.h"
-#include "SPI_PbCfg.h"
 
+#include "SPI_PbCfg.h"
 
 #define QUEUE_SIZE (NO_OF_JOBS_CONFIGURED)
 
@@ -31,7 +31,7 @@ typedef enum /** Specifies the asynchronous mechanism mode for SPI busses handle
 	SPI_POLLING_MODE = 0U,
 	SPI_INTERRUPT_MODE,
 }Spi_AsyncModeType;
-#endif
+#endif /** (SPI_LEVEL_DELIVERED == (2U)) */
 
 typedef enum /** Defines a range of specific Jobs status for SPI Handler/ */
 {
@@ -49,15 +49,8 @@ typedef enum
 	SPI_SEQ_CANCELED
 }Spi_SeqResultType;
 
-typedef uint16_t Spi_DataBufferType;
-typedef uint16_t Spi_NumberOfDataType;
-typedef uint8_t Spi_ChannelType;
-typedef uint16_t Spi_JobType;
-typedef uint8_t Spi_SequenceType;
-typedef uint8_t Spi_HWUnitType;
-
 typedef struct {
-	Spi_DataBufferType * TxBuffer;    /** Pointer to source buffer */
+	const Spi_DataBufferType * TxBuffer;    /** Pointer to source buffer */
 	Spi_DataBufferType * RxBuffer;   /** Pointer to destination buffer */
 	Spi_NumberOfDataType length; // Number of elements of Spi_DataBufferType in destination buffer
 	Bool active; /** Set if the buffer is configured */
@@ -78,6 +71,9 @@ typedef struct
 	Spi_JobType SpiQueuedJobsBuffer[QUEUE_SIZE];
 	Spi_BufferIndex BufferIndex[NO_OF_SEQUENCES_CONFIGURED]; /** Holds the index of the queued jobs of a sequence */
 	Spi_SequenceType NextSequence;
+#if(SPI_LEVEL_DELIVERED == (2U))
+	Spi_AsyncModeType Spi_AsyncMode;
+#endif /** (SPI_LEVEL_DELIVERED == (2U)) */
 }Spi_GlobalParams;
 
 extern Spi_ConfigType Spi_Config0;
@@ -85,16 +81,23 @@ extern Spi_ConfigType Spi_Config0;
 void Spi_Init (const Spi_ConfigType* ConfigPtr);
 Std_ReturnType Spi_DeInit (void);
 Std_ReturnType Spi_WriteIB (Spi_ChannelType Channel,const Spi_DataBufferType* DataBufferPtr);
+#if((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (1U)))
 Std_ReturnType Spi_AsyncTransmit (Spi_SequenceType Sequence);
+#endif  /** ((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (1U))) */
 Std_ReturnType Spi_ReadIB (Spi_ChannelType Channel,Spi_DataBufferType* DataBufferPointer);
 Std_ReturnType Spi_SetupEB (Spi_ChannelType Channel,const Spi_DataBufferType* SrcDataBufferPtr,
 							Spi_DataBufferType* DesDataBufferPtr,Spi_NumberOfDataType Length);
 Spi_StatusType Spi_GetStatus (void);
 Spi_JobResultType Spi_GetJobResult (Spi_JobType Job);
 Spi_SeqResultType Spi_GetSequenceResult (Spi_SequenceType Sequence);
+#if((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (0U)))
 Std_ReturnType Spi_SyncTransmit (Spi_SequenceType Sequence);
+#endif  /** ((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (0U))) */
 Spi_StatusType Spi_GetHWUnitStatus (Spi_HWUnitType HWUnit);
 void Spi_Cancel (Spi_SequenceType Sequence);
+#if(SPI_LEVEL_DELIVERED == (2U))
+Std_ReturnType Spi_SetAsyncMode (Spi_AsyncModeType Mode);
+#endif /** (SPI_LEVEL_DELIVERED == (2U))*/
 void Spi_MainFunction_Handling (void);
 
 #endif /* SPI_INC_SPI_H_ */

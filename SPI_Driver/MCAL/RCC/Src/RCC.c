@@ -30,7 +30,7 @@ void RCC_Init(RCC_GlobalConfigType* Config )
 		return;
 	}
 
-	RCC_GlobalConfig = (RCC_GlobalConfigType)(Config);
+	RCC_GlobalConfig = (RCC_GlobalConfigType*)(Config);
 
 #ifdef HSE_CLOCK_USED
 	RCC_HseConfigure(Config->HseConfig);
@@ -648,8 +648,9 @@ uint32_t RCC_GetSysClk(void)
 #endif
 #ifdef HSE_CLOCK_USED
 	return (uint32_t)(RCC_GlobalConfig->HseConfig->HseOutputFreq);
-#else
+#endif
 	return (uint32_t)(16000000U); /** HSI Clk Value */
+
 }
 
 uint32_t RCC_GetAHB1Clk(void)
