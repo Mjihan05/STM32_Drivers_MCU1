@@ -46,21 +46,25 @@ static Spi_HwType sSpi_getModuleNo (const Spi_JobConfigType* JobConfig);
 static void sSpi_Clk_Enable(Spi_HwType moduleNo);
 static uint8_t sSpi_GetBaudratePrescaler(Spi_JobConfigType* JobConfig);
 static void sSpi_ResetModule (Spi_HwType moduleNo);
+#if((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (1U)))
 static Std_ReturnType sSpi_CheckSharedJobs(Spi_SequenceType Sequence);
+static void sSpi_StartQueuedSequence(void);
+static void sSpi_FillJobQueue(Spi_SequenceConfigType SequenceConfig);
+static void sSpi_StartRxForJobs(void);
+static void sSpi_ConfigInterrupt(Spi_JobType jobId);
+static void sSpi_UpdateSequenceBuffer(uint8_t sequenceIndex,Spi_SeqResultType Result);
+#endif /** #if((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (1U))) */
 static Std_ReturnType sSpi_AllocateIbMemory(void);
 static Spi_StatusType sSpi_GetHwStatus(Spi_HwType en_moduleNo);
 static Spi_BufferStatusType sSpi_GetRxBufferStatus(Spi_HwType en_moduleNo);
 static Spi_BufferStatusType sSpi_GetTxBufferStatus(Spi_HwType en_moduleNo);
-static void sSpi_StartQueuedSequence(void);
-static void sSpi_FillJobQueue(Spi_SequenceConfigType SequenceConfig);
-static void sSpi_UpdateSequenceBuffer(uint8_t sequenceIndex,Spi_SeqResultType Result);
 static void sSpi_StartJob(Spi_JobConfigType* JobConfig);
-static void sSpi_StartRxForJobs(void);
 static void sSpi_CopyDataToChannelBuffer(Spi_JobType jobId);
 static void sSpi_StartSyncTransmit(Spi_SequenceType Sequence);
 static void sSpi_CancelSequence(Spi_SequenceType Sequence);
-static void sSpi_ConfigInterrupt(Spi_JobType jobId);
+#if(SPI_LEVEL_DELIVERED == (2U))
 Spi_AsyncModeType sSpi_GetAsyncMode (void);
+#endif /** (SPI_LEVEL_DELIVERED == (2U))*/
 static void sSpi_SetSpiStatus (Spi_StatusType Status);
 static void sSpi_SetSeqResult (Spi_SequenceType Sequence,Spi_SeqResultType Result);
 static void sSpi_SetJobResult(Spi_JobType Job,Spi_JobResultType Result);
@@ -116,6 +120,24 @@ void Spi_Init (const Spi_ConfigType* ConfigPtr)
 		if((JobConfig->CsFunctionUsed) == EN_CS_SW_HANDLING)
 		{
 			REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,9U),SET_BIT(9U));
+			/** Set the SSI BIT */
+			REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,8U),SET_BIT(8U));
+			/** Set the SSOE Bit  */
+			REG_RMW32(&pReg->CR2.R,MASK_BITS(0x1U,2U),SET_BIT(2U));
+		}
+		else if((JobConfig->CsFunctionUsed) == EN_CS_HW_HANDLING)
+		{
+			REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,9U),CLEAR_BIT(9U));
+			/** Set the SSOE Bit  */
+			REG_RMW32(&pReg->CR2.R,MASK_BITS(0x1U,2U),SET_BIT(2U));
+		}
+		else /** ((JobConfig->CsFunctionUsed) == EN_CS_NOT_USED)  */
+		{
+			REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,9U),SET_BIT(9U));
+			/** Set the SSI BIT */
+			REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,8U),SET_BIT(8U));
+			/** Clear the SSOE Bit  */
+			REG_RMW32(&pReg->CR2.R,MASK_BITS(0x1U,2U),CLEAR_BIT(2U));
 		}
 
 		/** Configure clock polarity and Clock phase  */
@@ -165,12 +187,27 @@ Std_ReturnType Spi_DeInit (void)
 		return E_NOT_OK;
 	}
 
+	Spi_JobConfigType* JobConfig = 0U;
+
 	uint8_t loopItr = 0U;
+	Spi_HwType moduleNo = 0U;
 
-	/** TODO - Perform safe shutdown before resetting the module */
-
-	for(loopItr = 0U; loopItr<TOTAL_NO_OF_SPI_HW_UNIT; loopItr++)
+	for(loopItr = 0U; loopItr<NO_OF_JOBS_CONFIGURED; loopItr++)
 	{
+		JobConfig = (Spi_JobConfigType*)(&GlobalConfigPtr->Job[loopItr]);
+		moduleNo = sSpi_getModuleNo(JobConfig);
+
+		while(sSpi_GetHwStatus((Spi_HwType)(moduleNo)) == SPI_BUSY);
+		if(sSpi_GetRxBufferStatus((Spi_HwType)(moduleNo)) == SPI_BUFFER_NOT_EMPTY)
+		{
+			return E_NOT_OK;
+		}
+		if(sSpi_GetTxBufferStatus((Spi_HwType)(moduleNo)) == SPI_BUFFER_NOT_EMPTY)
+		{
+			return E_NOT_OK;
+		}
+
+		/** TODO - Timeout handling */
 		sSpi_ResetModule(loopItr);
 	}
 
@@ -457,6 +494,7 @@ Std_ReturnType Spi_SyncTransmit (Spi_SequenceType Sequence)
 	while(*jobPtr != EOL)
 	{
 		sSpi_SetJobResult(*jobPtr,SPI_JOB_QUEUED);
+		jobPtr++;
 	}
 
 	sSpi_StartSyncTransmit(Sequence);
@@ -619,6 +657,7 @@ static void sSpi_ResetModule (Spi_HwType moduleNo)
 		}
 }
 
+#if((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (1U)))
 /** Function returns non zero value if shared Jobs exist else it returns 0 */
 static Std_ReturnType sSpi_CheckSharedJobs(Spi_SequenceType Sequence)
 {
@@ -661,6 +700,7 @@ static Std_ReturnType sSpi_CheckSharedJobs(Spi_SequenceType Sequence)
 
 	return E_OK;
 }
+#endif  /** ((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (1U))) */
 
 static Std_ReturnType sSpi_AllocateIbMemory(void)
 {
@@ -793,13 +833,14 @@ static Spi_BufferStatusType sSpi_GetTxBufferStatus(Spi_HwType en_moduleNo)
 	volatile  SPI_RegTypes * pReg = (SPI_RegTypes *)Spi_BaseAddress[en_moduleNo];
 	/*uint8_t u8_statusFlag = REG_READ32(&pReg->SR.R);*/
 
-	if(((REG_READ32(&pReg->SR.R)) & MASK_BIT(1U)) == SET)
+	if((((REG_READ32(&pReg->SR.R)) & MASK_BIT(1U))>>(1U)) == SET)
 	{
 		return SPI_BUFFER_EMPTY;
 	}
 	return SPI_BUFFER_NOT_EMPTY;
 }
 
+#if((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (1U)))
 /** TODO - 1. Interruptible sequence is not handled
  * 		   2. if a sequence fails to execute then the function returns whereas the next sequence should be scheduled
  * 		   3. Priority of jobs is not handled between interruptible sequences
@@ -909,7 +950,9 @@ static void sSpi_StartQueuedSequence(void)
 	}while((sequenceIndex!= loopItr1));
 
 }
+#endif  /** ((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (1U))) */
 
+#if((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (1U)))
 /** Jobs are filled in as per priority since the channels are put in the cfg as per priority */
 /** Circular queue is implemented */
 static void sSpi_FillJobQueue(Spi_SequenceConfigType SequenceConfig)
@@ -1007,6 +1050,7 @@ static void sSpi_UpdateSequenceBuffer(uint8_t sequenceIndex,Spi_SeqResultType Re
 		}
 	}
 }
+#endif  /** ((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (1U))) */
 
 static void sSpi_StartJob(Spi_JobConfigType* JobConfig)
 {
@@ -1048,7 +1092,7 @@ static void sSpi_StartJob(Spi_JobConfigType* JobConfig)
 		/** Make the NSS Pin low to indicate to slave of start transfer */
 		if(JobConfig->CsFunctionUsed == EN_CS_SW_HANDLING)
 		{
-			REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,8U),(CLEAR_BIT(8U)));
+			//REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,8U),(CLEAR_BIT(8U)));
 			Dio_WriteChannel(JobConfig->CsPinUsed,STD_LOW);
 		}
 
@@ -1058,6 +1102,7 @@ static void sSpi_StartJob(Spi_JobConfigType* JobConfig)
 			{
 				/** Check if Tx buffer is empty and write data*/
 				while( (sSpi_GetTxBufferStatus(en_moduleNo)) != SPI_BUFFER_EMPTY );
+				/** TODO - Implement timeout */
 
 				if(sIB_Config[channelId].TxBuffer.InUse == FALSE)
 				{
@@ -1091,9 +1136,12 @@ static void sSpi_StartJob(Spi_JobConfigType* JobConfig)
 		/** Make the NSS Pin High to indicate to slave of end transfer */
 		if(JobConfig->CsFunctionUsed == EN_CS_SW_HANDLING)
 		{
-			REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,8U),(SET_BIT(8U)));
+			//REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,8U),(SET_BIT(8U)));
 			Dio_WriteChannel(JobConfig->CsPinUsed,STD_HIGH);
 		}
+
+		/** Next Channel */
+		loopItr0++;
 	}
 
 	sSpi_SetJobResult(JobConfig->JobId,SPI_JOB_OK);
@@ -1102,6 +1150,7 @@ static void sSpi_StartJob(Spi_JobConfigType* JobConfig)
 	JobConfig->SpiJobEndNotification();
 }
 
+#if((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (1U)))
 static void sSpi_StartRxForJobs(void)
 {
 	Spi_JobType jobId = 0U;
@@ -1111,6 +1160,7 @@ static void sSpi_StartRxForJobs(void)
 		sSpi_CopyDataToChannelBuffer(jobId);
 	}
 }
+#endif  /** ((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (1U))) */
 
 static void sSpi_CopyDataToChannelBuffer(Spi_JobType jobId)
 {
@@ -1132,11 +1182,11 @@ static void sSpi_CopyDataToChannelBuffer(Spi_JobType jobId)
 
 	pReg = (SPI_RegTypes *)Spi_BaseAddress[en_moduleNo];
 
-	/** Skip iteration if no messages in Rx buffer */
-	if(sSpi_GetRxBufferStatus(en_moduleNo) == SPI_BUFFER_EMPTY)
-	{
-		return;
-	}
+//	/** Skip iteration if no messages in Rx buffer */
+//	if(sSpi_GetRxBufferStatus(en_moduleNo) == SPI_BUFFER_EMPTY)
+//	{
+//		return;
+//	}
 
 	/** Copy data from Hw Buffer to Channel Buffer  */
 	while(sSpi_GetRxBufferStatus(en_moduleNo) == SPI_BUFFER_NOT_EMPTY)
@@ -1165,7 +1215,7 @@ static void sSpi_CopyDataToChannelBuffer(Spi_JobType jobId)
 			/** Copy data to Buffer */
 			if(destBufferPtr != NULL_PTR)
 			{
-				for(loopItr0 = 0U; (loopItr0 == noOfBuffers); loopItr0++)
+				for(loopItr0 = 0U; (loopItr0 != noOfBuffers); loopItr0++)
 				{
 					if(sSpi_GetRxBufferStatus(en_moduleNo) == SPI_BUFFER_NOT_EMPTY)
 					{
@@ -1195,7 +1245,7 @@ static void sSpi_CopyDataToChannelBuffer(Spi_JobType jobId)
 static void sSpi_StartSyncTransmit(Spi_SequenceType Sequence)
 {
 	Spi_SequenceConfigType* sequenceConfig = (Spi_SequenceConfigType*)(&GlobalConfigPtr->Sequence[Sequence]);
-	uint8_t* jobPtr = (uint8_t*)(&sequenceConfig->Jobs[0U]);
+	Spi_JobType* jobPtr = (Spi_JobType*)(&sequenceConfig->Jobs[0U]);
 	Spi_JobConfigType* jobConfig = 0U;
 	Spi_StatusType en_moduleNo = 0U;
 
@@ -1229,7 +1279,7 @@ static void sSpi_CancelSequence(Spi_SequenceType Sequence)
 	uint8_t sequenceIndex = 0U;
 	Spi_JobConfigType* jobConfig = 0U;
 
-	/** Get the Index values of the job buffer for the next pending sequence */
+	/** Get the Index values of the sequence */
 	for(loopItr1 = 0U; loopItr1 < NO_OF_SEQUENCES_CONFIGURED; loopItr1++ )
 	{
 		if(GlobalParams.BufferIndex[loopItr1].sequenceId == Sequence)
@@ -1285,6 +1335,7 @@ static void sSpi_CancelSequence(Spi_SequenceType Sequence)
 	}
 }
 
+#if((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (1U)))
 static void sSpi_ConfigInterrupt(Spi_JobType jobId)
 {
 	uint8_t loopItr0 = 0U;
@@ -1314,6 +1365,7 @@ static void sSpi_ConfigInterrupt(Spi_JobType jobId)
 
 	return;
 }
+#endif  /** ((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (1U))) */
 
 #if(SPI_LEVEL_DELIVERED == (2U))
 Spi_AsyncModeType sSpi_GetAsyncMode (void)

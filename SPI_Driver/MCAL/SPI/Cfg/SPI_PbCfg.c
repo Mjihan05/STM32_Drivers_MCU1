@@ -12,7 +12,9 @@
 #include "Reg_Macros.h"
 #include "SPI_PbCfg.h"
 
-uint32_t Spi_BaseAddress[] =
+extern Std_ReturnType Spi_DeInit (void);
+
+uint32_t Spi_BaseAddress[TOTAL_NO_OF_SPI_HW_UNIT] =
 {
 	SPI_1_BASE_ADDRESS,
 	SPI_2_BASE_ADDRESS,
@@ -26,7 +28,7 @@ const Spi_SequenceConfigType Spi_SequenceConfig0[NO_OF_SEQUENCES_CONFIGURED] =
 			.SpiInterruptible = TRUE,
 			.SpiSequenceEndNotification = NULL_PTR,
 			.Jobs = {/** Jobs need to be filled in the order of priority  */
-				0U,1U,EOL,
+				0U,EOL,
 			},
 		},
 		{
@@ -56,7 +58,7 @@ const Spi_JobConfigType Spi_JobConfig0[NO_OF_JOBS_CONFIGURED] =
 			.BaudRate = 980000U,
 			.DataShiftonEdge = EN_SHIFT_ON_RISING_EDGE,
 			.ShiftClkIdleLevel = STD_LOW,
-			.SpiJobEndNotification = NULL_PTR,
+			.SpiJobEndNotification = (void*)&Spi_DeInit,
 			.ChannelAssignment = {
 					0U,1U,EOL,
 			},
@@ -77,7 +79,7 @@ const Spi_JobConfigType Spi_JobConfig0[NO_OF_JOBS_CONFIGURED] =
 	    },
 		{
 			.JobId = 2U,
-			.HwUsed = EN_SPI_1,
+			.HwUsed = EN_SPI_3,
 			.CsFunctionUsed = EN_CS_NOT_USED,
 			.BaudRate = 980000U,
 			.DataShiftonEdge = EN_SHIFT_ON_RISING_EDGE,

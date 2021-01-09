@@ -145,6 +145,8 @@ typedef struct
 }Pll_PreScalerType;
 
 
+extern RCC_GlobalConfigType RCC_Config0;
+
 
 extern Pll_PreScalerType PllPreScalerValues;
 

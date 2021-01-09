@@ -108,8 +108,11 @@ typedef union SPI_TXCRCR_Tag
 typedef struct
 {
 	SPI_CR1_Type CR1;			/** SPI control register 1 */
+	uint16_t reserved1;
 	SPI_CR2_Type CR2;			/** SPI control register 2 */
+	uint16_t reserved2;
 	SPI_SR_Type SR;				/** SPI status register */
+	uint16_t reserved3;
 	SPI_DR_Type DR;				/** SPI data register */
 	SPI_CRCPR_Type CRCPR;		/** SPI CRC polynomial register */
 	SPI_RXCRCR_Type RXCRCR;		/** SPI RX CRC register */

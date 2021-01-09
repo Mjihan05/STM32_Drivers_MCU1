@@ -11,7 +11,43 @@
   #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
 #endif
 
+#include "Reg_Macros.h"
+#include "RCC.h"
+#include "Gpio.h"
+#include "Spi.h"
+
+#define SEQUENCE_0 (0U)
+
+#define CHANNEL_0 (0U)
+#define CHANNEL_1 (1U)
+#define CHANNEL_LENGTH (6U)
+
+#define CHECK_RETURN_VALUE(x)  while(x)
+
+Spi_DataBufferType sampleTxDataCh1[CHANNEL_LENGTH] = {0xA,0xB,0xC,0xD,0xE,0xF};
+Spi_DataBufferType sampleTxDataCh2[CHANNEL_LENGTH] = {0xB,0xC,0xD,0xE,0xF,0xA};
+
+Spi_DataBufferType sampleRxDataCh1[CHANNEL_LENGTH];
+Spi_DataBufferType sampleRxDataCh2[CHANNEL_LENGTH];
+
 int main(void)
 {
+	Std_ReturnType returnValue = E_NOT_OK;
+
+	RCC_Init(&RCC_Config0);
+	Port_Init (&Port_Config0);
+
+	Spi_Init(&Spi_Config0);
+	//returnValue = Spi_DeInit();
+
+	returnValue = Spi_WriteIB (CHANNEL_0,sampleTxDataCh1);
+	CHECK_RETURN_VALUE(returnValue);
+
+	returnValue = Spi_SetupEB (CHANNEL_1,sampleTxDataCh2,(Spi_DataBufferType*)&sampleRxDataCh2,CHANNEL_LENGTH);
+	CHECK_RETURN_VALUE(returnValue);
+
+	returnValue =  Spi_SyncTransmit(SEQUENCE_0);
+	CHECK_RETURN_VALUE(returnValue);
+
 	for(;;);
 }

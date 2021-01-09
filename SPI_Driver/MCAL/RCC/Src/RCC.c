@@ -22,6 +22,10 @@ uint8_t gu8_RccInitStatus = MODULE_UNINITIALIZED;
 /** Added for Get APB Clk Values in MHz  */
 static RCC_GlobalConfigType* RCC_GlobalConfig;
 
+static uint16_t sRCC_GetActualAHBPreScalerValue(void);
+static uint8_t sRCC_GetActualAPB1PreScalerValue(void);
+static uint8_t sRCC_GetActualAPB2PreScalerValue(void);
+
 void RCC_Init(RCC_GlobalConfigType* Config )
 {
 	if(Config == NULL_PTR)
@@ -656,19 +660,19 @@ uint32_t RCC_GetSysClk(void)
 uint32_t RCC_GetAHB1Clk(void)
 {
 	uint32_t SysClk = (uint32_t)(RCC_GetSysClk());
-	return (uint32_t)(SysClk/(RCC_GlobalConfig->BusConfig->AHB_PreScaler));
+	return (uint32_t)(SysClk/((uint32_t)sRCC_GetActualAHBPreScalerValue()));
 }
 
 uint32_t RCC_GetAPB1Clk(void)
 {
 	uint32_t Ahb1Clk = (uint32_t)(RCC_GetAHB1Clk());
-	return (uint32_t)(Ahb1Clk/(RCC_GlobalConfig->BusConfig->APB1_PreScaler));
+	return (uint32_t)(Ahb1Clk/((uint32_t)sRCC_GetActualAPB1PreScalerValue()));
 }
 
 uint32_t RCC_GetAPB2Clk(void)
 {
 	uint32_t Ahb1Clk = (uint32_t)(RCC_GetAHB1Clk());
-	return (uint32_t)(Ahb1Clk/(RCC_GlobalConfig->BusConfig->APB2_PreScaler));
+	return (uint32_t)(Ahb1Clk/((uint32_t)sRCC_GetActualAPB2PreScalerValue()));
 }
 
 void RCC_AHB1PeripheralClkEnable(Rcc_AHB1_Peripherals peripheral)
@@ -819,9 +823,101 @@ Reset_Status_Type RCC_GetResetStatus(void)
 	return (Reset_Status_Type)(u8_returnValue);
 }
 
+static uint16_t sRCC_GetActualAHBPreScalerValue(void)
+{
+	Bus_Config_Type * busConfig = RCC_GlobalConfig->BusConfig;
 
+	switch(busConfig->AHB_PreScaler)
+	{
+		case EN_SYS_CLK_NOT_DIVIDED:
+			return (1U);
+			break;
+		case EN_SYS_CLK_DIVIDED_BY_2:
+			return (2U);
+			break;
+		case EN_SYS_CLK_DIVIDED_BY_4:
+			return (4U);
+			break;
+		case EN_SYS_CLK_DIVIDED_BY_8:
+			return (8U);
+			break;
+		case EN_SYS_CLK_DIVIDED_BY_16:
+			return (16U);
+			break;
+		case EN_SYS_CLK_DIVIDED_BY_64:
+			return (64U);
+			break;
+		case EN_SYS_CLK_DIVIDED_BY_128:
+			return (128U);
+			break;
+		case EN_SYS_CLK_DIVIDED_BY_256:
+			return (256U);
+			break;
+		case EN_SYS_CLK_DIVIDED_BY_512:
+			return (512U);
+			break;
 
+		default:
+			return (1U);
+			break;
+	}
+}
 
+static uint8_t sRCC_GetActualAPB1PreScalerValue(void)
+{
+	Bus_Config_Type * busConfig = RCC_GlobalConfig->BusConfig;
+
+	switch(busConfig->APB1_PreScaler)
+	{
+		case EN_AHB_CLK_NOT_DIVIDED:
+			return (1U);
+			break;
+		case EN_AHB_CLK_DIVIDED_BY_2:
+			return (2U);
+			break;
+		case EN_AHB_CLK_DIVIDED_BY_4:
+			return (4U);
+			break;
+		case EN_AHB_CLK_DIVIDED_BY_8:
+			return (8U);
+			break;
+		case EN_AHB_CLK_DIVIDED_BY_16:
+			return (16U);
+			break;
+
+		default:
+			return (1U);
+			break;
+	}
+}
+
+static uint8_t sRCC_GetActualAPB2PreScalerValue(void)
+{
+	Bus_Config_Type * busConfig = RCC_GlobalConfig->BusConfig;
+
+	switch(busConfig->APB2_PreScaler)
+	{
+		case EN_AHB_CLK_NOT_DIVIDED:
+			return (1U);
+			break;
+		case EN_AHB_CLK_DIVIDED_BY_2:
+			return (2U);
+			break;
+		case EN_AHB_CLK_DIVIDED_BY_4:
+			return (4U);
+			break;
+		case EN_AHB_CLK_DIVIDED_BY_8:
+			return (8U);
+			break;
+		case EN_AHB_CLK_DIVIDED_BY_16:
+			return (16U);
+			break;
+
+		default:
+			return (1U);
+			break;
+	}
+}
 
 
 
