@@ -10,7 +10,7 @@
 #ifndef RCC_PBCFG_H
 #define RCC_PBCFG_H
 
-#define PLL_CLOCK_USED
+//#define PLL_CLOCK_USED
 
 #ifdef HSE_CLOCK_USED
 	#define HSE_CLK_SECURITY STD_ON

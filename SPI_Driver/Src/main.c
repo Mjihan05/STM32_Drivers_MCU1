@@ -14,7 +14,16 @@
 #include "Reg_Macros.h"
 #include "RCC.h"
 #include "Gpio.h"
+#include "Dio.h"
 #include "Spi.h"
+#include "string.h"
+
+/** Pin Definition
+ * PA4 - SPI1_NSS
+ * PA5 - SPI1_SCK
+ * PA6 - SPI1_MISO
+ * PA7 - SPI1_MOSI
+ * */
 
 #define SEQUENCE_0 (0U)
 
@@ -24,11 +33,23 @@
 
 #define CHECK_RETURN_VALUE(x)  while(x)
 
-Spi_DataBufferType sampleTxDataCh1[CHANNEL_LENGTH] = {0xA,0xB,0xC,0xD,0xE,0xF};
-Spi_DataBufferType sampleTxDataCh2[CHANNEL_LENGTH] = {0xB,0xC,0xD,0xE,0xF,0xA};
+uint8_t sampleTxDataCh1[CHANNEL_LENGTH] = {0xA,0xC,0xD,0xE,0xF};
+char data[] = "Hello World";
+uint8_t  sampleTxDataCh2[CHANNEL_LENGTH] = {0x5,0xB,0xC,0xD,0xE,0xF};
 
 Spi_DataBufferType sampleRxDataCh1[CHANNEL_LENGTH];
 Spi_DataBufferType sampleRxDataCh2[CHANNEL_LENGTH];
+
+void delay()
+{
+	for(uint32_t j =0; j<5; j++)
+	{
+		for(uint32_t i =0; i<500000;)
+			{
+			i++;
+			}
+	}
+}
 
 int main(void)
 {
@@ -40,14 +61,37 @@ int main(void)
 	Spi_Init(&Spi_Config0);
 	//returnValue = Spi_DeInit();
 
-	returnValue = Spi_WriteIB (CHANNEL_0,sampleTxDataCh1);
-	CHECK_RETURN_VALUE(returnValue);
+	//returnValue = Spi_WriteIB (CHANNEL_0,(Spi_DataBufferType*)sampleTxDataCh1);
+	//CHECK_RETURN_VALUE(returnValue);
 
-	returnValue = Spi_SetupEB (CHANNEL_1,sampleTxDataCh2,(Spi_DataBufferType*)&sampleRxDataCh2,CHANNEL_LENGTH);
-	CHECK_RETURN_VALUE(returnValue);
+	//returnValue = Spi_SetupEB (CHANNEL_1,(Spi_DataBufferType*)sampleTxDataCh2,(Spi_DataBufferType*)&sampleRxDataCh2,CHANNEL_LENGTH);
+	//CHECK_RETURN_VALUE(returnValue);
 
-	returnValue =  Spi_SyncTransmit(SEQUENCE_0);
-	CHECK_RETURN_VALUE(returnValue);
+	while(1)
+	{
+		if(Dio_ReadChannel(GPIO_A_PIN_0) == 0x1U)
+		{
+			Spi_WriteIB (CHANNEL_0,(Spi_DataBufferType*)sampleTxDataCh1);
+			Spi_SetupEB (CHANNEL_1,(Spi_DataBufferType*)sampleTxDataCh2,(Spi_DataBufferType*)&sampleRxDataCh2,6U);
+			returnValue =  Spi_SyncTransmit(SEQUENCE_0);
+			CHECK_RETURN_VALUE(returnValue);
+			delay();
+		}
+		else
+		{
+
+		}
+	}
+
+//	do
+//	{
+//
+//		delay();
+//
+//		delay();
+//	}CHECK_RETURN_VALUE(!returnValue);
+
+	//CHECK_RETURN_VALUE(returnValue);
 
 	for(;;);
 }

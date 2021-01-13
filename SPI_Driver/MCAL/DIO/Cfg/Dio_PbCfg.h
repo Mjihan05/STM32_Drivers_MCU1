@@ -16,6 +16,7 @@
 #define DIO_GROUP_CONFIGURED (2U)
 #define DIO_PIN_A0  (0U)
 #define DIO_PIN_A1  (1U)
+#define DIO_PIN_A4  (4U)
 #define DIO_PIN_B2  (18U)
 #define DIO_PIN_B3  (19U)
 #define DIO_PIN_B4  (20U)

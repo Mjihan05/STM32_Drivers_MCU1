@@ -151,9 +151,6 @@ void Spi_Init (const Spi_ConfigType* ConfigPtr)
 		/** Select the device as master */
 		REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,2U),SET_BIT(2U));
 
-		/** Enable the Peripheral */
-		REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,6U),SET_BIT(6U));
-
 		GlobalParams.SpiStatus = SPI_IDLE;
 	}
 
@@ -255,11 +252,23 @@ Std_ReturnType Spi_WriteIB (Spi_ChannelType Channel,const Spi_DataBufferType* Da
 		}
 		else
 		{
+			/** Write the Data to Buffer */
+			sInternalBuffer[bufferItr] = (Spi_DataBufferType)(*DataBufferPtr);
+#if 0
 			/** Reformat the data as per dataFrame */
 			if(channelConfig.DataFrame == EN_8_BIT_DATA_FRAME)
 			{
 				/** Write the Data to Buffer */
-				sInternalBuffer[bufferItr] = (*DataBufferPtr) & 0x00FF;
+				sInternalBuffer[bufferItr] = ((*DataBufferPtr) & 0x00FF);
+
+//				/** Get Next Data */
+//				loopItr0++;
+//				if(loopItr0 < (channelConfig.NoOfBuffersUsed))
+//				{
+//					DataBufferPtr++;
+//					/** Write the Data to Buffer */
+//					sInternalBuffer[bufferItr] |= (uint8_t)((*DataBufferPtr) & 0x00FF);
+//				}
 			}
 			else if(channelConfig.DataFrame == EN_16_BIT_DATA_FRAME)
 			{
@@ -271,6 +280,7 @@ Std_ReturnType Spi_WriteIB (Spi_ChannelType Channel,const Spi_DataBufferType* Da
 				/** Write the Data to Buffer */
 				sInternalBuffer[bufferItr] = channelConfig.DefaultTransmitValue;
 			}
+#endif
 
 			/** Get Next Data */
 			DataBufferPtr++;
@@ -1058,6 +1068,7 @@ static void sSpi_StartJob(Spi_JobConfigType* JobConfig)
 	uint8_t channelId = 0U;
 	uint8_t loopItr0 = 0U;
 	uint8_t loopItr1 = 0U;
+	uint16_t u16_data = 0U;
 	Spi_HwType en_moduleNo = 0U;
 	Spi_ChannelConfigType* channelConfig = 0U;
 
@@ -1096,6 +1107,12 @@ static void sSpi_StartJob(Spi_JobConfigType* JobConfig)
 			Dio_WriteChannel(JobConfig->CsPinUsed,STD_LOW);
 		}
 
+		/** Select the Frame Format */
+		REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,11U),(channelConfig->DataFrame)<<11U);
+
+		/** Enable the Peripheral */
+		REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,6U),SET_BIT(6U));
+
 		if(channelConfig->BufferUsed == EN_INTERNAL_BUFFER)
 		{
 			for(loopItr1 = 0U; loopItr1<(channelConfig->NoOfBuffersUsed); loopItr1++)
@@ -1110,7 +1127,20 @@ static void sSpi_StartJob(Spi_JobConfigType* JobConfig)
 				}
 				else /** (sIB_Config[channelId].BufferInUse == TRUE) */
 				{
-					REG_WRITE32(&pReg->DR.R,(sInternalBuffer[sIB_Config[channelId].TxBuffer.Start+loopItr1]));
+					if(channelConfig->DataFrame == EN_16_BIT_DATA_FRAME)
+					{
+						u16_data = ((Spi_DataBufferType)(sInternalBuffer[sIB_Config[channelId].TxBuffer.Start+loopItr1]))<<8U;
+						loopItr1++;
+						if(loopItr1<(channelConfig->NoOfBuffersUsed))
+						{
+							u16_data |= ((Spi_DataBufferType)(sInternalBuffer[sIB_Config[channelId].TxBuffer.Start+loopItr1]));
+						}
+						REG_WRITE32(&pReg->DR.R,(uint16_t)(u16_data));
+					}
+					else
+					{
+						REG_WRITE32(&pReg->DR.R,(sInternalBuffer[sIB_Config[channelId].TxBuffer.Start+loopItr1]));
+					}
 				}
 			}
 		}
@@ -1128,10 +1158,29 @@ static void sSpi_StartJob(Spi_JobConfigType* JobConfig)
 				}
 				else /** (sExternalBuffer[channelId].TxBuffer != NULL_PTR) */
 				{
-					REG_WRITE32(&pReg->DR.R,(sExternalBuffer[channelId].TxBuffer[loopItr1]));
+					if(channelConfig->DataFrame == EN_16_BIT_DATA_FRAME)
+					{
+						//REG_WRITE32(&pReg->DR.R,(uint16_t)*((uint16_t*)(sExternalBuffer[channelId].TxBuffer)-loopItr1));
+						u16_data = ((Spi_DataBufferType)(sExternalBuffer[channelId].TxBuffer[loopItr1]))<<8U;
+						loopItr1++;
+						if(loopItr1<(sExternalBuffer[channelId].length))
+						{
+							u16_data |= ((Spi_DataBufferType)(sExternalBuffer[channelId].TxBuffer[loopItr1]));
+						}
+						REG_WRITE32(&pReg->DR.R,(uint16_t)(u16_data));
+					}
+					else
+					{
+						REG_WRITE32(&pReg->DR.R,(Spi_DataBufferType)(sExternalBuffer[channelId].TxBuffer[loopItr1]));
+					}
 				}
 			}
 		}
+
+		/** Check if Tx buffer is empty and shut down*/
+		while( (sSpi_GetTxBufferStatus(en_moduleNo)) != SPI_BUFFER_EMPTY );
+		/** Check if the module is busy */
+		while(sSpi_GetHwStatus(en_moduleNo) == SPI_BUSY);
 
 		/** Make the NSS Pin High to indicate to slave of end transfer */
 		if(JobConfig->CsFunctionUsed == EN_CS_SW_HANDLING)
@@ -1139,6 +1188,9 @@ static void sSpi_StartJob(Spi_JobConfigType* JobConfig)
 			//REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,8U),(SET_BIT(8U)));
 			Dio_WriteChannel(JobConfig->CsPinUsed,STD_HIGH);
 		}
+
+		/** Disable the Peripheral */
+		REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,6U),CLEAR_BIT(6U));
 
 		/** Next Channel */
 		loopItr0++;

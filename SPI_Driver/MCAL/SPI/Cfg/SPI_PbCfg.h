@@ -35,8 +35,8 @@
 
 #define EOL (0xFFU)
 
-typedef uint16_t Spi_DataBufferType;
-typedef uint16_t Spi_NumberOfDataType;
+typedef uint8_t Spi_DataBufferType;
+typedef uint8_t Spi_NumberOfDataType;
 typedef uint8_t Spi_ChannelType;
 typedef uint16_t Spi_JobType;
 typedef uint8_t Spi_SequenceType;
@@ -106,7 +106,7 @@ typedef struct
 	Spi_DataFrameType DataFrame; /** Contains the width of the transmitted data, has to be under 16bits */
 	uint8_t NoOfBuffersUsed;  /** for IB Channels (at least 1) or it is the maximum of data for EB Channels (a value of 0 makes no sense) */
 	Spi_DataShiftType TransferStart; /** MSB first or LSB first transmission */
-	uint16_t DefaultTransmitValue;  /** Default Value to be used when Dataptr is NULL, 16bit value max */
+	Spi_DataBufferType DefaultTransmitValue;  /** Default Value to be used when Dataptr is NULL, 16bit value max */
 }Spi_ChannelConfigType;
 
 typedef struct

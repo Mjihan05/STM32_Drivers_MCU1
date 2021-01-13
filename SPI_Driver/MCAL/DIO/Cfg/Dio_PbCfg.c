@@ -16,7 +16,7 @@
 Dio_ChannelType Dio_ChannelUsed[DIO_PINS_CONFIGURED] =
 {
 	DIO_PIN_A0,
-	DIO_PIN_A1,
+	DIO_PIN_A4,
 	DIO_PIN_B2,
 	DIO_PIN_B3,
 	DIO_PIN_B4,
