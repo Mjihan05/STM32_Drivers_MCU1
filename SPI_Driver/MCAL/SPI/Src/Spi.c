@@ -59,7 +59,10 @@ static Spi_StatusType sSpi_GetHwStatus(Spi_HwType en_moduleNo);
 static Spi_BufferStatusType sSpi_GetRxBufferStatus(Spi_HwType en_moduleNo);
 static Spi_BufferStatusType sSpi_GetTxBufferStatus(Spi_HwType en_moduleNo);
 static void sSpi_StartJob(Spi_JobConfigType* JobConfig);
+static void sSpi_CopyRxDataToChannelBuffer(Spi_ChannelConfigType* channelConfig,uint16_t u16_Data,uint8_t bufferNo);
+#if 0
 static void sSpi_CopyDataToChannelBuffer(Spi_JobType jobId);
+#endif
 static void sSpi_StartSyncTransmit(Spi_SequenceType Sequence);
 static void sSpi_CancelSequence(Spi_SequenceType Sequence);
 #if(SPI_LEVEL_DELIVERED == (2U))
@@ -619,7 +622,7 @@ static void sSpi_Clk_Enable(Spi_HwType moduleNo)
 static uint8_t sSpi_GetBaudratePrescaler(Spi_JobConfigType* JobConfig)
 {
 	Spi_HwType moduleNo = (Spi_HwType)(JobConfig->HwUsed);
-	uint8_t preScaler = 0U;
+	uint32_t preScaler = 0U;
 	uint32_t peripheralClk = 0U;
 	uint32_t requiredClk = (uint32_t)(JobConfig->BaudRate);
 	uint8_t temp = 0U;
@@ -627,7 +630,7 @@ static uint8_t sSpi_GetBaudratePrescaler(Spi_JobConfigType* JobConfig)
 	if(moduleNo == EN_SPI_1) /** (User has to verify perClk/BaudRate = valid preScaler) */
 	{
 		peripheralClk = (uint32_t)(RCC_GetAPB2Clk());
-		preScaler = (uint8_t)(peripheralClk/requiredClk);
+		preScaler = (uint32_t)(peripheralClk/requiredClk);
 	}
 	else
 	{
@@ -639,6 +642,11 @@ static uint8_t sSpi_GetBaudratePrescaler(Spi_JobConfigType* JobConfig)
 	{
 		preScaler = preScaler >> 1U;
 		temp++;
+		if(preScaler<2U)
+		{
+			temp = 0 ;
+			preScaler = 2U;
+		}
 	}
 
 	preScaler = temp;
@@ -1068,7 +1076,9 @@ static void sSpi_StartJob(Spi_JobConfigType* JobConfig)
 	uint8_t channelId = 0U;
 	uint8_t loopItr0 = 0U;
 	uint8_t loopItr1 = 0U;
+	uint32_t loopItr2 = 0U;
 	uint16_t u16_data = 0U;
+	volatile uint16_t u16_statusFlag = 0U;
 	Spi_HwType en_moduleNo = 0U;
 	Spi_ChannelConfigType* channelConfig = 0U;
 
@@ -1142,6 +1152,33 @@ static void sSpi_StartJob(Spi_JobConfigType* JobConfig)
 						REG_WRITE32(&pReg->DR.R,(sInternalBuffer[sIB_Config[channelId].TxBuffer.Start+loopItr1]));
 					}
 				}
+				u16_statusFlag = (REG_READ32(&pReg->SR.R));
+				u16_data = REG_READ32(&pReg->DR.R);
+
+				/** Get Rx buffer status and copy data into buffer  */
+				if(((u16_statusFlag) & MASK_BIT(0U)) == SET)
+				{
+					//u16_data = REG_READ32(&pReg->DR.R);
+					sSpi_CopyRxDataToChannelBuffer((Spi_ChannelConfigType*)channelConfig,u16_data,loopItr1-1U);
+				}
+
+				/** Give delay between the channels */
+				for(loopItr2 = 0 ; loopItr2 < (JobConfig->TimebetweenChannel); loopItr2++);
+
+				/** Read the last data (for some reason this works dont ask why) */
+				if(loopItr1 == ((channelConfig->NoOfBuffersUsed)-1U))
+				{
+					u16_data = REG_READ32(&pReg->DR.R);
+					sSpi_CopyRxDataToChannelBuffer((Spi_ChannelConfigType*)channelConfig,u16_data,loopItr1);
+				}
+
+#if 0
+				if(sSpi_GetRxBufferStatus(en_moduleNo) == SPI_BUFFER_NOT_EMPTY)
+				{
+					sSpi_CopyRxDataToChannelBuffer(en_moduleNo,(Spi_ChannelConfigType*)&channelConfig);
+				}
+#endif
+
 			}
 		}
 
@@ -1174,27 +1211,47 @@ static void sSpi_StartJob(Spi_JobConfigType* JobConfig)
 						REG_WRITE32(&pReg->DR.R,(Spi_DataBufferType)(sExternalBuffer[channelId].TxBuffer[loopItr1]));
 					}
 				}
+
+				u16_statusFlag = (REG_READ32(&pReg->SR.R));
+				u16_data = REG_READ32(&pReg->DR.R);
+
+				/** Get Rx buffer status and copy data into buffer  */
+				if(((u16_statusFlag) & MASK_BIT(0U)) == SET)
+				{
+					//u16_data = REG_READ32(&pReg->DR.R);
+					sSpi_CopyRxDataToChannelBuffer((Spi_ChannelConfigType*)channelConfig,u16_data,loopItr1-1U);
+				}
+
+				/** Give delay between the channels */
+				for(loopItr2 = 0 ; loopItr2 < (JobConfig->TimebetweenChannel); loopItr2++);
+
+				/** Read the last data (for some reason this works dont ask why) */
+				if(loopItr1 == ((sExternalBuffer[channelId].length)-1U))
+				{
+					u16_data = REG_READ32(&pReg->DR.R);
+					sSpi_CopyRxDataToChannelBuffer((Spi_ChannelConfigType*)channelConfig,u16_data,loopItr1);
+				}
 			}
 		}
-
-		/** Check if Tx buffer is empty and shut down*/
-		while( (sSpi_GetTxBufferStatus(en_moduleNo)) != SPI_BUFFER_EMPTY );
-		/** Check if the module is busy */
-		while(sSpi_GetHwStatus(en_moduleNo) == SPI_BUSY);
-
-		/** Make the NSS Pin High to indicate to slave of end transfer */
-		if(JobConfig->CsFunctionUsed == EN_CS_SW_HANDLING)
-		{
-			//REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,8U),(SET_BIT(8U)));
-			Dio_WriteChannel(JobConfig->CsPinUsed,STD_HIGH);
-		}
-
-		/** Disable the Peripheral */
-		REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,6U),CLEAR_BIT(6U));
 
 		/** Next Channel */
 		loopItr0++;
 	}
+
+	/** Check if Tx buffer is empty and shut down*/
+	while( (sSpi_GetTxBufferStatus(en_moduleNo)) != SPI_BUFFER_EMPTY );
+	/** Check if the module is busy */
+	while(sSpi_GetHwStatus(en_moduleNo) == SPI_BUSY);
+
+	/** Make the NSS Pin High to indicate to slave of end transfer */
+	if(JobConfig->CsFunctionUsed == EN_CS_SW_HANDLING)
+	{
+		//REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,8U),(SET_BIT(8U)));
+		Dio_WriteChannel(JobConfig->CsPinUsed,STD_HIGH);
+	}
+
+	/** Disable the Peripheral */
+	REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,6U),CLEAR_BIT(6U));
 
 	sSpi_SetJobResult(JobConfig->JobId,SPI_JOB_OK);
 
@@ -1214,6 +1271,39 @@ static void sSpi_StartRxForJobs(void)
 }
 #endif  /** ((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (1U))) */
 
+static void sSpi_CopyRxDataToChannelBuffer(Spi_ChannelConfigType* channelConfig,uint16_t u16_Data,uint8_t bufferNo)
+{
+	Spi_ChannelType channelId = channelConfig->ChannelId;
+	Spi_DataBufferType * destBufferPtr = 0U;
+
+	if(channelConfig->BufferUsed == EN_INTERNAL_BUFFER)
+	{
+		destBufferPtr = (Spi_DataBufferType *)(&sInternalBuffer[sIB_Config[channelId].RxBuffer.Start+bufferNo]);
+		sIB_Config[channelId].RxBuffer.InUse = TRUE;
+	}
+	else /** channelConfig->BufferUsed == EN_EXTERNAL_BUFFER */
+	{
+		destBufferPtr = sExternalBuffer[channelId].RxBuffer+bufferNo;
+		sExternalBuffer[channelId].active = TRUE;
+	}
+
+	/** Copy data to Buffer */
+	if(destBufferPtr != NULL_PTR)
+	{
+		if(channelConfig->DataFrame == EN_8_BIT_DATA_FRAME)
+		{
+			*destBufferPtr = (u16_Data & 0x00FF);
+		}
+		else /** (channelConfig->DataFrame == EN_16_BIT_DATA_FRAME) */
+		{
+			*destBufferPtr = ((u16_Data & 0xFF00)>>8U);
+			destBufferPtr++;
+			*destBufferPtr = (u16_Data & 0x00FF);
+		}
+	}
+}
+
+#if 0
 static void sSpi_CopyDataToChannelBuffer(Spi_JobType jobId)
 {
 	Spi_HwType en_moduleNo = 0U;
@@ -1293,6 +1383,7 @@ static void sSpi_CopyDataToChannelBuffer(Spi_JobType jobId)
 		}
 	}
 }
+#endif
 
 static void sSpi_StartSyncTransmit(Spi_SequenceType Sequence)
 {
@@ -1313,7 +1404,7 @@ static void sSpi_StartSyncTransmit(Spi_SequenceType Sequence)
 		sSpi_StartJob(jobConfig);
 
 		/** TODO - Check if Rx needs to be done here itself since this is Sync Transmit */
-		sSpi_CopyDataToChannelBuffer(jobConfig->JobId);
+		//sSpi_CopyDataToChannelBuffer(jobConfig->JobId);
 
 		jobPtr++;
 	}

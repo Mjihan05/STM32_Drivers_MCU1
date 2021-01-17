@@ -36,7 +36,7 @@
 #define EOL (0xFFU)
 
 typedef uint8_t Spi_DataBufferType;
-typedef uint8_t Spi_NumberOfDataType;
+typedef uint16_t Spi_NumberOfDataType;
 typedef uint8_t Spi_ChannelType;
 typedef uint16_t Spi_JobType;
 typedef uint8_t Spi_SequenceType;
@@ -121,6 +121,7 @@ typedef struct
 	uint8_t ShiftClkIdleLevel; /** CPOL (clock polarity) bit controls the steady state value of the clock when no data is being transferred */
 	Spi_ShiftEdgeType DataShiftonEdge;	/**  CPHA (clock phase) bit Controls on which edge Tx takes place */
 	uint8_t Priority;			/** Priority from 0 lower to 3 highest */
+	uint32_t TimebetweenChannel;  /** Delay between execution of channels in  1/SysClk (us) */
 	void (*SpiJobEndNotification)();
 	Spi_ChannelType ChannelAssignment[NO_OF_CHANNELS_CONFIGURED];
 }Spi_JobConfigType;

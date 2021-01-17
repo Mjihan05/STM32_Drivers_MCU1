@@ -39,7 +39,7 @@ const Spi_SequenceConfigType Spi_SequenceConfig0[NO_OF_SEQUENCES_CONFIGURED] =
 		{
 			.SequenceId = 1U,
 			.SpiInterruptible = TRUE,
-			.SpiSequenceEndNotification = NULL_PTR,
+			.SpiSequenceEndNotification = &dummyNotif,
 			.Jobs = {/** Jobs need to be filled in the order of priority  */
 				2U,EOL,
 			},
@@ -59,15 +59,16 @@ const Spi_JobConfigType Spi_JobConfig0[NO_OF_JOBS_CONFIGURED] =
 		{
 			.JobId = 0U,
 			.HwUsed = EN_SPI_1,
-			.CsFunctionUsed = EN_CS_NOT_USED,
+			.CsFunctionUsed = EN_CS_HW_HANDLING,
 			.CsPinUsed = DIO_PIN_A4,
 			.CsPinPolarity = STD_LOW,
-			.BaudRate = 9800U,
+			.BaudRate = 15625U,
 			.DataShiftonEdge = EN_SHIFT_ON_RISING_EDGE,
 			.ShiftClkIdleLevel = STD_LOW,
+			.TimebetweenChannel = 1000U,
 			.SpiJobEndNotification = (void*)&dummyNotif,
 			.ChannelAssignment = {
-					0U,1U,EOL,
+					0U,/*1U,*/EOL,
 			},
 		},
 	    {
@@ -79,6 +80,7 @@ const Spi_JobConfigType Spi_JobConfig0[NO_OF_JOBS_CONFIGURED] =
 			.BaudRate = 980000U,
 			.DataShiftonEdge = EN_SHIFT_ON_FALLING_EDGE,
 			.ShiftClkIdleLevel = STD_HIGH,
+			.TimebetweenChannel = 1000U,
 			.SpiJobEndNotification = NULL_PTR,
 			.ChannelAssignment = {
 					2U,1U,EOL,
@@ -91,6 +93,7 @@ const Spi_JobConfigType Spi_JobConfig0[NO_OF_JOBS_CONFIGURED] =
 			.BaudRate = 980000U,
 			.DataShiftonEdge = EN_SHIFT_ON_RISING_EDGE,
 			.ShiftClkIdleLevel = STD_LOW,
+			.TimebetweenChannel = 1000U,
 			.SpiJobEndNotification = NULL_PTR,
 			.ChannelAssignment = {
 					0U,2U,EOL,
@@ -102,27 +105,27 @@ const Spi_ChannelConfigType Spi_ChannelConfig0[NO_OF_CHANNELS_CONFIGURED] =
 {
 		{
 				.ChannelId = 0U,
-				.BufferUsed = EN_INTERNAL_BUFFER,
-				.NoOfBuffersUsed = 5U,
-				.DataFrame = EN_16_BIT_DATA_FRAME,
+				.BufferUsed = EN_EXTERNAL_BUFFER,
+				.NoOfBuffersUsed = 4U,
+				.DataFrame = EN_8_BIT_DATA_FRAME,
 				.TransferStart = EN_MSB_FIRST,
-				.DefaultTransmitValue = 5U,
+				.DefaultTransmitValue = 0xFF,
 		},
 		{
 				.ChannelId = 1U,
 				.BufferUsed = EN_EXTERNAL_BUFFER,
-				.NoOfBuffersUsed = 2U,
-				.DataFrame = EN_16_BIT_DATA_FRAME,
+				.NoOfBuffersUsed = 10U,
+				.DataFrame = EN_8_BIT_DATA_FRAME,
 				.TransferStart = EN_MSB_FIRST,
-				.DefaultTransmitValue = 5U,
+				.DefaultTransmitValue = 0xFF,
 		},
 		{
 				.ChannelId = 2U,
 				.BufferUsed = EN_INTERNAL_BUFFER,
-				.NoOfBuffersUsed = 5U,
+				.NoOfBuffersUsed = 2U,
 				.DataFrame = EN_8_BIT_DATA_FRAME,
-				.TransferStart = EN_LSB_FIRST,
-				.DefaultTransmitValue = 10U,
+				.TransferStart = EN_MSB_FIRST,
+				.DefaultTransmitValue = 0xD1,
 		}
 };
 
