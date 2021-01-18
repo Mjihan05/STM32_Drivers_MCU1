@@ -35,11 +35,15 @@
 #define COMMAND_PRINT           0x53
 #define COMMAND_ID_READ         0x54
 
-#define ONE_CHANNEL_USED
+//#define ONE_CHANNEL_USED
 
 /********************************* Test Code ******************************************************/
 
 #define SEQUENCE_0 (0U)
+#define SEQUENCE_1 (1U)
+#define SEQUENCE_2 (2U)
+#define SEQUENCE_3 (3U)
+
 #define SEQUENCE_COMMAND_LED_CTRL (0U)
 #define SEQUENCE_COMMAND_SENSOR_READ (0U)
 #define SEQUENCE_COMMAND_PRINT (0U)
@@ -98,6 +102,7 @@ void delay()
 			i++;
 			}
 	}
+
 }
 
 int main(void)
@@ -134,6 +139,8 @@ int main(void)
 	}
 #endif
 
+
+#if 0
 	while(1)
 	{
 		if(Dio_ReadChannel(GPIO_A_PIN_0) == 0x1U)
@@ -186,6 +193,38 @@ int main(void)
 		}
 	}
 
+#endif
+
+
+	while(1)
+	{
+		if(Dio_ReadChannel(GPIO_A_PIN_0) == 0x1U)
+		{
+			Spi_SetupEB(CHANNEL_CMD_PRINT,(Spi_DataBufferType*)print_TxData,print_RxData,3U);
+			Spi_SetupEB(CHANNEL_PRINT_DATA,(Spi_DataBufferType*)printData,NULL_PTR,strlen(printData));
+
+			returnValue =  Spi_AsyncTransmit (SEQUENCE_1);
+			CHECK_RETURN_VALUE(returnValue);
+
+			returnValue =  Spi_AsyncTransmit (SEQUENCE_COMMAND_PRINT);
+			CHECK_RETURN_VALUE(returnValue);
+
+			returnValue =  Spi_AsyncTransmit (SEQUENCE_2);
+			if(returnValue == E_NOT_OK)
+			{
+				Spi_Cancel(SEQUENCE_1);
+			}
+
+			returnValue =  Spi_AsyncTransmit (SEQUENCE_COMMAND_PRINT);
+			CHECK_RETURN_VALUE(!returnValue);
+
+			returnValue =  Spi_AsyncTransmit (SEQUENCE_3);
+			CHECK_RETURN_VALUE(!returnValue);
+
+			delay();
+			Spi_MainFunction_Handling();
+		}
+	}
 
 	for(;;);
 }

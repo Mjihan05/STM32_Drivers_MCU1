@@ -47,9 +47,17 @@ const Spi_SequenceConfigType Spi_SequenceConfig0[NO_OF_SEQUENCES_CONFIGURED] =
 		{
 			.SequenceId = 2U,
 			.SpiInterruptible = TRUE,
-			.SpiSequenceEndNotification = NULL_PTR,
+			.SpiSequenceEndNotification = &dummyNotif,
 			.Jobs = {/** Jobs need to be filled in the order of priority  */
-				0U,2U,EOL,
+				2U,0U,EOL,
+			},
+		},
+		{
+			.SequenceId = 3U,
+			.SpiInterruptible = TRUE,
+			.SpiSequenceEndNotification = &dummyNotif,
+			.Jobs = {/** Jobs need to be filled in the order of priority  */
+					0U,2U,EOL,
 			},
 		},
 };
@@ -68,7 +76,7 @@ const Spi_JobConfigType Spi_JobConfig0[NO_OF_JOBS_CONFIGURED] =
 			.TimebetweenChannel = 1000U,
 			.SpiJobEndNotification = (void*)&dummyNotif,
 			.ChannelAssignment = {
-					0U,/*1U,*/EOL,
+					0U,1U,EOL,
 			},
 		},
 	    {
@@ -81,7 +89,7 @@ const Spi_JobConfigType Spi_JobConfig0[NO_OF_JOBS_CONFIGURED] =
 			.DataShiftonEdge = EN_SHIFT_ON_FALLING_EDGE,
 			.ShiftClkIdleLevel = STD_HIGH,
 			.TimebetweenChannel = 1000U,
-			.SpiJobEndNotification = NULL_PTR,
+			.SpiJobEndNotification = (void*)&dummyNotif,
 			.ChannelAssignment = {
 					2U,1U,EOL,
 			},
@@ -94,7 +102,7 @@ const Spi_JobConfigType Spi_JobConfig0[NO_OF_JOBS_CONFIGURED] =
 			.DataShiftonEdge = EN_SHIFT_ON_RISING_EDGE,
 			.ShiftClkIdleLevel = STD_LOW,
 			.TimebetweenChannel = 1000U,
-			.SpiJobEndNotification = NULL_PTR,
+			.SpiJobEndNotification = (void*)&dummyNotif,
 			.ChannelAssignment = {
 					0U,2U,EOL,
 			},

@@ -50,8 +50,12 @@ static void sSpi_ResetModule (Spi_HwType moduleNo);
 static Std_ReturnType sSpi_CheckSharedJobs(Spi_SequenceType Sequence);
 static void sSpi_StartQueuedSequence(void);
 static void sSpi_FillJobQueue(Spi_SequenceConfigType SequenceConfig);
+#if 0
 static void sSpi_StartRxForJobs(void);
+#endif
+#if(SPI_LEVEL_DELIVERED == (2U))
 static void sSpi_ConfigInterrupt(Spi_JobType jobId);
+#endif /*#if(SPI_LEVEL_DELIVERED == (2U))*/
 static void sSpi_UpdateSequenceBuffer(uint8_t sequenceIndex,Spi_SeqResultType Result);
 #endif /** #if((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (1U))) */
 static Std_ReturnType sSpi_AllocateIbMemory(void);
@@ -63,7 +67,9 @@ static void sSpi_CopyRxDataToChannelBuffer(Spi_ChannelConfigType* channelConfig,
 #if 0
 static void sSpi_CopyDataToChannelBuffer(Spi_JobType jobId);
 #endif
+#if((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (0U)))
 static void sSpi_StartSyncTransmit(Spi_SequenceType Sequence);
+#endif /** #if((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (0U))) */
 static void sSpi_CancelSequence(Spi_SequenceType Sequence);
 #if(SPI_LEVEL_DELIVERED == (2U))
 Spi_AsyncModeType sSpi_GetAsyncMode (void);
@@ -150,6 +156,7 @@ void Spi_Init (const Spi_ConfigType* ConfigPtr)
 		/** Enable Polling Mode for the HW unit */
 #if(SPI_LEVEL_DELIVERED == (2U))
 		REG_RMW32(&pReg->CR2.R,MASK_BITS(0x7U,5U),(0U)<<5U);
+		Spi_SetAsyncMode (SPI_POLLING_MODE);
 #endif
 		/** Select the device as master */
 		REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,2U),SET_BIT(2U));
@@ -349,6 +356,8 @@ Std_ReturnType Spi_AsyncTransmit (Spi_SequenceType Sequence)
 			sSpi_ConfigInterrupt((Spi_JobType)(*jobPtr));
 		}
 #endif /** (SPI_LEVEL_DELIVERED == (2U))*/
+
+		jobPtr++;
 
 	}
 
@@ -574,12 +583,10 @@ void Spi_MainFunction_Handling (void)
 
 #if((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (1U)))
 	{
-		/** Start Rx for jobs with RX BUFFER NOT EMPTY */
-		sSpi_StartRxForJobs();
+		/** Start Tx for Queued Jobs */
+		sSpi_StartQueuedSequence();
 	}
 
-	/** Start Tx for Queued Jobs */
-	sSpi_StartQueuedSequence();
 #endif  /** ((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (1U))) */
 
 }
@@ -911,6 +918,11 @@ static void sSpi_StartQueuedSequence(void)
 		if(loopItr0 == QUEUE_SIZE)
 		{
 			loopItr0 = 0U;
+		}
+
+		if(loopItr0 == (GlobalParams.BufferIndex[sequenceIndex].endBufferIndex))
+		{
+			break;
 		}
 
 		jobConfig = (Spi_JobConfigType*)(&GlobalConfigPtr->Job[(GlobalParams.SpiQueuedJobsBuffer[loopItr0])]);
@@ -1259,6 +1271,7 @@ static void sSpi_StartJob(Spi_JobConfigType* JobConfig)
 	JobConfig->SpiJobEndNotification();
 }
 
+#if 0
 #if((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (1U)))
 static void sSpi_StartRxForJobs(void)
 {
@@ -1270,6 +1283,7 @@ static void sSpi_StartRxForJobs(void)
 	}
 }
 #endif  /** ((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (1U))) */
+#endif
 
 static void sSpi_CopyRxDataToChannelBuffer(Spi_ChannelConfigType* channelConfig,uint16_t u16_Data,uint8_t bufferNo)
 {
@@ -1385,6 +1399,7 @@ static void sSpi_CopyDataToChannelBuffer(Spi_JobType jobId)
 }
 #endif
 
+#if((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (0U)))
 static void sSpi_StartSyncTransmit(Spi_SequenceType Sequence)
 {
 	Spi_SequenceConfigType* sequenceConfig = (Spi_SequenceConfigType*)(&GlobalConfigPtr->Sequence[Sequence]);
@@ -1414,6 +1429,7 @@ static void sSpi_StartSyncTransmit(Spi_SequenceType Sequence)
 	/** Call Notification function */
 	sequenceConfig->SpiSequenceEndNotification();
 }
+#endif /*#if((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (0U)))*/
 
 static void sSpi_CancelSequence(Spi_SequenceType Sequence)
 {
@@ -1439,6 +1455,16 @@ static void sSpi_CancelSequence(Spi_SequenceType Sequence)
 	for(loopItr2 = GlobalParams.BufferIndex[sequenceIndex].startBufferIndex;
 				(loopItr2 != GlobalParams.BufferIndex[sequenceIndex].endBufferIndex); loopItr2++ )
 	{
+		if(loopItr2 == QUEUE_SIZE)
+		{
+			loopItr2 = 0U;
+		}
+
+		if(loopItr2 == (GlobalParams.BufferIndex[sequenceIndex].endBufferIndex))
+		{
+			break;
+		}
+
 		jobConfig = (Spi_JobConfigType*)(&GlobalConfigPtr->Job[(GlobalParams.SpiQueuedJobsBuffer[loopItr2])]);
 		sSpi_SetJobResult(jobConfig->JobId,SPI_JOB_OK);
 	}
@@ -1478,7 +1504,7 @@ static void sSpi_CancelSequence(Spi_SequenceType Sequence)
 	}
 }
 
-#if((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (1U)))
+#if(SPI_LEVEL_DELIVERED == (2U))
 static void sSpi_ConfigInterrupt(Spi_JobType jobId)
 {
 	uint8_t loopItr0 = 0U;
@@ -1503,12 +1529,12 @@ static void sSpi_ConfigInterrupt(Spi_JobType jobId)
 
 	pReg = (SPI_RegTypes *)Spi_BaseAddress[en_moduleNo];
 
-	/** Configure Rx Interrupt */
-	REG_RMW32(&pReg->SR.R,MASK_BITS(0x1U,6U),(SET_BIT(6U)));
+	/** Configure Rx & Tx Interrupt */
+	REG_RMW32(&pReg->SR.R,MASK_BITS(0x3U,6U),(SET_BIT(6U)|SET_BIT(7U)));
 
 	return;
 }
-#endif  /** ((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (1U))) */
+#endif  /** (SPI_LEVEL_DELIVERED == (2U)*/
 
 #if(SPI_LEVEL_DELIVERED == (2U))
 Spi_AsyncModeType sSpi_GetAsyncMode (void)
