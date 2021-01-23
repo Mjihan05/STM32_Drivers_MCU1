@@ -13,6 +13,7 @@
 
 #include "Reg_Macros.h"
 #include "RCC.h"
+#include "Intc.h"
 #include "Gpio.h"
 #include "Dio.h"
 #include "Spi.h"
@@ -38,6 +39,8 @@
 //#define ONE_CHANNEL_USED
 
 /********************************* Test Code ******************************************************/
+
+#define ISR_SPI_1_GLOBAL 	(35U)
 
 #define SEQUENCE_0 (0U)
 #define SEQUENCE_1 (1U)
@@ -113,6 +116,11 @@ int main(void)
 	Port_Init (&Port_Config0);
 
 	Spi_Init(&Spi_Config0);
+
+	NVIC_EnableIRQ(ISR_SPI_1_GLOBAL);
+	Spi_SetAsyncMode(SPI_INTERRUPT_MODE);
+
+
 	//returnValue = Spi_DeInit();
 
 	//returnValue = Spi_WriteIB (CHANNEL_0,(Spi_DataBufferType*)sampleTxDataCh1);
@@ -195,7 +203,7 @@ int main(void)
 
 #endif
 
-
+#if 0
 	while(1)
 	{
 		if(Dio_ReadChannel(GPIO_A_PIN_0) == 0x1U)
@@ -225,6 +233,23 @@ int main(void)
 			Spi_MainFunction_Handling();
 		}
 	}
+#endif
+
+	while(1)
+	{
+		if(Dio_ReadChannel(GPIO_A_PIN_0) == 0x1U)
+		{
+			Spi_SetupEB(CHANNEL_CMD_PRINT,(Spi_DataBufferType*)print_TxData,print_RxData,3U);
+			Spi_SetupEB(CHANNEL_PRINT_DATA,(Spi_DataBufferType*)printData,NULL_PTR,strlen(printData));
+
+			returnValue =  Spi_AsyncTransmit (SEQUENCE_COMMAND_PRINT);
+			CHECK_RETURN_VALUE(returnValue);
+
+			delay();
+			Spi_MainFunction_Handling();
+		}
+	}
+
 
 	for(;;);
 }

@@ -64,6 +64,13 @@ typedef struct
 	uint8_t noOfRetries;
 }Spi_BufferIndex;
 
+typedef struct
+{
+	Spi_JobType jobId;
+	Spi_ChannelType currentChannel;
+	Spi_NumberOfDataType dataRemaining;
+}Spi_CurrentChannelType;
+
 /* TODO - check sExternalBuffer implementation, this also can be implemented with ptr */
 typedef struct
 {
@@ -73,6 +80,7 @@ typedef struct
 	Spi_SequenceType NextSequence;
 #if(SPI_LEVEL_DELIVERED == (2U))
 	Spi_AsyncModeType Spi_AsyncMode;
+	Spi_CurrentChannelType currentHw[TOTAL_NO_OF_SPI_HW_UNIT];
 #endif /** (SPI_LEVEL_DELIVERED == (2U)) */
 }Spi_GlobalParams;
 
@@ -81,23 +89,29 @@ extern Spi_ConfigType Spi_Config0;
 void Spi_Init (const Spi_ConfigType* ConfigPtr);
 Std_ReturnType Spi_DeInit (void);
 Std_ReturnType Spi_WriteIB (Spi_ChannelType Channel,const Spi_DataBufferType* DataBufferPtr);
-#if((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (1U)))
-Std_ReturnType Spi_AsyncTransmit (Spi_SequenceType Sequence);
-#endif  /** ((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (1U))) */
 Std_ReturnType Spi_ReadIB (Spi_ChannelType Channel,Spi_DataBufferType* DataBufferPointer);
 Std_ReturnType Spi_SetupEB (Spi_ChannelType Channel,const Spi_DataBufferType* SrcDataBufferPtr,
 							Spi_DataBufferType* DesDataBufferPtr,Spi_NumberOfDataType Length);
 Spi_StatusType Spi_GetStatus (void);
 Spi_JobResultType Spi_GetJobResult (Spi_JobType Job);
 Spi_SeqResultType Spi_GetSequenceResult (Spi_SequenceType Sequence);
+Spi_StatusType Spi_GetHWUnitStatus (Spi_HWUnitType HWUnit);
+void Spi_Cancel (Spi_SequenceType Sequence);
+
+#if((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (1U)))
+Std_ReturnType Spi_AsyncTransmit (Spi_SequenceType Sequence);
+void Spi_MainFunction_Handling (void);
+#endif  /** ((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (1U))) */
+
 #if((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (0U)))
 Std_ReturnType Spi_SyncTransmit (Spi_SequenceType Sequence);
 #endif  /** ((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (0U))) */
-Spi_StatusType Spi_GetHWUnitStatus (Spi_HWUnitType HWUnit);
-void Spi_Cancel (Spi_SequenceType Sequence);
+
 #if(SPI_LEVEL_DELIVERED == (2U))
 Std_ReturnType Spi_SetAsyncMode (Spi_AsyncModeType Mode);
+void ISR_Spi_1_Global(void);
+void ISR_Spi_2_Global(void);
+void ISR_Spi_3_Global(void);
 #endif /** (SPI_LEVEL_DELIVERED == (2U))*/
-void Spi_MainFunction_Handling (void);
 
 #endif /* SPI_INC_SPI_H_ */

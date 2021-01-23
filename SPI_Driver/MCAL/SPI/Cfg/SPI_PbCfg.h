@@ -19,7 +19,7 @@
 /** LEVEL 0, Simple Synchronous SPI Handler/Driver
  *  LEVEL 1, Basic Asynchronous SPI Handler/Driver
  *  LEVEL 2, Enhanced (Synchronous/Asynchronous) SPI Handler/Driver */
-#define SPI_LEVEL_DELIVERED 		(1U)
+#define SPI_LEVEL_DELIVERED 		(2U)
 
 #define NO_OF_CHANNELS_CONFIGURED	(3U)
 #define NO_OF_JOBS_CONFIGURED		(3U)

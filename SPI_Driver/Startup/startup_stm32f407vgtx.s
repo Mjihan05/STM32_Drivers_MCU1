@@ -164,7 +164,7 @@ g_pfnVectors:
   .word	I2C1_ER_IRQHandler           			/* I2C1 error interrupt                                               */
   .word	I2C2_EV_IRQHandler           			/* I2C2 event interrupt                                               */
   .word	I2C2_ER_IRQHandler           			/* I2C2 error interrupt                                               */
-  .word	SPI1_IRQHandler              			/* SPI1 global interrupt                                              */
+  .word	ISR_Spi_1_Global              			/* SPI1 global interrupt                                              */
   .word	SPI2_IRQHandler              			/* SPI2 global interrupt                                              */
   .word	USART1_IRQHandler            			/* USART1 global interrupt                                            */
   .word	USART2_IRQHandler            			/* USART2 global interrupt                                            */
