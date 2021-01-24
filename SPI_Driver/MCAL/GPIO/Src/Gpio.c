@@ -85,7 +85,7 @@ void Port_Init (const Port_ConfigType* ConfigPtr)
 				}
 				else /** Select the Alternate Functionality in AFRH */
 				{
-					REG_RMW32(&pReg->AFRH.R,MASK_BITS(0xFU,pinNo*4U),(((ConfigPtr[loopItr0]).PinMode-4U))<<(pinNo*4U));
+					REG_RMW32(&pReg->AFRH.R,MASK_BITS(0xFU,(pinNo%8)*4U),(((ConfigPtr[loopItr0]).PinMode-4U))<<((pinNo%8)*4U));
 				}
 				REG_RMW32(&pReg->MODER.R,MASK_BITS(0x3U,pinNo*2U),(0x2U)<<(pinNo*2U));
 			}

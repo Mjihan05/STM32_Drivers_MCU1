@@ -27,7 +27,6 @@ typedef enum /** Defines a range of specific status for SPI Handler */
 	SPI_BUFFER_NOT_EMPTY,
 }Spi_BufferStatusType;
 
-
 //Spi_StatusType gEn_SpiStatus = SPI_UNINIT;
 
 Spi_GlobalParams GlobalParams;
@@ -63,6 +62,7 @@ static Spi_StatusType sSpi_GetHwStatus(Spi_HwType en_moduleNo);
 static Spi_BufferStatusType sSpi_GetRxBufferStatus(Spi_HwType en_moduleNo);
 static Spi_BufferStatusType sSpi_GetTxBufferStatus(Spi_HwType en_moduleNo);
 static void sSpi_StartJob(Spi_JobConfigType* JobConfig);
+static void sSpi_StartHw(Spi_JobType JobId);
 static void sSpi_CopyRxDataToChannelBuffer(Spi_ChannelConfigType* channelConfig,uint16_t u16_Data,uint8_t bufferNo);
 #if 0
 static void sSpi_CopyDataToChannelBuffer(Spi_JobType jobId);
@@ -376,7 +376,8 @@ Std_ReturnType Spi_AsyncTransmit (Spi_SequenceType Sequence)
 			sSpi_ConfigInterrupt(SequenceConfig.Jobs[0U],STD_ON);
 
 			/** Schedule First Job */
-			sSpi_ScheduleJob(SequenceConfig.Jobs[0U]);
+			sSpi_StartHw(SequenceConfig.Jobs[0U]);
+			//sSpi_ScheduleJob(SequenceConfig.Jobs[0U]);
 		}
 	}
 #endif /** (SPI_LEVEL_DELIVERED == (2U))*/
@@ -897,6 +898,24 @@ static Spi_BufferStatusType sSpi_GetTxBufferStatus(Spi_HwType en_moduleNo)
 	}
 	return SPI_BUFFER_NOT_EMPTY;
 }
+
+#if (0)
+	static void sSpi_FlushBuffer(Spi_JobConfigType* jobConfig)
+	{
+		uint8_t jobId = jobConfig->JobId;
+		Spi_HwType en_moduleNo = 0U;
+
+		volatile  SPI_RegTypes * pReg = 0U;
+
+		/** Get SPI Hw ID */
+		en_moduleNo = sSpi_getModuleNo(jobConfig);
+		pReg = (SPI_RegTypes *)Spi_BaseAddress[en_moduleNo];
+
+		REG_WRITE32(&pReg->DR.R,(uint16_t)(0x0U));
+		REG_READ32(&pReg->DR.R);
+		REG_READ32(&pReg->SR.R);
+	}
+#endif
 
 #if((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (1U)))
 /** TODO - 1. Interruptible sequence is not handled
@@ -1603,6 +1622,52 @@ static void sSpi_ConfigAsyncMode (Spi_JobType JobId)
 
 }
 
+static void sSpi_StartHw(Spi_JobType JobId)
+{
+	Spi_JobConfigType* JobConfig = (Spi_JobConfigType*)(&GlobalConfigPtr->Job[JobId]);
+		Spi_ChannelConfigType* channelConfig = 0U;
+		Spi_HwType en_moduleNo = 0U;
+		uint8_t channelItr = 0U;
+
+		volatile  SPI_RegTypes * pReg = 0U;
+
+		/** Get SPI Hw ID */
+		en_moduleNo = sSpi_getModuleNo(JobConfig);
+		pReg = (SPI_RegTypes *)Spi_BaseAddress[en_moduleNo];
+
+		if(JobConfig->ChannelAssignment[channelItr] == EOL)
+		{
+			return;
+			/** TODO - Report ERROR */
+		}
+
+		channelConfig = (Spi_ChannelConfigType*)(&GlobalConfigPtr->Channel[JobConfig->ChannelAssignment[channelItr]]);
+
+		while(sSpi_GetHwStatus(en_moduleNo) == SPI_BUSY);
+
+		if(channelConfig->TransferStart == EN_LSB_FIRST)
+		{
+			REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,7U),(SET_BIT(7U)));
+		}
+		else
+		{
+			REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,7U),(CLEAR_BIT(7U)));
+		}
+
+		/** Make the NSS Pin low to indicate to slave of start transfer */
+		if(JobConfig->CsFunctionUsed == EN_CS_SW_HANDLING)
+		{
+			//REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,8U),(CLEAR_BIT(8U)));
+			Dio_WriteChannel(JobConfig->CsPinUsed,STD_LOW);
+		}
+
+		/** Select the Frame Format */
+		REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,11U),(channelConfig->DataFrame)<<11U);
+
+		/** Enable the Peripheral */
+		REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,6U),SET_BIT(6U));
+}
+
 static void sSpi_ScheduleJob(Spi_JobType JobId)
 {
 	Spi_JobConfigType* JobConfig = (Spi_JobConfigType*)(&GlobalConfigPtr->Job[JobId]);
@@ -1816,7 +1881,7 @@ static void sSpi_EndJob(Spi_JobType JobId)
 	JobConfig->SpiJobEndNotification();
 
 	GlobalParams.BufferIndex[GlobalParams.NextSequence].startBufferIndex++;
-	if(GlobalParams.BufferIndex[GlobalParams.NextSequence].startBufferIndex == QUEUE_SIZE)
+	if(GlobalParams.BufferIndex[GlobalParams.NextSequence].startBufferIndex == (QUEUE_SIZE))
 	{
 		GlobalParams.BufferIndex[GlobalParams.NextSequence].startBufferIndex = 0U;
 	}
@@ -1840,13 +1905,13 @@ static void sSpi_EndJob(Spi_JobType JobId)
 	else
 	{
 		/** Schedule next Job */
-		JobId = GlobalParams.BufferIndex[GlobalParams.NextSequence].startBufferIndex;
+		JobId = GlobalParams.SpiQueuedJobsBuffer[GlobalParams.BufferIndex[GlobalParams.NextSequence].startBufferIndex];
 		/** Configure Global Parameters for next job */
 		sSpi_ConfigAsyncMode(JobId);
 		/** Config Hw for Interrupt  */
 		sSpi_ConfigInterrupt(JobId,STD_ON);
 		sSpi_SetJobResult(JobId,SPI_JOB_PENDING);
-		sSpi_ScheduleJob(JobId);
+		sSpi_StartHw(JobId);
 	}
 }
 
@@ -1921,6 +1986,7 @@ static void sSpi_SetJobResult(Spi_JobType Job,Spi_JobResultType Result)
 	Spi_JobResult[Job] = Result;
 }
 
+#if(SPI_LEVEL_DELIVERED == (2U))
 void sISR_Spi_Global(Spi_HwType en_moduleNo)
 {
 	Spi_JobType JobId = GlobalParams.currentHw[en_moduleNo].jobId;
@@ -1961,4 +2027,4 @@ void sISR_Spi_Global(Spi_HwType en_moduleNo)
 		sSpi_EndJob(JobId);
 	}
 }
-
+#endif /*(SPI_LEVEL_DELIVERED == (2U))*/

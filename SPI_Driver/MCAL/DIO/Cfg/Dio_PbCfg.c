@@ -23,7 +23,7 @@ Dio_ChannelType Dio_ChannelUsed[DIO_PINS_CONFIGURED] =
 	DIO_PIN_B6,
 	DIO_PIN_B7,
 	DIO_PIN_B8,
-	DIO_PIN_D12
+	DIO_PIN_B12
 };
 
 Dio_PortType Dio_PortUsed[DIO_PORT_CONFIGURED] =

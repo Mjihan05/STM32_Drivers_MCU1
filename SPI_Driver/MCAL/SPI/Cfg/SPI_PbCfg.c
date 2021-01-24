@@ -33,7 +33,7 @@ const Spi_SequenceConfigType Spi_SequenceConfig0[NO_OF_SEQUENCES_CONFIGURED] =
 			.SpiInterruptible = TRUE,
 			.SpiSequenceEndNotification = &dummyNotif,
 			.Jobs = {/** Jobs need to be filled in the order of priority  */
-				0U,EOL,
+				0U,1U,EOL,
 			},
 		},
 		{
@@ -82,16 +82,16 @@ const Spi_JobConfigType Spi_JobConfig0[NO_OF_JOBS_CONFIGURED] =
 	    {
 			.JobId = 1U,
 			.HwUsed = EN_SPI_2,
-			.CsFunctionUsed = EN_CS_SW_HANDLING,
-			.CsPinUsed = DIO_PIN_B3,
+			.CsFunctionUsed = EN_CS_HW_HANDLING,
+			.CsPinUsed = DIO_PIN_B12,
 			.CsPinPolarity = STD_LOW,
-			.BaudRate = 980000U,
-			.DataShiftonEdge = EN_SHIFT_ON_FALLING_EDGE,
-			.ShiftClkIdleLevel = STD_HIGH,
+			.BaudRate = 15625U,
+			.DataShiftonEdge = EN_SHIFT_ON_RISING_EDGE,
+			.ShiftClkIdleLevel = STD_LOW,
 			.TimebetweenChannel = 1000U,
 			.SpiJobEndNotification = (void*)&dummyNotif,
 			.ChannelAssignment = {
-					2U,1U,EOL,
+					2U,EOL,
 			},
 	    },
 		{
@@ -129,8 +129,8 @@ const Spi_ChannelConfigType Spi_ChannelConfig0[NO_OF_CHANNELS_CONFIGURED] =
 		},
 		{
 				.ChannelId = 2U,
-				.BufferUsed = EN_INTERNAL_BUFFER,
-				.NoOfBuffersUsed = 2U,
+				.BufferUsed = EN_EXTERNAL_BUFFER,
+				.NoOfBuffersUsed = 13U,
 				.DataFrame = EN_8_BIT_DATA_FRAME,
 				.TransferStart = EN_MSB_FIRST,
 				.DefaultTransmitValue = 0xD1,

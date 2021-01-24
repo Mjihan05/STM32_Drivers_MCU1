@@ -19,11 +19,18 @@
 #include "Spi.h"
 #include "string.h"
 
-/** Pin Definition
+/** Pin Definition SPI 1
  * PA4 - SPI1_NSS
  * PA5 - SPI1_SCK
  * PA6 - SPI1_MISO
  * PA7 - SPI1_MOSI
+ * */
+
+/** Pin Definition SPI 2
+ * PB12 - SPI2_NSS
+ * PB13 - SPI2_SCK
+ * PB14 - SPI2_MISO
+ * PB15 - SPI2_MOSI
  * */
 
 /** Arduino Defines */
@@ -41,6 +48,7 @@
 /********************************* Test Code ******************************************************/
 
 #define ISR_SPI_1_GLOBAL 	(35U)
+#define ISR_SPI_2_GLOBAL 	(36U)
 
 #define SEQUENCE_0 (0U)
 #define SEQUENCE_1 (1U)
@@ -54,6 +62,7 @@
 
 #define CHANNEL_0 (0U)
 #define CHANNEL_1 (1U)
+#define CHANNEL_2 (2U)
 #define CHANNEL_LENGTH (6U)
 
 #define DUMMY_DATA 				(0xFF)
@@ -92,6 +101,8 @@ uint8_t idRead_TxData[] = {COMMAND_ID_READ,DUMMY_DATA};
 uint8_t idRead_RxCMD[2];
 uint8_t idRead_RxData[10U];
 
+uint8_t myName[] = "Michael Jihan";
+
 
 Spi_DataBufferType sampleRxDataCh1[CHANNEL_LENGTH];
 Spi_DataBufferType sampleRxDataCh2[CHANNEL_LENGTH];
@@ -118,7 +129,8 @@ int main(void)
 	Spi_Init(&Spi_Config0);
 
 	NVIC_EnableIRQ(ISR_SPI_1_GLOBAL);
-	Spi_SetAsyncMode(SPI_INTERRUPT_MODE);
+	NVIC_EnableIRQ(ISR_SPI_2_GLOBAL);
+	Spi_SetAsyncMode(SPI_POLLING_MODE);
 
 
 	//returnValue = Spi_DeInit();
@@ -176,7 +188,7 @@ int main(void)
 			Spi_SetupEB(CHANNEL_PRINT_DATA,(Spi_DataBufferType*)printData,NULL_PTR,strlen(printData));
 			returnValue =  Spi_SyncTransmit(SEQUENCE_COMMAND_PRINT);
 			CHECK_RETURN_VALUE(returnValue);
-			CHECK_RETURN_VALUE((print_RxData[1] != ACK));
+			//CHECK_RETURN_VALUE((print_RxData[1] != ACK));
 			delay();
 
 			/** COMMAND_ID_READ  Make modification in pbcfg enable channel 1 */
@@ -235,12 +247,16 @@ int main(void)
 	}
 #endif
 
+#if 1
 	while(1)
 	{
 		if(Dio_ReadChannel(GPIO_A_PIN_0) == 0x1U)
 		{
 			Spi_SetupEB(CHANNEL_CMD_PRINT,(Spi_DataBufferType*)print_TxData,print_RxData,3U);
 			Spi_SetupEB(CHANNEL_PRINT_DATA,(Spi_DataBufferType*)printData,NULL_PTR,strlen(printData));
+
+			Spi_SetupEB(CHANNEL_2,(Spi_DataBufferType*)myName,NULL_PTR,strlen(myName));
+			//Spi_WriteIB (CHANNEL_2,(Spi_DataBufferType*)myName);
 
 			returnValue =  Spi_AsyncTransmit (SEQUENCE_COMMAND_PRINT);
 			CHECK_RETURN_VALUE(returnValue);
@@ -249,7 +265,7 @@ int main(void)
 			Spi_MainFunction_Handling();
 		}
 	}
-
+#endif
 
 	for(;;);
 }

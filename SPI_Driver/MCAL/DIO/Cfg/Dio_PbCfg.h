@@ -23,7 +23,7 @@
 #define DIO_PIN_B6  (22U)
 #define DIO_PIN_B7  (23U)
 #define DIO_PIN_B8  (24U)
-#define DIO_PIN_D12 (60U)
+#define DIO_PIN_B12 (28U)
 
 
 

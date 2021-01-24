@@ -16,7 +16,7 @@
 #define PORT_SET_PIN_DIRECTION_API	(STD_ON) 	 /** Port_SetPinDirection() will be available during runtime */
 #define PORT_SET_PIN_MODE_API		(STD_ON) 	 /** Port_SetPinMode() will be available during runtime */
 
-#define NO_OF_PINS_CONFIG   (11U)
+#define NO_OF_PINS_CONFIG   (50U)
 #define TOTAL_NO_OF_PORTS	(9U)				 	/** NOTE - Change in Dio_PbCfg.h also */
 #define TOTAL_NO_OF_PINS	(TOTAL_NO_OF_PORTS*16U) /** NOTE - Change in Dio_PbCfg.h also */
 
