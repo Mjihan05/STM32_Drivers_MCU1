@@ -33,7 +33,7 @@ const Spi_SequenceConfigType Spi_SequenceConfig0[NO_OF_SEQUENCES_CONFIGURED] =
 			.SpiInterruptible = TRUE,
 			.SpiSequenceEndNotification = &dummyNotif,
 			.Jobs = {/** Jobs need to be filled in the order of priority  */
-				0U,1U,EOL,
+				0U,/*1U,*/EOL,
 			},
 		},
 		{
@@ -41,7 +41,7 @@ const Spi_SequenceConfigType Spi_SequenceConfig0[NO_OF_SEQUENCES_CONFIGURED] =
 			.SpiInterruptible = TRUE,
 			.SpiSequenceEndNotification = &dummyNotif,
 			.Jobs = {/** Jobs need to be filled in the order of priority  */
-				2U,EOL,
+				1U,EOL,
 			},
 		},
 		{
@@ -67,7 +67,7 @@ const Spi_JobConfigType Spi_JobConfig0[NO_OF_JOBS_CONFIGURED] =
 		{
 			.JobId = 0U,
 			.HwUsed = EN_SPI_1,
-			.CsFunctionUsed = EN_CS_HW_HANDLING,
+			.CsFunctionUsed = EN_CS_SW_HANDLING,
 			.CsPinUsed = DIO_PIN_A4,
 			.CsPinPolarity = STD_LOW,
 			.BaudRate = 15625U,
@@ -82,7 +82,7 @@ const Spi_JobConfigType Spi_JobConfig0[NO_OF_JOBS_CONFIGURED] =
 	    {
 			.JobId = 1U,
 			.HwUsed = EN_SPI_2,
-			.CsFunctionUsed = EN_CS_HW_HANDLING,
+			.CsFunctionUsed = EN_CS_SW_HANDLING,
 			.CsPinUsed = DIO_PIN_B12,
 			.CsPinPolarity = STD_LOW,
 			.BaudRate = 15625U,

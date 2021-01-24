@@ -52,9 +52,6 @@ static void sSpi_FillJobQueue(Spi_SequenceConfigType SequenceConfig);
 #if 0
 static void sSpi_StartRxForJobs(void);
 #endif
-#if(SPI_LEVEL_DELIVERED == (2U))
-static void sSpi_ConfigInterrupt(Spi_JobType jobitr, uint8_t Enable);
-#endif /*#if(SPI_LEVEL_DELIVERED == (2U))*/
 static void sSpi_UpdateSequenceBuffer(uint8_t sequenceIndex,Spi_SeqResultType Result);
 #endif /** #if((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (1U))) */
 static Std_ReturnType sSpi_AllocateIbMemory(void);
@@ -72,6 +69,7 @@ static void sSpi_StartSyncTransmit(Spi_SequenceType Sequence);
 #endif /** #if((SPI_LEVEL_DELIVERED == (2U)) || (SPI_LEVEL_DELIVERED == (0U))) */
 static void sSpi_CancelSequence(Spi_SequenceType Sequence);
 #if(SPI_LEVEL_DELIVERED == (2U))
+static void sSpi_ConfigInterrupt(Spi_JobType jobitr, uint8_t Enable);
 static Spi_AsyncModeType sSpi_GetAsyncMode (void);
 static void sSpi_ConfigAsyncMode (Spi_JobType JobId);
 static void sSpi_ScheduleJob(Spi_JobType JobId);
@@ -999,6 +997,7 @@ static void sSpi_StartQueuedSequence(void)
 	}
 	/** Now that all the jobs in the sequence have been executed  */
 	/** Update sequence status */
+	SequenceId = GlobalParams.BufferIndex[sequenceIndex].sequenceId;
 	GlobalParams.BufferIndex[sequenceIndex].sequenceId = SEQUENCE_COMPLETED;
 	sSpi_SetSeqResult(SequenceId,SPI_SEQ_OK);
 	/** Call Notification function */
@@ -1668,6 +1667,7 @@ static void sSpi_StartHw(Spi_JobType JobId)
 		REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,6U),SET_BIT(6U));
 }
 
+#if 0
 static void sSpi_ScheduleJob(Spi_JobType JobId)
 {
 	Spi_JobConfigType* JobConfig = (Spi_JobConfigType*)(&GlobalConfigPtr->Job[JobId]);
@@ -1726,6 +1726,7 @@ static void sSpi_ScheduleJob(Spi_JobType JobId)
 		sSpi_EndJob(JobId);
 	}
 }
+#endif
 
 static void sSpi_LoadFifoBuffer(Spi_HwType en_moduleNo)
 {
@@ -1853,6 +1854,8 @@ static void sSpi_EndJob(Spi_JobType JobId)
 {
 	Spi_JobConfigType* JobConfig = (Spi_JobConfigType*)(&GlobalConfigPtr->Job[JobId]);
 	Spi_HwType en_moduleNo = 0U;
+	uint8_t loopItr1 = 0U;
+	uint8_t sequenceIndex = 0U;
 
 	volatile  SPI_RegTypes * pReg = 0U;
 
@@ -1880,10 +1883,20 @@ static void sSpi_EndJob(Spi_JobType JobId)
 	/** Call the notification function */
 	JobConfig->SpiJobEndNotification();
 
-	GlobalParams.BufferIndex[GlobalParams.NextSequence].startBufferIndex++;
-	if(GlobalParams.BufferIndex[GlobalParams.NextSequence].startBufferIndex == (QUEUE_SIZE))
+	/** Get the Index values of the job buffer for the next pending sequence */
+	for(loopItr1 = 0U; loopItr1 < NO_OF_SEQUENCES_CONFIGURED; loopItr1++ )
 	{
-		GlobalParams.BufferIndex[GlobalParams.NextSequence].startBufferIndex = 0U;
+		if(GlobalParams.BufferIndex[loopItr1].sequenceId == GlobalParams.NextSequence)
+		{
+			sequenceIndex = loopItr1;
+			break;
+		}
+	}
+
+	GlobalParams.BufferIndex[sequenceIndex].startBufferIndex++;
+	if(GlobalParams.BufferIndex[sequenceIndex].startBufferIndex == (QUEUE_SIZE))
+	{
+		GlobalParams.BufferIndex[sequenceIndex].startBufferIndex = 0U;
 	}
 
 //	/** Schedule next Job */
@@ -1898,7 +1911,7 @@ static void sSpi_EndJob(Spi_JobType JobId)
 //		sSpi_ScheduleJob(JobId);
 //	}
 //	else
-	if(GlobalParams.BufferIndex[GlobalParams.NextSequence].startBufferIndex == (GlobalParams.BufferIndex[GlobalParams.NextSequence].endBufferIndex))
+	if(GlobalParams.BufferIndex[sequenceIndex].startBufferIndex == (GlobalParams.BufferIndex[sequenceIndex].endBufferIndex))
 	{
 		sSpi_ScheduleNextSequence();
 	}

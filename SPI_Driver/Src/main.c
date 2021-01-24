@@ -261,6 +261,9 @@ int main(void)
 			returnValue =  Spi_AsyncTransmit (SEQUENCE_COMMAND_PRINT);
 			CHECK_RETURN_VALUE(returnValue);
 
+			returnValue =  Spi_AsyncTransmit (SEQUENCE_1);
+			CHECK_RETURN_VALUE(returnValue);
+
 			delay();
 			Spi_MainFunction_Handling();
 		}
