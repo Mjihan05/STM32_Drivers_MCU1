@@ -14,7 +14,7 @@
 #define I2C_2_BASE_ADDRESS      (0x40005800U)
 #define I2C_3_BASE_ADDRESS      (0x40005C00U)
 
-extern uint32_t I2c_BaseAddress[];
+extern uint32_t I2C_BaseAddress[];
 
 typedef union I2C_CR1_Tag
 {
