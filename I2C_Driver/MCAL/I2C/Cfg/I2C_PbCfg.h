@@ -11,7 +11,11 @@
 #ifndef I2C_CFG_I2C_PBCFG_H_
 #define I2C_CFG_I2C_PBCFG_H_
 
+#include "I2C_regTypes.h"
+
 #define TOTAL_NO_OF_I2C_HW_UNIT 	(EN_I2C_3 + 1U)
+
+#define NO_OF_HW_CONFIGURED 		(1U)
 
 typedef uint8_t I2C_DataBufferType;
 typedef uint16_t I2C_NumberOfDataType;

@@ -74,6 +74,17 @@
  *
  * */
 
+#include <stdint.h>
+#include <Reg_Macros.h>
+
+#include "RCC.h"
+#include "Dio.h"
+
+#include "I2C.h"
+
+#include "I2C_PbCfg.h"
+
+
 #define WRITE_MODE   (0x0U)
 #define READ_MODE    (0x1U)
 
@@ -83,6 +94,7 @@ I2C_GlobalParams GlobalParams;
 
 /********************** Local Functions *****************************/
 
+#if 0
 static I2C_HwType sI2C_getModuleNo (const I2C_JobConfigType* JobConfig)
 {
 	if(JobConfig == NULL_PTR)
@@ -92,10 +104,11 @@ static I2C_HwType sI2C_getModuleNo (const I2C_JobConfigType* JobConfig)
 
 	//return (I2C_HwType)(JobConfig->HwUsed);
 }
+#endif
 
 static uint8_t sI2C_getAPB1Freq (void)
 {
-	uint32 freqInMHz = 0U;
+	uint32_t freqInMHz = 0U;
 	freqInMHz = RCC_GetAPB1Clk();
 
 	return (uint8_t)(freqInMHz/1000000);
@@ -105,7 +118,7 @@ static Bool sI2C_GetSR1Status(I2C_HwType en_moduleNo,I2C_Status1Type flag)
 {
 	volatile  I2C_RegTypes * pReg = (I2C_RegTypes *)I2C_BaseAddress[en_moduleNo];
 
-	if((REG_READ32(&pReg->SR1.R)) & MASK_BIT(flag))
+	if((REG_READ16(&pReg->SR1.R)) & MASK_BIT(flag))
 	{
 		return TRUE;
 	}
@@ -116,14 +129,36 @@ static Bool sI2C_GetSR2Status(I2C_HwType en_moduleNo,I2C_Status2Type flag)
 {
 	volatile  I2C_RegTypes * pReg = (I2C_RegTypes *)I2C_BaseAddress[en_moduleNo];
 
-	if((REG_READ32(&pReg->SR2.R)) & MASK_BIT(flag))
+	if((REG_READ16(&pReg->SR2.R)) & MASK_BIT(flag))
 	{
 		return TRUE;
 	}
 	return FALSE;
 }
 
-static Std_ReturnType sI2C_InitHwModule(I2C_HwConfigType HwConfig)
+static void sI2C_Clk_Enable(I2C_HwType moduleNo)
+{
+	/** I2C-1,2,3 - APB1  */
+	switch(moduleNo)
+	{
+	case EN_I2C_1:
+		RCC_APB1PeripheralClkEnable(EN_I2C1);
+		break;
+
+	case EN_I2C_2:
+		RCC_APB1PeripheralClkEnable(EN_I2C2);
+		break;
+
+	case EN_I2C_3:
+		RCC_APB1PeripheralClkEnable(EN_I2C3);
+		break;
+
+	default:
+		break;
+	}
+}
+
+/*static*/ Std_ReturnType sI2C_InitHwModule(I2C_HwConfigType* HwConfig)
 {
 	uint8_t apb1Freq = 0U;
 	uint16_t ccrValue = 0U;
@@ -131,8 +166,11 @@ static Std_ReturnType sI2C_InitHwModule(I2C_HwConfigType HwConfig)
 	volatile  I2C_RegTypes * pReg = 0U;
 	pReg = (I2C_RegTypes *)I2C_BaseAddress[HwConfig->ModuleNo];
 
+	/** Enable Clock for the Module */
+	sI2C_Clk_Enable(HwConfig->ModuleNo);
+
 	/** Enable ACK mode  */
-	REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,10U),(SET)<<(10U));
+	//REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,10U),SET_BIT(10U));/** TODO - Check why not working */
 
 	/** Configure the Freq of APB1 in CR2 Register */
 	apb1Freq = sI2C_getAPB1Freq();
@@ -213,13 +251,34 @@ static Std_ReturnType sI2C_InitHwModule(I2C_HwConfigType HwConfig)
 		REG_RMW32(&pReg->CCR.R,MASK_BITS(0xFFFU,0U),(ccrValue&0xFFFU));
 	}
 
+	/** Configure the Max TRISE Value */
+	if(HwConfig->MasterMode == EN_I2C_STANDARD_MODE)
+	{
+		/** Max value is (Trise/Tpck1) +1 Trise = 1000ns = /1000000 which is already done in sI2C_getAPB1Freq() */
+		REG_RMW32(&pReg->TRISE.R,MASK_BITS(0x3FU,0U),((apb1Freq + 1U)&0x3FU));
+	}
+	else /** (HwConfig->MasterMode == EN_I2C_FAST_MODE) */
+	{
+		/** Max value is (Trise/Tpck1) +1 Trise = 300ns = 300/1000000000 = 3/10 as /1000000 is already done in sI2C_getAPB1Freq() */
+		REG_RMW32(&pReg->TRISE.R,MASK_BITS(0x3FU,0U),((((apb1Freq*3)/10) + 1U)&0x3FU));
+	}
+
+
+	return (Std_ReturnType)E_OK;
+
 }
 
-static Std_ReturnType sI2C_MasterTxData(I2C_HwType ModuleNo,I2C_DataBufferType* DataBufferPtr,
+/*static*/ Std_ReturnType sI2C_MasterTxData(I2C_HwType ModuleNo,I2C_DataBufferType* DataBufferPtr,
 										I2C_NumberOfDataType noOfBytesRemaining,uint16_t SlaveAddress)
 {
 	volatile  I2C_RegTypes * pReg = 0U;
 	pReg = (I2C_RegTypes *)I2C_BaseAddress[ModuleNo];
+
+	/** Enable the Peripheral */
+	REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,0U),(SET_BIT(0U)));
+
+	/** Enable ACK mode  */
+	REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,10U),SET_BIT(10U));
 
 	/** Generate a START condition  */
 	REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,8U),(SET_BIT(8U)));
@@ -228,12 +287,12 @@ static Std_ReturnType sI2C_MasterTxData(I2C_HwType ModuleNo,I2C_DataBufferType* 
 
 	/** Send the Address of the Slave */
 	/** Set the R/W bit to indicate Write mode */
-	SlaveAddress = (SlaveAddress << 1U) & WRITE_MODE;
+	SlaveAddress = (SlaveAddress << 1U) | WRITE_MODE;
 	REG_WRITE32(&pReg->DR.R,(uint8_t)(SlaveAddress));
 	/** Check if address Tx is completed */
-	while(sI2C_GetSR1Status(ModuleNo,I2C_ADDRESS_SENT) != TRUE);
-	REG_READ32(&pReg->SR1.R);	/** Dummy read to clear ADDR in SR1 */
-	REG_READ32(&pReg->SR2.R);	/** Dummy read to clear ADDR in SR1 */
+	while((sI2C_GetSR1Status(ModuleNo,I2C_ADDRESS_SENT)) != TRUE);
+	REG_READ16(&pReg->SR1.R);	/** Dummy read to clear ADDR in SR1 */
+	REG_READ16(&pReg->SR2.R);	/** Dummy read to clear ADDR in SR1 */
 
 	/** Tx 1 byte of data until buffer is empty */
 	while(noOfBytesRemaining > 0U)
@@ -250,8 +309,13 @@ static Std_ReturnType sI2C_MasterTxData(I2C_HwType ModuleNo,I2C_DataBufferType* 
 
 	/** Generate a STOP condition  */
 	REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,9U),(SET_BIT(9U)));
-	/** Check if Start bit generation is completed */
-	while(sI2C_GetSR1Status(ModuleNo,I2C_START_BIT_GENERATED) != TRUE);
+	/** Check if STOP bit generation is completed NO NEED FOR THIS */
+	//while(sI2C_GetSR1Status(ModuleNo,I2C_STOP_CONDITION_DETECTED) != TRUE);
+
+	/** Disable the Peripheral */
+	REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,0U),(CLEAR_BIT(0U)));
+
+	return (Std_ReturnType)E_OK;
 
 }
 

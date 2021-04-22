@@ -34,6 +34,10 @@
 #define MASK_BIT(x) (SET<<x)
 #define MASK_BITS(bitMask,positionOfBits) ((0x00000000|bitMask)<<positionOfBits)
 
+#define REG_READ16(regAddress) (uint16_t)(*regAddress)
+#define REG_WRITE16(regAddress,value) ((uint16_t)(*regAddress = value) )
+#define REG_RMW16(regAddress,mask,value) REG_WRITE32(regAddress,( ( ((uint16_t)(*regAddress)) &(~mask) )|(value&mask)))
+
 #define REG_READ32(regAddress) (uint32_t)(*regAddress)
 #define REG_WRITE32(regAddress,value) ((uint32_t)(*regAddress = value) )
 #define REG_RMW32(regAddress,mask,value) REG_WRITE32(regAddress,( ( ((uint32_t)(*regAddress)) &(~mask) )|(value&mask)))

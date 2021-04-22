@@ -11,7 +11,80 @@
   #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
 #endif
 
+
+
+#include "Reg_Macros.h"
+#include "RCC.h"
+#include "Intc.h"
+#include "Gpio.h"
+#include "Dio.h"
+#include "I2C.h"
+#include "string.h"
+
+#define CHECK_RETURN_VALUE(x)  while(x)
+
+extern Std_ReturnType sI2C_InitHwModule(I2C_HwConfigType* HwConfig);
+extern Std_ReturnType sI2C_MasterTxData(I2C_HwType ModuleNo,I2C_DataBufferType* DataBufferPtr,
+		I2C_NumberOfDataType noOfBytesRemaining,uint16_t SlaveAddress);
+extern const I2C_HwConfigType I2C_HwConfig0[NO_OF_HW_CONFIGURED];
+
+/** Pin Definition I2C 1
+ * PB6 - I2C1_SCL
+ * PB7 - I2C1_SDA
+ * */
+
+uint8_t myName[] = "Michael Jihan";
+
+void delay()
+{
+	for(uint32_t j =0; j<2; j++)
+	{
+		for(uint32_t i =0; i<500000;)
+			{
+			i++;
+			}
+	}
+
+}
+
 int main(void)
 {
+	Std_ReturnType returnValue = E_NOT_OK;
+
+	RCC_Init(&RCC_Config0);
+	Port_Init (&Port_Config0);
+
+	while(1)
+	{
+		if(Dio_ReadChannel(GPIO_A_PIN_0) == 0x1U)
+		{
+			returnValue = sI2C_InitHwModule((I2C_HwConfigType*)I2C_HwConfig0);
+			CHECK_RETURN_VALUE(returnValue);
+
+			returnValue = sI2C_MasterTxData(I2C_HwConfig0[0U].ModuleNo,(I2C_DataBufferType*)myName,strlen(myName),0x68);
+			CHECK_RETURN_VALUE(returnValue);
+
+			delay();
+		}
+	}
+
 	for(;;);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

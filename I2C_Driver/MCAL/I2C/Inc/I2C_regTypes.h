@@ -54,21 +54,6 @@ typedef union I2C_CR2_Tag
 	uint16_t R;
 }I2C_CR2_Type;
 
-typedef union I2C_CR2_Tag
-{
-	struct {
-		uint16_t FREQ:6;
-		uint16_t reserved1:2;
-		uint16_t ITERREN:1;
-		uint16_t ITEVTEN:1;
-		uint16_t ITBUFEN:1;
-		uint16_t DMAEN:1;
-		uint16_t LAST:1;
-		uint16_t reserved2:3;
-	}B;
-	uint16_t R;
-}I2C_CR2_Type;
-
 typedef union I2C_OAR1_Tag
 {
 	struct {

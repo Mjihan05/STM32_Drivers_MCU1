@@ -11,6 +11,13 @@
 #include "Reg_Macros.h"
 #include "I2C_PbCfg.h"
 
+uint32_t I2C_BaseAddress[TOTAL_NO_OF_I2C_HW_UNIT] =
+{
+	I2C_1_BASE_ADDRESS,
+	I2C_2_BASE_ADDRESS,
+	I2C_3_BASE_ADDRESS
+};
+
 const I2C_HwConfigType I2C_HwConfig0[NO_OF_HW_CONFIGURED] =
 {
 	{
