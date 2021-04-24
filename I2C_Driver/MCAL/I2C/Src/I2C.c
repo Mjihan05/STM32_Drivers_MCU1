@@ -269,7 +269,7 @@ static void sI2C_Clk_Enable(I2C_HwType moduleNo)
 }
 
 /*static*/ Std_ReturnType sI2C_MasterTxData(I2C_HwType ModuleNo,I2C_DataBufferType* DataBufferPtr,
-										I2C_NumberOfDataType noOfBytesRemaining,uint16_t SlaveAddress)
+									I2C_NumberOfDataType noOfBytesRemaining,uint16_t SlaveAddress,Bool RepeatedStart)
 {
 	volatile  I2C_RegTypes * pReg = 0U;
 	pReg = (I2C_RegTypes *)I2C_BaseAddress[ModuleNo];
@@ -286,7 +286,7 @@ static void sI2C_Clk_Enable(I2C_HwType moduleNo)
 	while(sI2C_GetSR1Status(ModuleNo,I2C_START_BIT_GENERATED) != TRUE);
 
 	/** Send the Address of the Slave */
-	/** Set the R/W bit to indicate Write mode */
+	/** Clear the R/W bit to indicate Write mode */
 	SlaveAddress = (SlaveAddress << 1U) | WRITE_MODE;
 	REG_WRITE32(&pReg->DR.R,(uint8_t)(SlaveAddress));
 	/** Check if address Tx is completed */
@@ -307,10 +307,13 @@ static void sI2C_Clk_Enable(I2C_HwType moduleNo)
 	while(sI2C_GetSR1Status(ModuleNo,I2C_TX_DATA_REGISTER_EMPTY) != TRUE);
 	while(sI2C_GetSR1Status(ModuleNo,I2C_BYTE_TRANSFER_FINISHED) != TRUE);
 
-	/** Generate a STOP condition  */
-	REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,9U),(SET_BIT(9U)));
-	/** Check if STOP bit generation is completed NO NEED FOR THIS */
-	//while(sI2C_GetSR1Status(ModuleNo,I2C_STOP_CONDITION_DETECTED) != TRUE);
+	/** Generate a STOP condition or Repeated START */
+	if(RepeatedStart == STD_OFF)
+	{
+		REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,9U),(SET_BIT(9U)));
+		/** Check if STOP bit generation is completed NO NEED FOR THIS */
+		//while(sI2C_GetSR1Status(ModuleNo,I2C_STOP_CONDITION_DETECTED) != TRUE);
+	}
 
 	/** Disable the Peripheral */
 	REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,0U),(CLEAR_BIT(0U)));
@@ -319,7 +322,70 @@ static void sI2C_Clk_Enable(I2C_HwType moduleNo)
 
 }
 
+/**
+ * 1. To Receive data we first send the address with the read bit enabled.
+ * 2. we wait for the byte to be recieved read it and ACK it.
+ * 3. if there is only 1 byte dont ACK as we need to NACK to end communication.
+ * 4. if more than 1 byte then disable ACK when length is 2.
+ * */
+/*static*/ Std_ReturnType sI2C_MasterRxData(I2C_HwType ModuleNo,I2C_DataBufferType* DataBufferPtr,
+		I2C_NumberOfDataType noOfBytesRemaining,uint16_t SlaveAddress,Bool RepeatedStart)
+{
+	volatile  I2C_RegTypes * pReg = 0U;
+	pReg = (I2C_RegTypes *)I2C_BaseAddress[ModuleNo];
 
+	/** Enable the Peripheral */
+	REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,0U),(SET_BIT(0U)));
+
+	/** Enable ACK mode  */
+	REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,10U),SET_BIT(10U));
+
+	/** Generate a START condition  */
+	REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,8U),(SET_BIT(8U)));
+	/** Check if Start bit generation is completed */
+	while(sI2C_GetSR1Status(ModuleNo,I2C_START_BIT_GENERATED) != TRUE);
+
+	/** Send the Address of the Slave */
+	/** Set the R/W bit to indicate Read mode */
+	SlaveAddress = (SlaveAddress << 1U) | READ_MODE;
+	REG_WRITE32(&pReg->DR.R,(uint8_t)(SlaveAddress));
+	/** Check if address Tx is completed */
+	while((sI2C_GetSR1Status(ModuleNo,I2C_ADDRESS_SENT)) != TRUE);
+	REG_READ16(&pReg->SR1.R);	/** Dummy read to clear ADDR in SR1 */
+	REG_READ16(&pReg->SR2.R);	/** Dummy read to clear ADDR in SR1 */
+
+	/** Tx 1 byte of data until buffer is empty */
+	while(noOfBytesRemaining > 0U)
+	{
+		if(noOfBytesRemaining < 2U)
+		{
+			/** Disable ACKing */
+			REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,10U),CLEAR_BIT(10U));
+		}
+		while(sI2C_GetSR1Status(ModuleNo,I2C_RX_DATA_REGISTER_NOT_EMPTY) != TRUE);
+		(*DataBufferPtr) = (uint8_t)(REG_READ16(&pReg->DR.R));
+		DataBufferPtr++;
+		noOfBytesRemaining--;
+	}
+
+	/** Wait for RXNE and BTF bit to SET which indicates completion */
+	while(sI2C_GetSR1Status(ModuleNo,I2C_RX_DATA_REGISTER_NOT_EMPTY) == TRUE);
+	//while(sI2C_GetSR1Status(ModuleNo,I2C_BYTE_TRANSFER_FINISHED) != TRUE); Since for last byte NACK is received --> The BTF bit is not set after a NACK reception
+
+	/** Generate a STOP condition or Repeated START */
+	if(RepeatedStart == STD_OFF)
+	{
+		REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,9U),(SET_BIT(9U)));
+	}
+
+	/** Enable ACK mode  */
+	REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,10U),SET_BIT(10U));
+
+	/** Disable the Peripheral */
+	REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,0U),(CLEAR_BIT(0U)));
+
+	return (Std_ReturnType)E_OK;
+}
 
 
 
