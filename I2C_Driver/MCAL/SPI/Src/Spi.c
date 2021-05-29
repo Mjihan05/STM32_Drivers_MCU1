@@ -108,12 +108,14 @@ void Spi_Init (const Spi_ConfigType* ConfigPtr)
 
 	volatile  SPI_RegTypes * pReg = 0U;
 
+#if ((SPI_CHANNEL_BUFFERS_ALLOWED == 0U) || (SPI_CHANNEL_BUFFERS_ALLOWED == 2U))
 	/** Initialise internal Buffers for channels using IB */
 	if((sSpi_AllocateIbMemory()) == E_NOT_OK)
 	{
 		/** NO MEMORY FOUND */
 		/** TODO - Report DET Error */
 	}
+#endif /** #if ((SPI_CHANNEL_BUFFERS_ALLOWED == 0U) || (SPI_CHANNEL_BUFFERS_ALLOWED == 2U)) */
 
 	for(loopItr0 = 0U; loopItr0 < NO_OF_JOBS_CONFIGURED; loopItr0++ )
 	{

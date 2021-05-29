@@ -17,8 +17,31 @@
 
 #define NO_OF_HW_CONFIGURED 		(1U)
 
+/** LEVEL 0, Simple Synchronous I2C Handler/Driver
+ *  LEVEL 1, Basic Asynchronous I2C Handler/Driver
+ *  LEVEL 2, Enhanced (Synchronous/Asynchronous) I2C Handler/Driver */
+#define I2C_LEVEL_DELIVERED 		(0U)
+
+/** Usage 0: the SPI Handler/Driver manages only Internal Buffers.
+ 	Usage 1: the SPI Handler/Driver manages only External Buffers.
+ 	Usage 2: the SPI Handler/Driver manages both buffers types. */
+#define I2C_CHANNEL_BUFFERS_ALLOWED (2U)
+
+
+#define EOL (0xFFU)
+
+typedef uint8_t I2C_ChannelType;
+typedef uint8_t I2C_JobType;
+typedef uint8_t I2C_SequenceType;
 typedef uint8_t I2C_DataBufferType;
 typedef uint16_t I2C_NumberOfDataType;
+
+/** Buffer used by the I2C Hw */
+typedef enum
+{
+	EN_INTERNAL_BUFFER,
+	EN_EXTERNAL_BUFFER
+}I2C_BufferType;
 
 /** I2C Hw units available in STM32 */
 typedef enum
@@ -83,5 +106,45 @@ typedef struct
 	uint32_t ClkSpeed;
 	I2C_FMDutyCycleType FastModeDutyCycle;
 }I2C_HwConfigType;
+
+/** Structure to hold Channel properties */
+typedef struct
+{
+	I2C_ChannelType ChannelId;
+	I2C_BufferType BufferUsed; 					/** Internal or External , STM32 has internal buffers*/
+	uint8_t NoOfBuffersUsed;  					/** for IB Channels (at least 1) or it is the maximum of data for EB Channels (a value of 0 makes no sense) */
+	I2C_DataBufferType DefaultTransmitValue; 	/** Default Value to be used when Dataptr is NULL, 8-bit value max */
+}I2C_ChannelConfigType;
+
+typedef struct
+{
+	I2C_JobType JobId;
+	I2C_HwConfigType* HwConfig;		/** I2C Hw used */
+	uint8_t Priority;				/** Priority from 0 lower to 3 highest */
+	uint32_t TimebetweenChannel;  	/** Delay between execution of channels in  1/SysClk (us) */
+	void (*I2CJobEndNotification)();
+	I2C_ChannelType ChannelAssignment[NO_OF_CHANNELS_CONFIGURED];
+}I2C_JobConfigType;
+
+typedef struct
+{
+	I2C_SequenceType SequenceId;
+	uint8_t I2CInterruptible;				  /** is the Sequence Interruptible */
+	void (*I2CSequenceEndNotification)();
+	I2C_JobType Jobs[NO_OF_JOBS_CONFIGURED];  /** Available jobs in sequence */
+}I2C_SequenceConfigType;
+
+/** Structure shall contain the initialisation data for the I2C Handler*/
+typedef struct
+{
+/**
+ *  MCU dependent properties for I2C HW units
+ Definition of Channels
+ Definition of Jobs
+ Definition of Sequences⌋*/
+	const I2C_ChannelConfigType* Channel;
+	const I2C_JobConfigType* Job;
+	const I2C_SequenceConfigType* Sequence;
+}I2C_ConfigType;
 
 #endif /* I2C_CFG_I2C_PBCFG_H_ */

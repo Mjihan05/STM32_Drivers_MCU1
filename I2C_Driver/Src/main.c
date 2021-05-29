@@ -40,12 +40,12 @@ uint8_t myRxBuffer[30];
 
 void delay()
 {
-	for(uint32_t j =0; j<2; j++)
+	for(volatile uint32_t j =0; j<2; j++)
 	{
-		for(uint32_t i =0; i<500000;)
-			{
-			i++;
-			}
+		for(volatile uint32_t i =0; i<500000;)
+		{
+			  i++;
+		}
 	}
 
 }

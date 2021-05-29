@@ -90,9 +90,120 @@
 
 
 I2C_GlobalParams GlobalParams;
+static const I2C_ConfigType* GlobalConfigPtr;
+
+
+/********************** Global Functions ******************************/
+
+void I2C_Init (const I2C_ConfigType* ConfigPtr)
+{
+	if(ConfigPtr == NULL_PTR)
+	{
+		sI2C_SetI2CStatus (I2C_UNINIT);
+		/** TODO - Report DET error here */
+		return;
+	}
+
+	GlobalConfigPtr = ConfigPtr;
+
+	/*volatile  I2C_RegTypes * pReg = 0U;*/
+
+	/** Initialise internal Buffers for channels using IB */
+#if ((I2C_CHANNEL_BUFFERS_ALLOWED == 0U) || (I2C_CHANNEL_BUFFERS_ALLOWED == 2U))
+	if((sI2C_AllocateIbMemory()) == E_NOT_OK)
+	{
+		/** NO MEMORY FOUND */
+		/** TODO - Report DET Error */
+	}
+#endif /** ((I2C_CHANNEL_BUFFERS_ALLOWED == 0U) || (I2C_CHANNEL_BUFFERS_ALLOWED == 2U)) */
+
+	for(loopItr0 = 0U; loopItr0 < NO_OF_JOBS_CONFIGURED; loopItr0++ )
+	{
+		JobConfig = (Spi_JobConfigType*)(&ConfigPtr->Job[loopItr0]);
+		moduleNo = sSpi_getModuleNo(JobConfig);
+		pReg = (SPI_RegTypes *)Spi_BaseAddress[moduleNo];
+
+		/** Turn on the clock for the module */
+		sSpi_Clk_Enable(moduleNo);
+
+		/** Configure the Baudrate */
+		preScaler = sSpi_GetBaudratePrescaler(JobConfig);
+		REG_RMW32(&pReg->CR1.R,MASK_BITS(0x7U,3U),(preScaler)<<(3U));
+
+		/** Select the Data frame format to be 16 bit. Depending on the channels DataFrame SW will handle frame formatting  */
+		REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,11U),SET_BIT(11U));
+
+		/** Select Sw/Hw Chip select functionality */
+		if((JobConfig->CsFunctionUsed) == EN_CS_SW_HANDLING)
+		{
+			REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,9U),SET_BIT(9U));
+			/** Set the SSI BIT */
+			REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,8U),SET_BIT(8U));
+			/** Set the SSOE Bit  */
+			REG_RMW32(&pReg->CR2.R,MASK_BITS(0x1U,2U),SET_BIT(2U));
+		}
+		else if((JobConfig->CsFunctionUsed) == EN_CS_HW_HANDLING)
+		{
+			REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,9U),CLEAR_BIT(9U));
+			/** Set the SSOE Bit  */
+			REG_RMW32(&pReg->CR2.R,MASK_BITS(0x1U,2U),SET_BIT(2U));
+		}
+		else /** ((JobConfig->CsFunctionUsed) == EN_CS_NOT_USED)  */
+		{
+			REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,9U),SET_BIT(9U));
+			/** Set the SSI BIT */
+			REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,8U),SET_BIT(8U));
+			/** Clear the SSOE Bit  */
+			REG_RMW32(&pReg->CR2.R,MASK_BITS(0x1U,2U),CLEAR_BIT(2U));
+		}
+
+		/** Configure clock polarity and Clock phase  */
+		REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,1U),(ConfigPtr->Job->ShiftClkIdleLevel)<<1U);
+		REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,0U),(ConfigPtr->Job->DataShiftonEdge));
+
+		/** Enable Polling Mode for the HW unit */
+#if(SPI_LEVEL_DELIVERED == (2U))
+		REG_RMW32(&pReg->CR2.R,MASK_BITS(0x7U,5U),(0U)<<5U);
+		Spi_SetAsyncMode (SPI_POLLING_MODE);
+		GlobalParams.currentHw[moduleNo].currentChannel = EOL;
+		GlobalParams.currentHw[moduleNo].dataRemaining = 0U;
+#endif
+		/** Select the device as master */
+		REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,2U),SET_BIT(2U));
+
+		GlobalParams.SpiStatus = SPI_IDLE;
+	}
+
+	/** Initialise Job Queue with EOL values */
+	for(loopItr0 = 0U; loopItr0 < QUEUE_SIZE; loopItr0++ )
+	{
+		GlobalParams.SpiQueuedJobsBuffer[loopItr0] = EOL;
+	}
+
+	/** Initialise the Result for Sequence and jobs  */
+	for(loopItr0 = 0U; loopItr0 < NO_OF_JOBS_CONFIGURED; loopItr0++ )
+	{
+		sSpi_SetJobResult(loopItr0,SPI_JOB_OK);
+	}
+	for(loopItr0 = 0U; loopItr0 < NO_OF_SEQUENCES_CONFIGURED; loopItr0++ )
+	{
+		sSpi_SetSeqResult(loopItr0,SPI_SEQ_OK);
+		/** Also initialise the pending sequence buffer */
+		GlobalParams.BufferIndex[loopItr0].sequenceId = EOL;
+	}
+
+	/** Initialise Sequence queue */
+	GlobalParams.NextSequence = EOL;
+	//gu8_SpiInitStatus = MODULE_INITIALIZED;
+}
 
 
 /********************** Local Functions *****************************/
+
+static void sI2C_SetI2CStatus (I2C_StatusType Status)
+{
+	GlobalParams.I2CStatus = Status;
+}
 
 #if 0
 static I2C_HwType sI2C_getModuleNo (const I2C_JobConfigType* JobConfig)
@@ -105,6 +216,53 @@ static I2C_HwType sI2C_getModuleNo (const I2C_JobConfigType* JobConfig)
 	//return (I2C_HwType)(JobConfig->HwUsed);
 }
 #endif
+
+static Std_ReturnType sI2C_AllocateIbMemory(void)
+{
+	uint8_t channelItr1 = 0U;
+	uint8_t bufferItr1 = 0U;
+	uint8_t bufferStart = 0U;
+	uint8_t bufferEnd = 0U;
+	Spi_ChannelConfigType* channelConfig = 0U;
+
+	for(channelItr1 = 0U; channelItr1 < NO_OF_CHANNELS_CONFIGURED; channelItr1++)
+	{
+		channelConfig = (Spi_ChannelConfigType*)(&GlobalConfigPtr->Channel[channelItr1]);
+		if(channelConfig->BufferUsed == EN_INTERNAL_BUFFER)
+		{
+			/** Allocate memory for both Tx and Rx Buffers  */
+			for(bufferItr1 = 0U; bufferItr1 < 2U; bufferItr1++)
+			{
+				bufferEnd = (bufferStart + channelConfig->NoOfBuffersUsed) -1U;
+
+				if((bufferEnd >= IB_BUFFERS_AVAILABLE) || (bufferStart >= IB_BUFFERS_AVAILABLE))
+				{
+					/** Memory Overflow */
+					return E_NOT_OK;
+				}
+
+				/** Memory found update the parameters */
+				if(bufferItr1 == 0U)
+				{
+					sIB_Config[channelItr1].RxBuffer.Start = bufferStart;
+					sIB_Config[channelItr1].RxBuffer.End = bufferEnd;
+					sIB_Config[channelItr1].RxBuffer.InUse = FALSE;
+				}
+				else /** bufferItr1 == 1U */
+				{
+					sIB_Config[channelItr1].TxBuffer.Start = bufferStart;
+					sIB_Config[channelItr1].TxBuffer.End = bufferEnd;
+					sIB_Config[channelItr1].TxBuffer.InUse = FALSE;
+				}
+				sIB_Config[channelItr1].ChannelId = channelItr1;
+
+				/** Update parameters for next iteration */
+				bufferStart = bufferEnd +1U;
+			}
+		}
+	}
+	return E_OK;
+}
 
 static uint8_t sI2C_getAPB1Freq (void)
 {
@@ -158,7 +316,7 @@ static void sI2C_Clk_Enable(I2C_HwType moduleNo)
 	}
 }
 
-/*static*/ Std_ReturnType sI2C_InitHwModule(I2C_HwConfigType* HwConfig)
+static Std_ReturnType sI2C_InitHwModule(I2C_HwConfigType* HwConfig)
 {
 	uint8_t apb1Freq = 0U;
 	uint16_t ccrValue = 0U;
@@ -268,7 +426,7 @@ static void sI2C_Clk_Enable(I2C_HwType moduleNo)
 
 }
 
-/*static*/ Std_ReturnType sI2C_MasterTxData(I2C_HwType ModuleNo,I2C_DataBufferType* DataBufferPtr,
+static Std_ReturnType sI2C_MasterTxData(I2C_HwType ModuleNo,I2C_DataBufferType* DataBufferPtr,
 									I2C_NumberOfDataType noOfBytesRemaining,uint16_t SlaveAddress,Bool RepeatedStart)
 {
 	volatile  I2C_RegTypes * pReg = 0U;
@@ -328,7 +486,7 @@ static void sI2C_Clk_Enable(I2C_HwType moduleNo)
  * 3. if there is only 1 byte dont ACK as we need to NACK to end communication.
  * 4. if more than 1 byte then disable ACK when length is 2.
  * */
-/*static*/ Std_ReturnType sI2C_MasterRxData(I2C_HwType ModuleNo,I2C_DataBufferType* DataBufferPtr,
+static Std_ReturnType sI2C_MasterRxData(I2C_HwType ModuleNo,I2C_DataBufferType* DataBufferPtr,
 		I2C_NumberOfDataType noOfBytesRemaining,uint16_t SlaveAddress,Bool RepeatedStart)
 {
 	volatile  I2C_RegTypes * pReg = 0U;
