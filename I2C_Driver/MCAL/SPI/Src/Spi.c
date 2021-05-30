@@ -463,11 +463,7 @@ Std_ReturnType Spi_SetupEB (Spi_ChannelType Channel,const Spi_DataBufferType* Sr
 	/** Configure the Length of the buffer*/
 	sExternalBuffer[Channel].length = Length;
 
-
-
 	return E_OK;
-
-
 }
 
 Spi_StatusType Spi_GetStatus (void)

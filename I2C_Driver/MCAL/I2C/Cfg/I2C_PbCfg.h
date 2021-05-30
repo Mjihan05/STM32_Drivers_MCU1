@@ -17,6 +17,10 @@
 
 #define NO_OF_HW_CONFIGURED 		(1U)
 
+#define NO_OF_CHANNELS_CONFIGURED	(2U)
+#define NO_OF_JOBS_CONFIGURED		(1U)
+#define NO_OF_SEQUENCES_CONFIGURED	(1U)
+
 /** LEVEL 0, Simple Synchronous I2C Handler/Driver
  *  LEVEL 1, Basic Asynchronous I2C Handler/Driver
  *  LEVEL 2, Enhanced (Synchronous/Asynchronous) I2C Handler/Driver */
@@ -26,6 +30,10 @@
  	Usage 1: the SPI Handler/Driver manages only External Buffers.
  	Usage 2: the SPI Handler/Driver manages both buffers types. */
 #define I2C_CHANNEL_BUFFERS_ALLOWED (2U)
+
+#if ((I2C_CHANNEL_BUFFERS_ALLOWED == 0U) || (I2C_CHANNEL_BUFFERS_ALLOWED == 2U))
+#define IB_BUFFERS_AVAILABLE (128U)	/** (1bytes*x) Reserve 128 Bytes for Internal Buffers */
+#endif /** ((I2C_CHANNEL_BUFFERS_ALLOWED == 0U) || (I2C_CHANNEL_BUFFERS_ALLOWED == 2U)) */
 
 
 #define EOL (0xFFU)
@@ -96,6 +104,22 @@ typedef enum
 	EN_I2C_FAST_MODE_DUTY_2,		/** tlow/thigh = 2  */
 	EN_I2C_FAST_MODE_DUTY_16_DIV_9  /** tlow/thigh = 16/9  */
 }I2C_FMDutyCycleType;
+
+#if ((I2C_CHANNEL_BUFFERS_ALLOWED == 0U) || (I2C_CHANNEL_BUFFERS_ALLOWED == 2U))
+/** Structure to hold the IB information // Only used for channel with buffer used as Internal */
+typedef struct
+{
+	uint8_t Start;
+	uint8_t End;
+	Bool InUse;
+}Ib_Type;
+typedef struct
+{
+	I2C_ChannelType ChannelId;
+	Ib_Type TxBuffer;
+	Ib_Type RxBuffer;
+}InternalBufferType;
+#endif /** ((I2C_CHANNEL_BUFFERS_ALLOWED == 0U) || (I2C_CHANNEL_BUFFERS_ALLOWED == 2U)) */
 
 typedef struct
 {
