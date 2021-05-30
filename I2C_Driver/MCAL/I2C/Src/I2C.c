@@ -266,29 +266,72 @@ Std_ReturnType I2C_SetupEB (I2C_ChannelType Channel,const I2C_DataBufferType* Sr
 	/** Configure the buffers */
 	if(SrcDataBufferPtr == NULL_PTR)
 	{
-		sExternalBuffer[Channel].TxBuffer = NULL_PTR;
+		GlobalParams.sExternalBuffer[Channel].TxBuffer = NULL_PTR;
 	}
 	else /** (SrcDataBufferPtr != NULL_PTR) */
 	{
-		sExternalBuffer[Channel].TxBuffer = (I2C_DataBufferType*)(SrcDataBufferPtr);
+		GlobalParams.sExternalBuffer[Channel].TxBuffer = (I2C_DataBufferType*)(SrcDataBufferPtr);
 	}
 
 	if(DesDataBufferPtr == NULL_PTR)
 	{
-		sExternalBuffer[Channel].RxBuffer = NULL_PTR;
+		GlobalParams.sExternalBuffer[Channel].RxBuffer = NULL_PTR;
 	}
 	else /** (SrcDataBufferPtr != NULL_PTR) */
 	{
-		sExternalBuffer[Channel].RxBuffer = DesDataBufferPtr;
+		GlobalParams.sExternalBuffer[Channel].RxBuffer = DesDataBufferPtr;
 	}
 
 	/** Configure the Length of the buffer*/
-	sExternalBuffer[Channel].length = Length;
+	GlobalParams.sExternalBuffer[Channel].length = Length;
 
 	return E_OK;
 }
 #endif /** ((I2C_CHANNEL_BUFFERS_ALLOWED == 0U) || (I2C_CHANNEL_BUFFERS_ALLOWED == 2U)) */
 
+#if((I2C_LEVEL_DELIVERED == (2U)) || (I2C_LEVEL_DELIVERED == (0U)))
+Std_ReturnType I2C_SyncTransmit (I2C_SequenceType Sequence)
+{
+	/** Check for module Init */
+	if((I2C_GetStatus()) == I2C_UNINIT)
+	{
+		return E_NOT_OK;
+	}
+
+	/** Parameter Checking */
+	if(Sequence >= NO_OF_SEQUENCES_CONFIGURED)
+	{
+		return E_NOT_OK;
+	}
+
+	/** if the sequence is already in pending state then return */
+	if(I2C_SeqResult[Sequence] == I2C_SEQ_PENDING)
+	{
+		return E_NOT_OK;
+	}
+
+	I2C_SequenceConfigType SequenceConfig = GlobalConfigPtr->Sequence[Sequence];
+	I2C_StatusType moduleStatus = I2C_GetStatus();
+
+	/** Put the Sequence in pending and start transmission of the sequence */
+	sI2C_SetI2CStatus(I2C_BUSY);
+	sI2C_SetSeqResult(Sequence,I2C_SEQ_PENDING);
+
+	I2C_JobType * jobPtr = &SequenceConfig.Jobs[0U];
+
+	while(*jobPtr != EOL)
+	{
+		sI2C_SetJobResult(*jobPtr,I2C_JOB_QUEUED);
+		jobPtr++;
+	}
+
+	sI2C_StartSyncTransmit(Sequence);
+
+	sI2C_SetI2CStatus(moduleStatus);
+
+	return E_OK;
+}
+#endif  /** ((I2C_LEVEL_DELIVERED == (2U)) || (I2C_LEVEL_DELIVERED == (0U))) */
 
 I2C_StatusType I2C_GetStatus (void)
 {
@@ -340,7 +383,7 @@ static void sI2C_SetJobResult(I2C_JobType Job,I2C_JobResultType Result)
 	I2C_JobResult[Job] = Result;
 }
 
-#if 0
+
 static I2C_HwType sI2C_getModuleNo (const I2C_JobConfigType* JobConfig)
 {
 	if(JobConfig == NULL_PTR)
@@ -348,9 +391,8 @@ static I2C_HwType sI2C_getModuleNo (const I2C_JobConfigType* JobConfig)
 		return 0xFF;
 	}
 
-	//return (I2C_HwType)(JobConfig->HwUsed);
+	return (I2C_HwType)(JobConfig->HwConfig->ModuleNo);
 }
-#endif
 
 /** Initialise internal Buffers for channels using IB */
 #if ((I2C_CHANNEL_BUFFERS_ALLOWED == 0U) || (I2C_CHANNEL_BUFFERS_ALLOWED == 2U))
@@ -431,6 +473,18 @@ static Bool sI2C_GetSR2Status(I2C_HwType en_moduleNo,I2C_Status2Type flag)
 		return TRUE;
 	}
 	return FALSE;
+}
+
+static I2C_StatusType sI2C_GetHwStatus(I2C_HwType en_moduleNo)
+{
+	volatile  I2C_RegTypes * pReg = (I2C_RegTypes *)I2C_BaseAddress[en_moduleNo];
+	/* uint8_t u8_statusFlag = REG_READ32(&pReg->SR.R); */
+
+	if((sI2C_GetSR2Status(en_moduleNo,I2C_BUS_BUSY)) == TRUE)
+	{
+		return I2C_BUSY;
+	}
+	return I2C_IDLE;
 }
 
 static void sI2C_Clk_Enable(I2C_HwType moduleNo)
@@ -610,10 +664,10 @@ static Std_ReturnType sI2C_MasterTxData(I2C_HwType ModuleNo,I2C_DataBufferType* 
 		REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,9U),(SET_BIT(9U)));
 		/** Check if STOP bit generation is completed NO NEED FOR THIS */
 		//while(sI2C_GetSR1Status(ModuleNo,I2C_STOP_CONDITION_DETECTED) != TRUE);
-	}
 
-	/** Disable the Peripheral */
-	REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,0U),(CLEAR_BIT(0U)));
+		/** Disable the Peripheral */
+		REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,0U),(CLEAR_BIT(0U)));
+	}
 
 	return (Std_ReturnType)E_OK;
 
@@ -684,7 +738,147 @@ static Std_ReturnType sI2C_MasterRxData(I2C_HwType ModuleNo,I2C_DataBufferType* 
 	return (Std_ReturnType)E_OK;
 }
 
+#if((I2C_LEVEL_DELIVERED == (2U)) || (I2C_LEVEL_DELIVERED == (0U)))
+static void sI2C_StartSyncTransmit(I2C_SequenceType Sequence)
+{
+	I2C_SequenceConfigType* sequenceConfig = (I2C_SequenceConfigType*)(&GlobalConfigPtr->Sequence[Sequence]);
+	I2C_JobType* jobPtr = (I2C_JobType*)(&sequenceConfig->Jobs[0U]);
+	I2C_JobConfigType* jobConfig = 0U;
+	I2C_StatusType en_moduleNo = 0U;
 
+	while((*jobPtr) != EOL)
+	{
+		jobConfig = (I2C_JobConfigType*)(&GlobalConfigPtr->Job[*jobPtr]);
+		en_moduleNo = sI2C_getModuleNo(jobConfig);
+
+		/** Wait for the Hw to get free */
+		while(sI2C_GetHwStatus(en_moduleNo) == I2C_BUSY);
+
+		/** Start the job */
+		sI2C_StartJob(jobConfig);
+
+		jobPtr++;
+	}
+
+	/** Now that all the jobs have been executed call the notification function */
+	sI2C_SetSeqResult(sequenceConfig->SequenceId,I2C_SEQ_OK);
+	/** Call Notification function */
+	sequenceConfig->I2CSequenceEndNotification();
+}
+
+static void sI2C_StartJob(I2C_JobConfigType* JobConfig)
+{
+	uint8_t jobId = JobConfig->JobId;
+	uint8_t channelId = 0U;
+	uint8_t loopItr0 = 0U;
+	uint8_t loopItr1 = 0U;
+	volatile uint32_t loopItr2 = 0U;
+	uint16_t u16_data = 0U;
+	volatile uint16_t u16_statusFlag = 0U;
+	I2C_HwType en_moduleNo = 0U;
+	I2C_ChannelConfigType* channelConfig = 0U;
+
+	volatile  I2C_RegTypes * pReg = 0U;
+
+	/** Update the Job status */
+	sI2C_SetJobResult(jobId,I2C_JOB_PENDING);
+
+	/** Get I2C Hw ID */
+	en_moduleNo = sI2C_getModuleNo(JobConfig);
+	pReg = (I2C_RegTypes *)I2C_BaseAddress[en_moduleNo];
+
+	/** Start Channels execution */
+	while(JobConfig->ChannelAssignment[loopItr0] != EOL)
+	{
+		channelId = JobConfig->ChannelAssignment[loopItr0];
+		channelConfig = (I2C_ChannelConfigType*)(&GlobalConfigPtr->Channel[channelId]);
+
+		/** Configure the LSBFIRST bit*/
+		/** Check if the module is busy */
+		while(sI2C_GetHwStatus(en_moduleNo) == I2C_BUSY);
+
+		if(channelConfig->BufferUsed == EN_INTERNAL_BUFFER)
+		{
+			for(loopItr1 = 0U; loopItr1<(channelConfig->NoOfBuffersUsed); loopItr1++)
+			{
+				/** Check if Tx buffer is empty and write data*/
+				while( (sI2C_GetSR1Status(en_moduleNo,I2C_TX_DATA_REGISTER_EMPTY)) != TRUE );
+				/** TODO - Implement timeout */
+
+				if(GlobalParams.sIB_Config[channelId].TxBuffer.InUse == FALSE)
+				{
+					/** Transmit the Default Value */
+					if((loopItr1+1U) != (channelConfig->NoOfBuffersUsed))
+					{
+						sI2C_MasterTxData(en_moduleNo,channelConfig->DefaultTransmitValue,
+																(I2C_NumberOfDataType)1U,channelConfig->SlaveAddress,TRUE);
+					}
+					else /** No repeated Start */
+					{
+						sI2C_MasterTxData(en_moduleNo,channelConfig->DefaultTransmitValue,
+																(I2C_NumberOfDataType)1U,channelConfig->SlaveAddress,FALSE);
+					}
+				}
+				else /** (sIB_Config[channelId].BufferInUse == TRUE) */
+				{
+					uint8_t IB_index = GlobalParams.sIB_Config[channelId].TxBuffer.Start+loopItr1;
+
+					if((loopItr1+1U) != (channelConfig->NoOfBuffersUsed))
+					{
+						sI2C_MasterTxData(en_moduleNo,sInternalBuffer[IB_index],(I2C_NumberOfDataType)1U,
+													channelConfig->SlaveAddress,TRUE);
+					}
+					else  /** No repeated Start */
+					{
+						sI2C_MasterTxData(en_moduleNo,sInternalBuffer[IB_index],(I2C_NumberOfDataType)1U,
+																			channelConfig->SlaveAddress,FALSE);
+					}
+				}
+
+				/** Give delay between the channels */
+				for(loopItr2 = 0 ; loopItr2 < (JobConfig->TimebetweenChannel); loopItr2++);
+			}
+		}
+
+		else if(channelConfig->BufferUsed == EN_EXTERNAL_BUFFER)
+		{
+			if(GlobalParams.sExternalBuffer[channelId].TxBuffer == NULL_PTR)
+			{
+				for(loopItr1 = 0U; loopItr1<(sExternalBuffer[channelId].length); loopItr1++)
+				{
+					if((loopItr1+1U) != (channelConfig->NoOfBuffersUsed))
+					{
+						sI2C_MasterTxData(en_moduleNo,channelConfig->DefaultTransmitValue,
+								(I2C_NumberOfDataType)1U,channelConfig->SlaveAddress,TRUE);
+					}
+					else  /** No repeated Start */
+					{
+						sI2C_MasterTxData(en_moduleNo,channelConfig->DefaultTransmitValue,
+								(I2C_NumberOfDataType)1U,channelConfig->SlaveAddress,FALSE);
+					}
+				}
+			}
+			else /** (sExternalBuffer[channelId].TxBuffer != NULL_PTR) */
+			{
+				for(loopItr1 = 0U; loopItr1<(sExternalBuffer[channelId].length); loopItr1++)
+				{
+					sI2C_MasterTxData(en_moduleNo,(I2C_DataBufferType*)sExternalBuffer[channelId].TxBuffer[0U],
+													(I2C_NumberOfDataType)(sExternalBuffer[channelId].length),
+													channelConfig->SlaveAddress,FALSE);
+				}
+			}
+		}
+
+		/** Next Channel */
+		loopItr0++;
+	}
+
+	sI2C_SetJobResult(JobConfig->JobId,I2C_JOB_OK);
+
+	/** Call the notification function */
+	JobConfig->I2CJobEndNotification();
+}
+#endif /*#if((I2C_LEVEL_DELIVERED == (2U)) || (I2C_LEVEL_DELIVERED == (0U)))*/
 
 
 

@@ -125,7 +125,7 @@ typedef struct
 {
 	I2C_HwType ModuleNo;
 	I2C_SlaveAddressType SlaveAddressMode;
-	uint16_t SlaveAddress;
+	uint16_t OwnAddress;
 	I2C_MasterModeType MasterMode;
 	uint32_t ClkSpeed;
 	I2C_FMDutyCycleType FastModeDutyCycle;
@@ -135,6 +135,7 @@ typedef struct
 typedef struct
 {
 	I2C_ChannelType ChannelId;
+	uint8_t SlaveAddress;
 	I2C_BufferType BufferUsed; 					/** Internal or External , STM32 has internal buffers*/
 	uint8_t NoOfBuffersUsed;  					/** for IB Channels (at least 1) or it is the maximum of data for EB Channels (a value of 0 makes no sense) */
 	I2C_DataBufferType DefaultTransmitValue; 	/** Default Value to be used when Dataptr is NULL, 8-bit value max */
