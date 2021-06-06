@@ -63,4 +63,27 @@ typedef struct
 #endif /** ((I2C_CHANNEL_BUFFERS_ALLOWED == 1U) || (I2C_CHANNEL_BUFFERS_ALLOWED == 2U)) */
 }I2C_GlobalParams;
 
+/** I2c Configuration structure */
+extern I2C_ConfigType I2C_Config0;
+
+/** Global Functions available */
+void I2C_Init (const I2C_ConfigType* ConfigPtr);
+I2C_StatusType I2C_GetStatus (void);
+I2C_JobResultType I2C_GetJobResult (I2C_JobType Job);
+I2C_SeqResultType I2C_GetSequenceResult (I2C_SequenceType Sequence);
+
+#if ((I2C_CHANNEL_BUFFERS_ALLOWED == 0U) || (I2C_CHANNEL_BUFFERS_ALLOWED == 2U))
+Std_ReturnType I2C_WriteIB (I2C_ChannelType Channel,const I2C_DataBufferType* DataBufferPtr);
+Std_ReturnType I2C_ReadIB (I2C_ChannelType Channel,I2C_DataBufferType* DataBufferPointer);
+#endif /** ((I2C_CHANNEL_BUFFERS_ALLOWED == 0U) || (I2C_CHANNEL_BUFFERS_ALLOWED == 2U)) */
+
+#if ((I2C_CHANNEL_BUFFERS_ALLOWED == 1U) || (I2C_CHANNEL_BUFFERS_ALLOWED == 2U))
+Std_ReturnType I2C_SetupEB (I2C_ChannelType Channel,const I2C_DataBufferType* SrcDataBufferPtr,
+							I2C_DataBufferType* DesDataBufferPtr,I2C_NumberOfDataType Length);
+#endif /** ((I2C_CHANNEL_BUFFERS_ALLOWED == 1U) || (I2C_CHANNEL_BUFFERS_ALLOWED == 2U)) */
+
+#if((I2C_LEVEL_DELIVERED == (2U)) || (I2C_LEVEL_DELIVERED == (0U)))
+Std_ReturnType I2C_SyncTransmit (I2C_SequenceType Sequence);
+#endif /** ((I2C_LEVEL_DELIVERED == (2U)) || (I2C_LEVEL_DELIVERED == (0U))) */
+
 #endif /* I2C_INC_I2C_H_ */

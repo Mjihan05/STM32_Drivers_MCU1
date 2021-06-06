@@ -39,7 +39,7 @@ typedef uint8_t Spi_DataBufferType;
 typedef uint16_t Spi_NumberOfDataType;
 typedef uint8_t Spi_ChannelType;
 typedef uint16_t Spi_JobType;
-typedef uint8_t Spi_SequenceType;
+typedef uint16_t Spi_SequenceType;
 typedef uint8_t Spi_HWUnitType;
 
 /** Buffer used by the SPI Hw */

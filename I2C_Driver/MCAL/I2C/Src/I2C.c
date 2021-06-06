@@ -99,18 +99,45 @@ I2C_SeqResultType I2C_SeqResult[NO_OF_SEQUENCES_CONFIGURED];
 static I2C_DataBufferType sInternalBuffer[IB_BUFFERS_AVAILABLE]; /** Reserve IB_BUFFERS_AVAILABLE Bytes for Internal Buffers */
 #endif /** ((I2C_CHANNEL_BUFFERS_ALLOWED == 0U) || (I2C_CHANNEL_BUFFERS_ALLOWED == 2U)) */
 
+/********************** Local Function Prototypes *********************/
+static void sI2C_SetStatus (I2C_StatusType Status);
+static void sI2C_SetSeqResult (I2C_SequenceType Sequence,I2C_SeqResultType Result);
+static void sI2C_SetJobResult(I2C_JobType Job,I2C_JobResultType Result);
+static I2C_HwType sI2C_getModuleNo (const I2C_JobConfigType* JobConfig);
+static uint8_t sI2C_getAPB1Freq (void);
+static Bool sI2C_GetSR1Status(I2C_HwType en_moduleNo,I2C_Status1Type flag);
+static I2C_StatusType sI2C_GetHwStatus(I2C_HwType en_moduleNo);
+static void sI2C_Clk_Enable(I2C_HwType moduleNo);
+static Std_ReturnType sI2C_InitHwModule(I2C_HwConfigType* HwConfig);
+static Std_ReturnType sI2C_MasterTxData(I2C_HwType ModuleNo,I2C_DataBufferType* DataBufferPtr,
+		I2C_NumberOfDataType noOfBytesRemaining,uint16_t SlaveAddress,Bool RepeatedStart);
+static Std_ReturnType sI2C_MasterRxData(I2C_HwType ModuleNo,I2C_DataBufferType* DataBufferPtr,
+		I2C_NumberOfDataType noOfBytesRemaining,uint16_t SlaveAddress,Bool RepeatedStart);
+
+#if ((I2C_CHANNEL_BUFFERS_ALLOWED == 0U) || (I2C_CHANNEL_BUFFERS_ALLOWED == 2U))
+static Std_ReturnType sI2C_AllocateIbMemory(void);
+#endif /** ((I2C_CHANNEL_BUFFERS_ALLOWED == 0U) || (I2C_CHANNEL_BUFFERS_ALLOWED == 2U)) */
+
+#if((I2C_LEVEL_DELIVERED == (2U)) || (I2C_LEVEL_DELIVERED == (0U)))
+static void sI2C_StartSyncTransmit(I2C_SequenceType Sequence);
+static void sI2C_StartJob(I2C_JobConfigType* JobConfig);
+#endif /** ((I2C_LEVEL_DELIVERED == (2U)) || (I2C_LEVEL_DELIVERED == (0U))) */
+
 /********************** Global Functions ******************************/
 
 void I2C_Init (const I2C_ConfigType* ConfigPtr)
 {
 	if(ConfigPtr == NULL_PTR)
 	{
-		sI2C_SetI2CStatus (I2C_UNINIT);
+		sI2C_SetStatus (I2C_UNINIT);
 		/** TODO - Report DET error here */
 		return;
 	}
 
 	GlobalConfigPtr = ConfigPtr;
+
+	uint8_t loopItr0 = 0U;
+	I2C_JobConfigType* JobConfig = 0U;
 
 	/*volatile  I2C_RegTypes * pReg = 0U;*/
 
@@ -128,7 +155,7 @@ void I2C_Init (const I2C_ConfigType* ConfigPtr)
 		JobConfig = (I2C_JobConfigType*)(&ConfigPtr->Job[loopItr0]);
 
 		/** Initialise the Hw module assigned to the job */
-		sI2C_InitHwModule(((I2C_HwConfigType*)&JobConfig->HwConfig));
+		sI2C_InitHwModule(((I2C_HwConfigType*)JobConfig->HwConfig));
 
 		/** Enable Polling Mode for the HW unit */
 #if(SPI_LEVEL_DELIVERED == (2U))
@@ -140,10 +167,12 @@ void I2C_Init (const I2C_ConfigType* ConfigPtr)
 	}
 
 	/** Initialise Job Queue with EOL values */
+#if 0
 	for(loopItr0 = 0U; loopItr0 < QUEUE_SIZE; loopItr0++ )
 	{
 		GlobalParams.SpiQueuedJobsBuffer[loopItr0] = EOL;/** TODO - FIx this */
 	}
+#endif
 
 	/** Initialise the Result for Sequence and jobs  */
 	for(loopItr0 = 0U; loopItr0 < NO_OF_JOBS_CONFIGURED; loopItr0++ )
@@ -154,13 +183,13 @@ void I2C_Init (const I2C_ConfigType* ConfigPtr)
 	{
 		sI2C_SetSeqResult(loopItr0,I2C_SEQ_OK);
 		/** Also initialise the pending sequence buffer */
-		GlobalParams.BufferIndex[loopItr0].sequenceId = EOL; /** TODO - FIx this */
+		//GlobalParams.BufferIndex[loopItr0].sequenceId = EOL; /** TODO - FIx this */
 	}
 
 	/** Initialise Sequence queue */
-	GlobalParams.NextSequence = EOL;/** TODO - FIx this */
+	//GlobalParams.NextSequence = EOL;/** TODO - FIx this */
 
-	sI2C_SetI2CStatus(I2C_IDLEStatus);
+	sI2C_SetStatus(I2C_IDLE);
 }
 
 #if ((I2C_CHANNEL_BUFFERS_ALLOWED == 0U) || (I2C_CHANNEL_BUFFERS_ALLOWED == 2U))
@@ -181,7 +210,7 @@ Std_ReturnType I2C_WriteIB (I2C_ChannelType Channel,const I2C_DataBufferType* Da
 	uint8_t loopItr0 = 0U;
 	uint8_t bufferItr = 0U;
 	I2C_ChannelConfigType channelConfig = GlobalConfigPtr->Channel[Channel];
-	InternalBufferType* IB_Parameters = &GlobalParams.sIB_Config;
+	InternalBufferType* IB_Parameters = GlobalParams.sIB_Config;
 
 	/** Write Data to the IB */
 	for(loopItr0 = 0U; loopItr0 < (channelConfig.NoOfBuffersUsed); loopItr0++)
@@ -202,7 +231,7 @@ Std_ReturnType I2C_WriteIB (I2C_ChannelType Channel,const I2C_DataBufferType* Da
 			DataBufferPtr++;
 		}
 	}
-	sIB_Config[Channel].TxBuffer.InUse = TRUE;
+	GlobalParams.sIB_Config[Channel].TxBuffer.InUse = TRUE;
 
 	return E_OK;
 
@@ -234,14 +263,14 @@ Std_ReturnType I2C_ReadIB (I2C_ChannelType Channel,I2C_DataBufferType* DataBuffe
 	/** If no new data is received then copy old data */
 	for(loopItr0 = 0U; loopItr0 < (channelConfig.NoOfBuffersUsed); loopItr0++)
 	{
-		bufferIndex = sIB_Config[Channel].RxBuffer.Start+loopItr0;
+		bufferIndex = GlobalParams.sIB_Config[Channel].RxBuffer.Start+loopItr0;
 
 		/** Write the Data from IB to DataBufferPointer */
 		(*DataBufferPointer) = sInternalBuffer[bufferIndex];
 		DataBufferPointer++;
 	}
 
-	sIB_Config[Channel].RxBuffer.InUse = FALSE;
+	GlobalParams.sIB_Config[Channel].RxBuffer.InUse = FALSE;
 	return E_OK;
 }
 
@@ -314,7 +343,7 @@ Std_ReturnType I2C_SyncTransmit (I2C_SequenceType Sequence)
 	I2C_StatusType moduleStatus = I2C_GetStatus();
 
 	/** Put the Sequence in pending and start transmission of the sequence */
-	sI2C_SetI2CStatus(I2C_BUSY);
+	sI2C_SetStatus(I2C_BUSY);
 	sI2C_SetSeqResult(Sequence,I2C_SEQ_PENDING);
 
 	I2C_JobType * jobPtr = &SequenceConfig.Jobs[0U];
@@ -327,7 +356,7 @@ Std_ReturnType I2C_SyncTransmit (I2C_SequenceType Sequence)
 
 	sI2C_StartSyncTransmit(Sequence);
 
-	sI2C_SetI2CStatus(moduleStatus);
+	sI2C_SetStatus(moduleStatus);
 
 	return E_OK;
 }
@@ -368,7 +397,7 @@ I2C_SeqResultType I2C_GetSequenceResult (I2C_SequenceType Sequence)
 
 /********************** Local Functions *****************************/
 
-static void sI2C_SetI2CStatus (I2C_StatusType Status)
+static void sI2C_SetStatus (I2C_StatusType Status)
 {
 	GlobalParams.I2CStatus = Status;
 }
@@ -403,7 +432,7 @@ static Std_ReturnType sI2C_AllocateIbMemory(void)
 	uint8_t bufferStart = 0U;
 	uint8_t bufferEnd = 0U;
 	I2C_ChannelConfigType* channelConfig = 0U;
-	InternalBufferType* IB_Parameters = &GlobalParams.sIB_Config;
+	InternalBufferType* IB_Parameters = GlobalParams.sIB_Config;
 
 	for(channelItr1 = 0U; channelItr1 < NO_OF_CHANNELS_CONFIGURED; channelItr1++)
 	{
@@ -477,7 +506,7 @@ static Bool sI2C_GetSR2Status(I2C_HwType en_moduleNo,I2C_Status2Type flag)
 
 static I2C_StatusType sI2C_GetHwStatus(I2C_HwType en_moduleNo)
 {
-	volatile  I2C_RegTypes * pReg = (I2C_RegTypes *)I2C_BaseAddress[en_moduleNo];
+	//volatile  I2C_RegTypes * pReg = (I2C_RegTypes *)I2C_BaseAddress[en_moduleNo];
 	/* uint8_t u8_statusFlag = REG_READ32(&pReg->SR.R); */
 
 	if((sI2C_GetSR2Status(en_moduleNo,I2C_BUS_BUSY)) == TRUE)
@@ -532,12 +561,12 @@ static Std_ReturnType sI2C_InitHwModule(I2C_HwConfigType* HwConfig)
 	if((HwConfig->SlaveAddressMode) == EN_I2C_7_BIT_SLAVE_ADDRESS)
 	{
 		REG_RMW32(&pReg->OAR1.R,MASK_BITS(0x1U,15U),(CLEAR_BIT(15U)));
-		REG_RMW32(&pReg->OAR1.R,MASK_BITS(0x7FU,1U),((HwConfig->SlaveAddress) & 0x7F)<<1U);
+		REG_RMW32(&pReg->OAR1.R,MASK_BITS(0x7FU,1U),((HwConfig->OwnAddress) & 0x7F)<<1U);
 	}
 	else	/*((HwConfig->SlaveAddressMode) == EN_I2C_10_BIT_SLAVE_ADDRESS)*/
 	{
 		REG_RMW32(&pReg->OAR1.R,MASK_BITS(0x1U,15U),(SET_BIT(15U)));
-		REG_RMW32(&pReg->OAR1.R,MASK_BITS(0x3FFU,0U),((HwConfig->SlaveAddress) & 0x3FFU));
+		REG_RMW32(&pReg->OAR1.R,MASK_BITS(0x3FFU,0U),((HwConfig->OwnAddress) & 0x3FFU));
 	}
 	REG_RMW32(&pReg->OAR1.R,MASK_BITS(0x1U,14U),(SET_BIT(14U)));
 
@@ -635,6 +664,7 @@ static Std_ReturnType sI2C_MasterTxData(I2C_HwType ModuleNo,I2C_DataBufferType* 
 	REG_RMW32(&pReg->CR1.R,MASK_BITS(0x1U,8U),(SET_BIT(8U)));
 	/** Check if Start bit generation is completed */
 	while(sI2C_GetSR1Status(ModuleNo,I2C_START_BIT_GENERATED) != TRUE);
+	/** TODO - Implement timeout */
 
 	/** Send the Address of the Slave */
 	/** Clear the R/W bit to indicate Write mode */
@@ -649,6 +679,7 @@ static Std_ReturnType sI2C_MasterTxData(I2C_HwType ModuleNo,I2C_DataBufferType* 
 	while(noOfBytesRemaining > 0U)
 	{
 		while(sI2C_GetSR1Status(ModuleNo,I2C_TX_DATA_REGISTER_EMPTY) != TRUE);
+		/** TODO - Implement timeout */
 		REG_WRITE32(&pReg->DR.R,(uint8_t)(*DataBufferPtr));
 		DataBufferPtr++;
 		noOfBytesRemaining--;
@@ -705,7 +736,7 @@ static Std_ReturnType sI2C_MasterRxData(I2C_HwType ModuleNo,I2C_DataBufferType* 
 	REG_READ16(&pReg->SR1.R);	/** Dummy read to clear ADDR in SR1 */
 	REG_READ16(&pReg->SR2.R);	/** Dummy read to clear ADDR in SR1 */
 
-	/** Tx 1 byte of data until buffer is empty */
+	/** Rx 1 byte of data until buffer is empty */
 	while(noOfBytesRemaining > 0U)
 	{
 		if(noOfBytesRemaining < 2U)
@@ -773,19 +804,14 @@ static void sI2C_StartJob(I2C_JobConfigType* JobConfig)
 	uint8_t loopItr0 = 0U;
 	uint8_t loopItr1 = 0U;
 	volatile uint32_t loopItr2 = 0U;
-	uint16_t u16_data = 0U;
-	volatile uint16_t u16_statusFlag = 0U;
 	I2C_HwType en_moduleNo = 0U;
 	I2C_ChannelConfigType* channelConfig = 0U;
-
-	volatile  I2C_RegTypes * pReg = 0U;
 
 	/** Update the Job status */
 	sI2C_SetJobResult(jobId,I2C_JOB_PENDING);
 
 	/** Get I2C Hw ID */
 	en_moduleNo = sI2C_getModuleNo(JobConfig);
-	pReg = (I2C_RegTypes *)I2C_BaseAddress[en_moduleNo];
 
 	/** Start Channels execution */
 	while(JobConfig->ChannelAssignment[loopItr0] != EOL)
@@ -802,7 +828,7 @@ static void sI2C_StartJob(I2C_JobConfigType* JobConfig)
 			for(loopItr1 = 0U; loopItr1<(channelConfig->NoOfBuffersUsed); loopItr1++)
 			{
 				/** Check if Tx buffer is empty and write data*/
-				while( (sI2C_GetSR1Status(en_moduleNo,I2C_TX_DATA_REGISTER_EMPTY)) != TRUE );
+				//while( (sI2C_GetSR1Status(en_moduleNo,I2C_TX_DATA_REGISTER_EMPTY)) != TRUE );
 				/** TODO - Implement timeout */
 
 				if(GlobalParams.sIB_Config[channelId].TxBuffer.InUse == FALSE)
@@ -810,12 +836,12 @@ static void sI2C_StartJob(I2C_JobConfigType* JobConfig)
 					/** Transmit the Default Value */
 					if((loopItr1+1U) != (channelConfig->NoOfBuffersUsed))
 					{
-						sI2C_MasterTxData(en_moduleNo,channelConfig->DefaultTransmitValue,
+						sI2C_MasterTxData(en_moduleNo,&channelConfig->DefaultTransmitValue,
 																(I2C_NumberOfDataType)1U,channelConfig->SlaveAddress,TRUE);
 					}
 					else /** No repeated Start */
 					{
-						sI2C_MasterTxData(en_moduleNo,channelConfig->DefaultTransmitValue,
+						sI2C_MasterTxData(en_moduleNo,&channelConfig->DefaultTransmitValue,
 																(I2C_NumberOfDataType)1U,channelConfig->SlaveAddress,FALSE);
 					}
 				}
@@ -825,18 +851,15 @@ static void sI2C_StartJob(I2C_JobConfigType* JobConfig)
 
 					if((loopItr1+1U) != (channelConfig->NoOfBuffersUsed))
 					{
-						sI2C_MasterTxData(en_moduleNo,sInternalBuffer[IB_index],(I2C_NumberOfDataType)1U,
+						sI2C_MasterTxData(en_moduleNo,&sInternalBuffer[IB_index],(I2C_NumberOfDataType)1U,
 													channelConfig->SlaveAddress,TRUE);
 					}
 					else  /** No repeated Start */
 					{
-						sI2C_MasterTxData(en_moduleNo,sInternalBuffer[IB_index],(I2C_NumberOfDataType)1U,
+						sI2C_MasterTxData(en_moduleNo,&sInternalBuffer[IB_index],(I2C_NumberOfDataType)1U,
 																			channelConfig->SlaveAddress,FALSE);
 					}
 				}
-
-				/** Give delay between the channels */
-				for(loopItr2 = 0 ; loopItr2 < (JobConfig->TimebetweenChannel); loopItr2++);
 			}
 		}
 
@@ -844,30 +867,35 @@ static void sI2C_StartJob(I2C_JobConfigType* JobConfig)
 		{
 			if(GlobalParams.sExternalBuffer[channelId].TxBuffer == NULL_PTR)
 			{
-				for(loopItr1 = 0U; loopItr1<(sExternalBuffer[channelId].length); loopItr1++)
+				for(loopItr1 = 0U; loopItr1<(GlobalParams.sExternalBuffer[channelId].length); loopItr1++)
 				{
+
 					if((loopItr1+1U) != (channelConfig->NoOfBuffersUsed))
 					{
-						sI2C_MasterTxData(en_moduleNo,channelConfig->DefaultTransmitValue,
+						sI2C_MasterTxData(en_moduleNo,&channelConfig->DefaultTransmitValue,
 								(I2C_NumberOfDataType)1U,channelConfig->SlaveAddress,TRUE);
 					}
 					else  /** No repeated Start */
 					{
-						sI2C_MasterTxData(en_moduleNo,channelConfig->DefaultTransmitValue,
+						sI2C_MasterTxData(en_moduleNo,&channelConfig->DefaultTransmitValue,
 								(I2C_NumberOfDataType)1U,channelConfig->SlaveAddress,FALSE);
 					}
 				}
 			}
 			else /** (sExternalBuffer[channelId].TxBuffer != NULL_PTR) */
 			{
-				for(loopItr1 = 0U; loopItr1<(sExternalBuffer[channelId].length); loopItr1++)
-				{
-					sI2C_MasterTxData(en_moduleNo,(I2C_DataBufferType*)sExternalBuffer[channelId].TxBuffer[0U],
-													(I2C_NumberOfDataType)(sExternalBuffer[channelId].length),
-													channelConfig->SlaveAddress,FALSE);
-				}
+
+				sI2C_MasterTxData(en_moduleNo,(I2C_DataBufferType*)&GlobalParams.sExternalBuffer[channelId].TxBuffer[0U],
+									          (I2C_NumberOfDataType)(GlobalParams.sExternalBuffer[channelId].length),
+											   channelConfig->SlaveAddress,FALSE);
+
 			}
 		}
+
+
+
+		/** Give delay between the channels */
+		for(loopItr2 = 0 ; loopItr2 < (JobConfig->TimebetweenChannel); loopItr2++);
 
 		/** Next Channel */
 		loopItr0++;

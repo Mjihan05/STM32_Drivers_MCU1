@@ -21,6 +21,10 @@
 #include "I2C.h"
 #include "string.h"
 
+#define CHANNEL_0_CMD 		(0U)
+#define CHANNEL_1_DATA 		(1U)
+#define SEQUENCE_0			(0U)
+
 #define CHECK_RETURN_VALUE(x)  while(x)
 
 extern Std_ReturnType sI2C_InitHwModule(I2C_HwConfigType* HwConfig);
@@ -56,28 +60,36 @@ int main(void)
 
 	RCC_Init(&RCC_Config0);
 	Port_Init (&Port_Config0);
+	I2C_Init (&I2C_Config0);
 
 	while(1)
 	{
 		if(Dio_ReadChannel(GPIO_A_PIN_0) == 0x1U)
 		{
-			returnValue = sI2C_InitHwModule((I2C_HwConfigType*)I2C_HwConfig0);
-			CHECK_RETURN_VALUE(returnValue);
-
 			uint8_t commandValue = 0x51;
-			returnValue = sI2C_MasterTxData(I2C_HwConfig0[0U].ModuleNo,(I2C_DataBufferType*)(&commandValue),1U,0x68,STD_ON);
+			returnValue = I2C_WriteIB (CHANNEL_0_CMD,(I2C_DataBufferType*)(&commandValue));
 			CHECK_RETURN_VALUE(returnValue);
 
-			uint8_t u8_length = 0U;
-			returnValue = sI2C_MasterRxData(I2C_HwConfig0[0U].ModuleNo,(I2C_DataBufferType*)(&u8_length),1U,0x68,STD_ON);
+			//commandValue = 0x52;
+			returnValue = I2C_SetupEB (CHANNEL_1_DATA,(I2C_DataBufferType*)(myName),
+					NULL,13);
+
 			CHECK_RETURN_VALUE(returnValue);
 
-			commandValue = 0x52;
-			returnValue = sI2C_MasterTxData(I2C_HwConfig0[0U].ModuleNo,(I2C_DataBufferType*)(&commandValue),1U,0x68,STD_ON);
+			returnValue = I2C_SyncTransmit (SEQUENCE_0);
+			//returnValue = sI2C_MasterTxData(I2C_HwConfig0[0U].ModuleNo,(I2C_DataBufferType*)(&commandValue),1U,0x68,STD_ON);
 			CHECK_RETURN_VALUE(returnValue);
 
-			returnValue = sI2C_MasterRxData(I2C_HwConfig0[0U].ModuleNo,(I2C_DataBufferType*)(myRxBuffer),u8_length,0x68,STD_OFF);
-			CHECK_RETURN_VALUE(returnValue);
+//			uint8_t u8_length = 0U;
+//			returnValue = sI2C_MasterRxData(I2C_HwConfig0[0U].ModuleNo,(I2C_DataBufferType*)(&u8_length),1U,0x68,STD_ON);
+//			CHECK_RETURN_VALUE(returnValue);
+//
+//			commandValue = 0x52;
+//			returnValue = sI2C_MasterTxData(I2C_HwConfig0[0U].ModuleNo,(I2C_DataBufferType*)(&commandValue),1U,0x68,STD_ON);
+//			CHECK_RETURN_VALUE(returnValue);
+//
+//			returnValue = sI2C_MasterRxData(I2C_HwConfig0[0U].ModuleNo,(I2C_DataBufferType*)(myRxBuffer),u8_length,0x68,STD_OFF);
+//			CHECK_RETURN_VALUE(returnValue);
 
 			delay();
 		}

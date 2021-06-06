@@ -14,7 +14,7 @@
 
 extern Std_ReturnType Spi_DeInit (void);
 
-void dummyNotif(void)
+static void dummyNotif(void)
 {
 	;
 }

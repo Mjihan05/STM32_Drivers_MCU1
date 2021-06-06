@@ -148,7 +148,7 @@ typedef struct
 	uint8_t Priority;				/** Priority from 0 lower to 3 highest */
 	uint32_t TimebetweenChannel;  	/** Delay between execution of channels in  1/SysClk (us) */
 	void (*I2CJobEndNotification)();
-	I2C_ChannelType ChannelAssignment[NO_OF_CHANNELS_CONFIGURED];
+	I2C_ChannelType ChannelAssignment[NO_OF_CHANNELS_CONFIGURED+1U];
 }I2C_JobConfigType;
 
 typedef struct
@@ -156,7 +156,7 @@ typedef struct
 	I2C_SequenceType SequenceId;
 	uint8_t I2CInterruptible;				  /** is the Sequence Interruptible */
 	void (*I2CSequenceEndNotification)();
-	I2C_JobType Jobs[NO_OF_JOBS_CONFIGURED];  /** Available jobs in sequence */
+	I2C_JobType Jobs[NO_OF_JOBS_CONFIGURED+1U];  /** Available jobs in sequence */
 }I2C_SequenceConfigType;
 
 /** Structure shall contain the initialisation data for the I2C Handler*/

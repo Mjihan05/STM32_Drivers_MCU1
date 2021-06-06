@@ -11,6 +11,11 @@
 #include "Reg_Macros.h"
 #include "I2C_PbCfg.h"
 
+static void dummyNotif(void)
+{
+	;
+}
+
 uint32_t I2C_BaseAddress[TOTAL_NO_OF_I2C_HW_UNIT] =
 {
 	I2C_1_BASE_ADDRESS,
@@ -49,9 +54,9 @@ const I2C_JobConfigType I2C_JobConfig0[NO_OF_JOBS_CONFIGURED] =
 			.Priority = 0U,
 			.TimebetweenChannel = 1000U,
 			.I2CJobEndNotification = (void*)&dummyNotif,
-			.HwConfig = &I2C_HwConfig0[0U],
+			.HwConfig = (I2C_HwConfigType*)&I2C_HwConfig0[0U],
 			.ChannelAssignment = {
-					0U,1U,EOL,
+					/*0U,*/1U,EOL,
 			},
 		},
 };
@@ -63,12 +68,14 @@ const I2C_ChannelConfigType I2C_ChannelConfig0[NO_OF_CHANNELS_CONFIGURED] =
 				.BufferUsed = EN_INTERNAL_BUFFER,
 				.NoOfBuffersUsed = 1U,
 				.DefaultTransmitValue = 0xFF,
+				.SlaveAddress = 0x68,
 		},
 		{
 				.ChannelId = 1U,
 				.BufferUsed = EN_EXTERNAL_BUFFER,
 				.NoOfBuffersUsed = 10U,
 				.DefaultTransmitValue = 0xFF,
+				.SlaveAddress = 0x68,
 		},
 };
 
